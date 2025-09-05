@@ -140,6 +140,59 @@
     </div>
   </section>
 
+  <!-- Featured Event Section 2 -->
+<section class="event-featured" aria-labelledby="f3-title">
+  <div class="event-card-large">
+    <!-- Clickable poster (keeps your original DOM shape for CSS) -->
+    <a
+      href="https://www.instagram.com/f3strike/"
+      class="event-media"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View event details on Instagram: F3 Strike – International Fight Combat"
+    >
+      <picture>
+        <img
+          src="{{ url_for('static', filename='images/events/F3.jpg') }}"
+          alt="F3 Strike: International Fight Combat poster"
+          loading="lazy"
+        />
+      </picture>
+    </a>
+
+    <div class="event-details">
+      <h2 id="f3-title">F3 Strike: International Fight Combat – JOIN THE STRIKE</h2>
+      <p>
+        <time datetime="2025-10-12">12 October 2025</time>
+        • Location: Dewan Beringin, Gombak
+      </p>
+      <p>Registration RM50 · Powered by F3 Strike × ONE PRIDE MMA Audition</p>
+      <p class="copy-ms">
+        🔥 ARE YOU READY TO STRIKE? 🔥<br>
+        Step into the Ring and prove your power. This event is also the official
+        audition for ONE PRIDE MMA selection happening the same day. Don’t miss
+        your chance to be scouted! ⚔
+      </p>
+
+      <div class="event-buttons">
+        <a href="https://forms.gle/oVYkaA17eXA1oLyC9" class="btn register" target="_blank" rel="noopener">
+          Register Now
+        </a>
+        <!-- Event Details now points to Instagram -->
+        <a
+          href="https://www.instagram.com/f3strike/"
+          class="btn details"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Event Details
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
   <!-- More Events (WA-clickable cards with prefilled messages) -->
   <section class="events-wrap">
     <h2 class="section-title">Upcoming Championship Fights</h2>
@@ -183,7 +236,7 @@
 
       <a class="event-card" target="_blank" rel="noopener"
          href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Malaysia%20Beatdown%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/poster2.jpg') }}" alt="Malaysia Beatdown">
+        <img src="{{ url_for('static', filename='images/events/F3.jpg') }}" alt="Malaysia Beatdown">
         <div class="event-date">September 13</div>
         <h4 class="event-org">Malaysia Beatdown</h4>
       </a>

@@ -5,101 +5,267 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sponsors | TruBoxing</title>
 
-  <!-- CSS & Scripts -->
+  <!-- Global site CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Sponsors page CSS (this file) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sponsers.css') }}">
+
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-
-  <!-- Optional quick override -->
-  <style>
-    @media (min-width: 769px) {
-      .burger {
-        display: none !important;
-      }
-    }
-  </style>
 </head>
 
 <body>
   <!-- Navbar -->
   <nav class="navbar">
     <div class="navbar-container">
-<a href="/">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
-    </a>      <i class="fas fa-bars burger" id="burger"></i>
+      <a href="/"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" /></a>
+      <i class="fas fa-bars burger" id="burger"></i>
       <ul class="nav-links" id="navLinks">
         <li><a href="/">Home</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
         <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
         <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors">SPONSORS</a></li>
+        <li><a href="/sponsors" class="active">SPONSORS</a></li>
         <li><a href="/contact">CONTACT US</a></li>
       </ul>
     </div>
   </nav>
 
-  <!-- Coming Soon -->
-  <div class="coming-soon-container">
-    <h1>Sponsors</h1>
-    <p>🚧 Coming Soon 🚧</p>
-  </div>
+  <!-- Page content -->
+  <main class="sp-page">
+    <div class="sp-wrap">
+      <h1 class="sp-title">Our Sponsors</h1>
 
- <!-- Footer Section -->
-<footer class="footer">
-  <div class="footer-content">
-    <div class="footer-column logo-column">
-<img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
-      <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong>
+      <!-- Logo Grid (kept same visual) -->
+      <div class="sponsors-grid">
+        <!-- kept your current folder name 'sponsers' on purpose -->
+        <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/trurec.png') }}" alt="TruRec"></div>
+        <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/Besi.png') }}" alt="Besi"></div>
+        <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/kaboom.png') }}" alt="Kaboom"></div>
+        <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/ko.png') }}" alt="KO"></div>
+        <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/tsl.png') }}" alt="TSL"></div>
+        <!-- Add more as needed -->
+      </div>
+<!-- Minimal Clean Sponsor Block (TruRec) -->
+<section id="trurec" class="sponsor-feature v1" style="--accent:#00e5ff; --text:#0b1220; --bg:#ffffff;">
+  <div class="sf2">
+    <div class="sf2-body">
+      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/trurec.png') }}" alt="TruRec logo">
+      <h2 class="sf2-title">TruRec — Official Record Partner</h2>
+      <p class="sf2-desc">
+        TruRec is the digital boxer record for Malaysia — verified results, fighter profiles,
+        and career stats. Trusted by promoters and coaches nationwide.
       </p>
-      <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
-    </div>
-
-    <div class="footer-column">
-      <h3>Quick Links</h3>
-      <ul>
-        <li><a href="/">HOME</a></li>
-        <li><a href="/events">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-        <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors">SPONSORS</a></li>
-        <li><a href="/contact">CONTACT US</a></li>
+      <div class="sf2-cta">
+        <a class="sf2-btn" href="https://truboxing.co/trurec" target="_blank" rel="noopener">Visit Website</a>
+      </div>
+      <ul class="sf2-meta">
+        <li>Since 2025</li>
+        <li>Category: Technology</li>
+        <li>Tier: Gold Partner</li>
       </ul>
     </div>
 
-    <div class="footer-column">
-      <h3>Contact us</h3>
-      <ul>
-        <li>📞 +60 111 8808 511</li>
-        <li>📞 +60 14 360 9582</li>
-        <li>✉️ truboxingmy@gmail.com</li>
+    <figure class="sf2-media">
+      <iframe
+        class="sf2-video"
+        src="https://www.youtube-nocookie.com/embed/7FqgcXWSVkk?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=7FqgcXWSVkk"
+        title="TruRec video"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    </figure>
+  </div>
+</section>
+<!-- Minimal Clean Sponsor Block (Abang Besi) -->
+<section id="abang-besi" class="sponsor-feature v1" style="--accent:#f97316; --text:#0b1220; --bg:#ffffff;">
+  <div class="sf2">
+    <div class="sf2-body">
+      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/Besi.png') }}" alt="Abang Besi logo">
+      <h2 class="sf2-title">Shamel “Abang Besi” — Light Heavyweight</h2>
+      <p class="sf2-desc">
+        Fan favorite with heavy hands and relentless pressure. Follow Abang Besi’s journey in the ring,
+        highlights, and upcoming fight announcements.
+      </p>
+      <div class="sf2-cta">
+        <a class="sf2-btn" href="/fighters" rel="noopener">View Fighter Profile</a>
+        <a class="sf2-btn ghost" href="/events">Upcoming Bouts</a>
+      </div>
+      <ul class="sf2-meta">
+        <li>Record: 23–17–0 (19 KOs)</li>
+        <li>Stance: Orthodox</li>
+        <li>Country: Malaysia</li>
       </ul>
     </div>
 
-   <div class="footer-column">
-  <h3>Social Media</h3>
-  <ul>
-    <li>
-      <a href="https://instagram.com/truboxing.co" target="_blank">
-        <i class="fab fa-instagram"></i> Instagram
-      </a>
-    </li>
-    <li>
-      <a href="https://facebook.com/truboxing.co" target="_blank">
-        <i class="fab fa-facebook-f"></i> Facebook
-      </a>
-    </li>
-    <li>
-      <a href="https://youtube.com/@truboxing" target="_blank">
-        <i class="fab fa-youtube"></i> YouTube
-      </a>
-    </li>
-  </ul>
-</div>
+<!-- Abang Besi highlights (YouTube embed) -->
+<figure class="sf2-media">
+  <iframe
+    class="sf2-video"
+    src="https://www.youtube-nocookie.com/embed/JLCr-0d-RWI?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=JLCr-0d-RWI"
+    title="Abang Besi highlights"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+    loading="lazy"
+    referrerpolicy="strict-origin-when-cross-origin"
+  ></iframe>
+</figure>
 
+  </div>
+</section>
 
-<!-- Bottom Footer Note -->
+<!-- Kaboom.my — Marketing Partner -->
+<section id="kaboom" class="sponsor-feature v1" style="--accent:#f59e0b; --text:#0b1220; --bg:#ffffff;">
+  <div class="sf2">
+    <div class="sf2-body">
+      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/kaboom.png') }}" alt="Kaboom.my logo">
+      <h2 class="sf2-title">Kaboom.my — Marketing Partner</h2>
+      <p class="sf2-desc">
+        Full-service marketing support powering TruBoxing campaigns — brand strategy, social media,
+        on-site content, and sponsor activations that actually convert.
+      </p>
+      <div class="sf2-cta">
+        <a class="sf2-btn" href="https://kaboom.my" target="_blank" rel="noopener">Visit Website</a>
+      </div>
+      <ul class="sf2-meta">
+        <li>Scope: Strategy & Social</li>
+        <li>Activation: Event Coverage</li>
+        <li>Tier: Partner</li>
+      </ul>
+    </div>
 
-  <p>&copy; 2025 TruRec. All rights reserved.</p>
+    <!-- Video (replace VIDEO_ID) OR use the commented image fallback -->
+    <figure class="sf2-media">
+      <iframe
+        class="sf2-video"
+        src="https://www.youtube-nocookie.com/embed/VIDEO_ID?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=VIDEO_ID"
+        title="Kaboom.my reel"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+      <!-- <img src="{{ url_for('static', filename='images/sponsers/kaboom-hero.jpg') }}" alt="Kaboom.my work"> -->
+    </figure>
+  </div>
+</section>
+
+<!-- Knockout Media — Live Stream & Videography -->
+<section id="knockout-media" class="sponsor-feature v1" style="--accent:#6366f1; --text:#0b1220; --bg:#ffffff;">
+  <div class="sf2">
+    <div class="sf2-body">
+      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/ko.png') }}" alt="Knockout Media logo">
+      <h2 class="sf2-title">Knockout Media — Live Stream & Videography</h2>
+      <p class="sf2-desc">
+        The crew behind our smooth live streams and cinematic fight recaps — multi-cam production,
+        replays, and highlight edits that bring the crowd online.
+      </p>
+      <div class="sf2-cta">
+        <a class="sf2-btn" href="https://youtube.com/@truboxing" target="_blank" rel="noopener">Watch Highlights</a>
+      </div>
+      <ul class="sf2-meta">
+        <li>Service: Live Production</li>
+        <li>Deliverables: Streams & Recaps</li>
+        <li>Tier: Media Partner</li>
+      </ul>
+    </div>
+
+    <figure class="sf2-media">
+      <iframe
+        class="sf2-video"
+        src="https://www.youtube-nocookie.com/embed/VIDEO_ID?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=VIDEO_ID"
+        title="Knockout Media BTS"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+      <!-- <img src="{{ url_for('static', filename='images/sponsers/ko-hero.jpg') }}" alt="Knockout Media production"> -->
+    </figure>
+  </div>
+</section>
+
+<!-- Team Sound & Light — Event Production -->
+<section id="team-sound-light" class="sponsor-feature v1" style="--accent:#22c55e; --text:#0b1220; --bg:#ffffff;">
+  <div class="sf2">
+    <div class="sf2-body">
+      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/tsl.png') }}" alt="Team Sound & Light logo">
+      <h2 class="sf2-title">Team Sound & Light — Event Production</h2>
+      <p class="sf2-desc">
+        They power the arena atmosphere — PA systems, lighting rigs, walk-out cues, and crisp ring audio
+        so every punch lands with impact.
+      </p>
+      <div class="sf2-cta">
+        <a class="sf2-btn" href="#contact" rel="noopener">Book for Event</a>
+        <a class="sf2-btn ghost" href="/sponsors/team-sound-light">Learn More</a>
+      </div>
+      <ul class="sf2-meta">
+        <li>Systems: PA & Lighting</li>
+        <li>Specialty: Live Events</li>
+        <li>Tier: Production Partner</li>
+      </ul>
+    </div>
+
+<!-- Team Sound & Light — use an image instead of video -->
+<figure class="sf2-media">
+  <img
+    src="{{ url_for('static', filename='images/sponsers/TSL.jpeg') }}"
+    alt="Team Sound & Light stage setup"
+    loading="lazy"
+  >
+</figure>
+
+  </div>
+</section>
+
+ 
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-column logo-column">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
+        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
+        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers to champions.</p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">HOME</a></li>
+          <li><a href="/events">EVENTS</a></li>
+          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+          <li><a href="/merchandise">MERCHANDISE</a></li>
+          <li><a href="/sponsors">SPONSORS</a></li>
+          <li><a href="/contact">CONTACT US</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact us</h3>
+        <ul>
+          <li>📞 +60 111 8808 511</li>
+          <li>📞 +60 14 360 9582</li>
+          <li>✉️ truboxingmy@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Social Media</h3>
+        <ul>
+          <li><a href="https://instagram.com/truboxing.co" target="_blank"><i class="fab fa-instagram"></i> Instagram</a></li>
+          <li><a href="https://facebook.com/truboxing.co" target="_blank"><i class="fab fa-facebook-f"></i> Facebook</a></li>
+          <li><a href="https://youtube.com/@truboxing" target="_blank"><i class="fab fa-youtube"></i> YouTube</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p>&copy; 2025 TruRec. All rights reserved.</p>
+  </footer>
 </body>
 </html>

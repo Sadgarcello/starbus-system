@@ -159,6 +159,240 @@ body {
   padding: 8px 0;
   grid-template-columns: repeat(auto-fit, minmax(var(--card), 1fr));
 }
+/* ===== Event Spotlight (ev-) ===== */
+:root{
+  --ev-brand:#0047ab;
+  --ev-bg:#0f0f10;
+  --ev-card:#ffffff;
+  --ev-muted:#63666f;
+}
+
+.ev-spotlight{ background:var(--ev-bg); padding:40px 16px; }
+.ev-card{
+  max-width:1150px; margin:0 auto;
+  display:grid; grid-template-columns: 1.1fr 1fr; gap:28px;
+  background:var(--ev-card); border-radius:18px; overflow:hidden;
+  box-shadow:0 14px 38px rgba(0,0,0,.28);
+}
+
+/* Media / poster */
+.ev-media{ position:relative; background:#0d0e10; }
+.ev-media img{
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+.ev-datepill{
+  position:absolute; top:14px; left:14px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.65); color:#fff;
+  font-weight:800; letter-spacing:.3px; text-align:center;
+}
+.ev-day{ font-size:22px; line-height:1; }
+.ev-mon{ font-size:12px; opacity:.9; }
+.ev-yr{ font-size:10px; opacity:.8; }
+
+/* Body */
+.ev-body{ padding:26px; display:flex; flex-direction:column; }
+.ev-title{
+  margin:0 0 8px; font-family:'Anton',sans-serif;
+  font-size: clamp(28px, 3.2vw, 44px); color:#1a1b1f; line-height:1.05;
+}
+.ev-meta{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+.ev-chip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:999px; font-weight:700; font-size:12px;
+  background:#f5f6f8; color:#222; border:1px solid #e8e9ee;
+}
+.ev-chip svg{ width:14px; height:14px; fill:currentColor; opacity:.8; }
+
+.ev-desc{
+  color:#2a2c33; line-height:1.6; margin:8px 0 18px;
+  font-size:15px;
+}
+
+.ev-actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:auto; }
+.ev-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 18px; border-radius:10px; font-weight:800; text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+.ev-primary{
+  background:linear-gradient(180deg, #2f6aff, var(--ev-brand));
+  color:#fff; box-shadow:0 8px 22px rgba(0,71,171,.30);
+}
+.ev-primary:hover{ transform:translateY(-1px); box-shadow:0 12px 28px rgba(0,71,171,.40); }
+
+.ev-ghost{
+  background:#eef1f7; color:#0f1a2e; border:1px solid #dbe1ee;
+}
+.ev-ghost:hover{ background:#e7ecf8; }
+/* ===== Modern Event Card (evx-) ===== */
+:root{
+  --evx-brand:#0047ab;
+  --evx-bg:#0f0f10;
+  --evx-card:#ffffff;
+  --evx-muted:#63666f;
+}
+
+.evx{ background:var(--evx-bg); padding:44px 16px; }
+.evx-card{
+  max-width:1150px; margin:0 auto;
+  display:grid; grid-template-columns: 1.05fr 1fr; gap:28px;
+  background:var(--evx-card); border-radius:20px; overflow:hidden;
+  box-shadow:0 14px 38px rgba(0,0,0,.28);
+}
+
+/* Poster */
+.evx-media{ position:relative; display:block; background:#0d0e10; }
+.evx-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+.evx-media::after{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(120% 80% at 50% 10%, rgba(0,0,0,.10), transparent 55%);
+  pointer-events:none;
+}
+/* Date pill */
+.evx-date{
+  position:absolute; top:14px; left:14px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:8px 10px; border-radius:12px;
+  background:rgba(0,0,0,.65); color:#fff; font-weight:800; letter-spacing:.3px;
+}
+.evx-date .d{ font-size:22px; line-height:1; }
+.evx-date .m{ font-size:12px; opacity:.9; }
+.evx-date .y{ font-size:10px; opacity:.8; }
+
+/* Body */
+.evx-body{ padding:28px; display:flex; flex-direction:column; }
+.evx-title{
+  margin:0 0 10px; font-family:'Anton',sans-serif;
+  font-size: clamp(28px, 3.2vw, 46px); line-height:1.04; color:#14161b;
+}
+.evx-meta{ list-style:none; padding:0; margin:0 0 14px; display:flex; flex-wrap:wrap; gap:10px; }
+.evx-chip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:999px; font-weight:700; font-size:12px;
+  background:#f5f6f8; color:#222; border:1px solid #e8e9ee;
+}
+.evx-chip svg{ width:14px; height:14px; fill:currentColor; opacity:.8; }
+
+.evx-desc{ color:#2a2c33; line-height:1.6; margin:6px 0 18px; font-size:15px; }
+
+/* Buttons */
+.evx-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:auto; }
+.evx-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 18px; border-radius:12px; font-weight:800; text-decoration:none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+.evx-primary{
+  background:linear-gradient(180deg, #2f6aff, var(--evx-brand));
+  color:#fff; box-shadow:0 8px 22px rgba(0,71,171,.30);
+}
+.evx-primary:hover{ transform:translateY(-1px); box-shadow:0 12px 28px rgba(0,71,171,.40); }
+.evx-ghost{
+  background:#eef1f7; color:#0f1a2e; border:1px solid #dbe1ee;
+}
+.evx-ghost:hover{ background:#e7ecf8; }
+/* ===== Simple Modern Event Card (evm-) ===== */
+:root{
+  --evm-brand:#0047ab;         /* change once if you want a different accent */
+  --evm-bg:#0f0f10;
+  --evm-card:#ffffff;
+  --evm-text:#14161b;
+}
+
+.evm{ background:var(--evm-bg); padding:40px 16px; }
+.evm-card{
+  max-width:1100px; margin:0 auto;
+  display:grid; grid-template-columns:1.05fr 1fr; gap:24px;
+  background:var(--evm-card); border-radius:16px; overflow:hidden;
+  box-shadow:0 12px 30px rgba(0,0,0,.28);
+}
+
+/* Poster */
+.evm-media{ position:relative; display:block; background:#0d0e10; }
+.evm-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* date tag on poster */
+.evm-tag{
+  position:absolute; top:12px; left:12px;
+  padding:6px 10px; border-radius:10px;
+  background:rgba(0,0,0,.65); color:#fff; font-weight:800; font-size:12px; letter-spacing:.3px;
+  backdrop-filter: blur(4px);
+}
+
+/* Body */
+.evm-body{ padding:24px; display:flex; flex-direction:column; }
+.evm-title{
+  margin:0 0 10px; font-family:'Anton',sans-serif;
+  font-size:clamp(26px,3vw,42px); line-height:1.05; color:var(--evm-text);
+}
+.evm-meta{
+  list-style:none; padding:0; margin:0 0 12px;
+  display:flex; flex-wrap:wrap; gap:10px;
+}
+.evm-meta li{
+  font-size:12px; font-weight:700;
+  padding:6px 10px; border-radius:999px;
+  background:#f5f6f8; border:1px solid #e6e8ef; color:#111;
+}
+.evm-desc{ margin:8px 0 18px; color:#2a2c33; line-height:1.6; font-size:15px; }
+
+/* Buttons */
+.evm-actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:auto; }
+.evm-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 18px; border-radius:10px; font-weight:800; text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.evm-primary{
+  background:linear-gradient(180deg,#2f6aff,var(--evm-brand)); color:#fff;
+  box-shadow:0 8px 20px rgba(0,71,171,.30);
+}
+.evm-primary:hover{ transform:translateY(-1px); box-shadow:0 12px 26px rgba(0,71,171,.40); }
+.evm-ghost{ background:#eef1f7; color:#0f1a2e; border:1px solid #dbe1ee; }
+.evm-ghost:hover{ background:#e7ecf8; }
+@media (max-width: 960px){
+  .evm-card{ grid-template-columns: 1fr; }
+  .evm-media{ aspect-ratio: 3 / 4; }          /* portrait instead of 4/3 */
+  .evm-media img{ object-fit: cover; object-position: top center; }
+}
+
+
+
+
+/* Responsive */
+@media (max-width:960px){
+  .evm-card{ grid-template-columns:1fr; }
+  .evm-media{ aspect-ratio:4/3; }         /* poster on top */
+  .evm-actions .evm-btn{ flex:1 1 140px; }/* buttons stretch evenly */
+}
+@media (max-width:520px){
+  .evm-body{ padding:18px; }
+  .evm-desc{ font-size:14px; }
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .evx-card{ grid-template-columns: 1fr; }
+  .evx-media{ aspect-ratio: 4/3; }          /* poster on top */
+  .evx-btn{ flex:1 1 140px; }               /* buttons stretch evenly */
+}
+@media (max-width: 520px){
+  .evx-body{ padding:18px; }
+  .evx-desc{ font-size:14px; }
+  .evx-chip{ font-size:11px; padding:6px 9px; }
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .ev-card{ grid-template-columns: 1fr; }
+  .ev-media{ aspect-ratio: 4/3; }      /* nice top visual on mobile */
+  .ev-actions .ev-btn{ flex:1 1 140px; } /* buttons stretch evenly */
+}
+@media (max-width: 520px){
+  .ev-body{ padding:18px; }
+  .ev-desc{ font-size:14px; }
+  .ev-chip{ font-size:11px; padding:6px 9px; }
+}
 
 /* ≥1800px: full width 8 columns */
 @media (min-width: 1800px) {

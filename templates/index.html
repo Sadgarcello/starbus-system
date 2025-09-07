@@ -4,288 +4,280 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TruRec | Home</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-
-
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar">
-  <div class="navbar-container">
-   <a href="/">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
-    </a>
-    <!-- Burger Icon (For mobile) -->
-  <i class="fas fa-bars burger" id="burger"></i>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing logo" class="logo" />
+      </a>
 
+      <!-- Burger (mobile) -->
+      <button class="burger" id="burger" aria-label="Open menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
 
-
-    <!-- Navigation Links -->
-    <ul class="nav-links" id="navLinks">
-      <li><a href="/">HOME</a></li>
-      <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-      <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-      <li><a href="/merchandise">MERCHANDISE</a></li>
-      <li><a href="/sponsors">SPONSORS</a></li>
-      <li><a href="/contact">CONTACT US</a></li>
-    </ul>
-  </div>
-</nav>
-
-
-<!-- Hero Slider -->
-<section class="hero-slider">
-  <div class="slide active" style="background-image: url('{{ url_for('static', filename='images/img1.jpg') }}');">
-    <div class="overlay">
-      <h1>Welcome to TruBoxing.co</h1>
-      <p>Your Malaysian Boxing Record System</p>
-    </div>
-  </div>
-  <div class="slide" style="background-image: url('{{ url_for('static', filename='images/img2.jpg') }}');">
-    <div class="overlay">
-      <h1>Malaysia Hub
-For Real Boxers.</h1>
-      <p>Real records. Real talent.</p>
-    </div>
-  </div>
-  <div class="slide" style="background-image: url('{{ url_for('static', filename='images/img3.jpg') }}');">
-    <div class="overlay">
-      <h1>Track Events</h1>
-      <p>Stay updated with every bout</p>
-    </div>
-  </div>
-</section>
-
-<!-- Top Moving CAUTION Tape -->
-<div class="caution-tape-wrapper">
-  <div class="caution-tape">
-    <div class="tape-track">
-      <span>NO POLITICS</span>
-      <span>JUST BOXING</span>
-      <span>NO SCRIPT</span>
-      <span>NO FIX</span>
-      <span>JUST FISTS</span>
-      <span>EARN</span>
-      <span>YOUR</span>
-      <span>NAME</span>
-
-      <!-- Duplicate content for seamless looping -->
-      <span>NO POLITICS</span>
-      <span>JUST BOXING</span>
-      <span>NO SCRIPT</span>
-      <span>NO FIX</span>
-      <span>JUST FISTS</span>
-      <span>EARN</span>
-      <span>YOUR</span>
-      <span>NAME</span>
-    </div>
-  </div>
-</div>
-
-<!-- Section Title -->
-<div class="section-title">Upcoming Events</div>
-
-<!-- Event Cards -->
-<div class="event-container">
-  <div class="event-card">
-<img src="{{ url_for('static', filename='images/events/Teaser.png') }}" alt="Penang Fight Night poster" />
-    <div class="button">Learn More</div>
-  </div>
-  <div class="event-card">
-    <img src="{{ url_for('static', filename='images/events/truss.png') }}" />
-  </div>
-  <div class="event-card">
-<img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="Penang Fight Night poster" />
-  </div>
-  <div class="event-card see-more">
-    See<br />More<br />Events
-  </div>
-</div>
-
-<!-- Bottom Moving CAUTION Tape -->
-<div class="caution-tape-wrapper">
-  <div class="caution-tape">
-    <div class="tape-track">
-      <span>NO POLITICS</span>
-      <span>JUST BOXING</span>
-      <span>NO SCRIPT</span>
-      <span>NO FIX</span>
-      <span>JUST FISTS</span>
-      <span>EARN</span>
-      <span>YOUR</span>
-      <span>NAME</span>
-
-      <!-- Duplicate content for seamless looping -->
-      <span>NO POLITICS</span>
-      <span>JUST BOXING</span>
-      <span>NO SCRIPT</span>
-      <span>NO FIX</span>
-      <span>JUST FISTS</span>
-      <span>EARN</span>
-      <span>YOUR</span>
-      <span>NAME</span>
-    </div>
-  </div>
-</div>
-
-
-<div class="boxer-section">
-  <div class="boxer-title">Featured Boxers</div>
-
-  <div class="boxer-container">
-
-<a href="{{ url_for('fighter_profile', fighter_id='shamel') }}" class="boxer-card">
-      <div class="boxer-card">
-        <div class="ribbon red">Most Active</div>
-        <img src="{{ url_for('static', filename='images/shamelprev.png') }}" alt="Shamel Salahudin" />
-        <div class="boxer-info">
-          <h3>SHAMEL SALAHUDIN</h3>
-          <p>Light Heavyweight</p>
-        </div>
-      </div>
-    </a>
-
-<a href="{{ url_for('fighter_profile', fighter_id='bazooka') }}" class="boxer-card">
-      <div class="boxer-card">
-        <div class="ribbon yellow">Rising Star</div>
-        <img src="{{ url_for('static', filename='images/imranprev.png') }}" alt="Imran bazooka" />
-        <div class="boxer-info">
-          <h3>IMRAN BAZOOKA</h3>
-          <p>Light Heavyweight</p>
-        </div>
-      </div>
-    </a>
-
-<a href="{{ url_for('fighter_profile', fighter_id='danny') }}" class="boxer-card">
-      <div class="boxer-card">
-        <div class="ribbon blue">New Fighter</div>
-        <img src="{{ url_for('static', filename='images/dannyprev.png') }}" alt="danny" />
-        <div class="boxer-info">
-          <h3>DANNY BOYZ</h3>
-          <p>Lightweight</p>
-        </div>
-      </div>
-    </a>
-
-<a href="{{ url_for('fighter_profile', fighter_id='Thanish') }}" class="boxer-card">
-      <div class="boxer-card">
-        <div class="ribbon purple">Crowd Puller</div>
-        <img src="{{ url_for('static', filename='images/thanishprev.png') }}" alt="Thanesh Ganesan" />
-        <div class="boxer-info">
-          <h3>THANESH GANESAN</h3>
-          <p>Middle Weight</p>
-        </div>
-      </div>
-    </a>
-
-  </div>
-
-  <div class="see-all-btn">
-    <a href="{{ url_for('fighters_page') }}">See All Fighters</a>
-  </div>
-</div>
-
-
-
-
-
-
-
-<!-- Merchandise Section -->
-<div class="main-container">
-  <div class="merch-section">
-    <div class="merch-left">
-      <h2><span>Merchandise</span></h2>
-      <p>From Boxers For Boxers !</p>
-    </div>
-
-    <div class="merch-items">
-      <div class="merch-card">
-        <img src="{{ url_for('static', filename='images/trushrt.png') }}" alt="TruBoxing Shirt" />
-        <div class="merch-btn">Coming soon</div>
-      </div>
-
-      <div class="merch-card">
-        <img src="{{ url_for('static', filename='images/boxingkey.png') }}" alt="TruBoxing Keychain" />
-        <div class="merch-btn">Coming soon</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Sponsors Section -->
-<!-- Sponsors Section -->
-<section class="sponsors-section">
-  <h2 class="sponsors-title">Our Sponsors</h2>
-  <p class="sponsors-subtitle">Big Thanks To Em !</p>
-  
-  <div class="sponsor-logos">
-<img src="{{ url_for('static', filename='images/sponsers.png') }}" alt="Our Sponsors">
-  </div>
-</section>
-
-
-<!-- Footer Section -->
-<footer class="footer">
-  <div class="footer-content">
-    <div class="footer-column logo-column">
-<img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
-      <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong>
-      </p>
-      <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
-    </div>
-
-    <div class="footer-column">
-      <h3>Quick Links</h3>
-      <ul>
+      <!-- Navigation Links -->
+      <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
-        <li><a href="/events">EVENTS</a></li>
+        <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
         <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-        <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors">SPONSORS</a></li>
-        <li><a href="/contact">CONTACT US</a></li>
+        <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
+        <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
+        <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
       </ul>
     </div>
+  </nav>
 
-    <div class="footer-column">
-      <h3>Contact us</h3>
-      <ul>
-        <li>📞 +60 111 8808 511</li>
-        <li>📞 +60 14 360 9582</li>
-        <li>✉️ truboxingmy@gmail.com</li>
-      </ul>
+  <!-- Hero Slider -->
+  <section class="hero-slider">
+    <div class="slide active" style="background-image: url('{{ url_for('static', filename='images/img1.jpg') }}');">
+      <div class="overlay">
+        <h1>Welcome to TruBoxing.co</h1>
+        <p>Your Malaysian Boxing Record System</p>
+      </div>
+    </div>
+    <div class="slide" style="background-image: url('{{ url_for('static', filename='images/img2.jpg') }}');">
+      <div class="overlay">
+        <h2>Malaysia Hub<br>For Real Boxers.</h2>
+        <p>Real records. Real talent.</p>
+      </div>
+    </div>
+    <div class="slide" style="background-image: url('{{ url_for('static', filename='images/img3.jpg') }}');">
+      <div class="overlay">
+        <h2>Track Events</h2>
+        <p>Stay updated with every bout</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Top Moving CAUTION Tape -->
+  <div class="caution-tape-wrapper">
+    <div class="caution-tape">
+      <div class="tape-track">
+        <span>NO POLITICS</span>
+        <span>JUST BOXING</span>
+        <span>NO SCRIPT</span>
+        <span>NO FIX</span>
+        <span>JUST FISTS</span>
+        <span>EARN</span>
+        <span>YOUR</span>
+        <span>NAME</span>
+
+        <!-- Duplicate content for seamless looping -->
+        <span>NO POLITICS</span>
+        <span>JUST BOXING</span>
+        <span>NO SCRIPT</span>
+        <span>NO FIX</span>
+        <span>JUST FISTS</span>
+        <span>EARN</span>
+        <span>YOUR</span>
+        <span>NAME</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Title -->
+  <div class="section-title">Upcoming Events</div>
+
+  <!-- Event Cards -->
+  <div class="event-container">
+    <a href="{{ url_for('events_page') }}" class="event-card">
+      <img src="{{ url_for('static', filename='images/events/f32.jpg') }}" alt="Penang Fight Night poster" />
+      <div class="button">Learn More</div>
+    </a>
+
+    <a href="{{ url_for('events_page') }}" class="event-card">
+      <img src="{{ url_for('static', filename='images/events/truss.png') }}" alt="TruBoxing event poster" />
+    </a>
+
+    <a href="{{ url_for('events_page') }}" class="event-card">
+      <img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="The Fighting Kingdom poster" />
+    </a>
+
+    <a href="{{ url_for('events_page') }}" class="event-card see-more">
+      See<br>More<br>Events
+    </a>
+  </div>
+
+  <!-- Bottom Moving CAUTION Tape -->
+  <div class="caution-tape-wrapper">
+    <div class="caution-tape">
+      <div class="tape-track">
+        <span>NO POLITICS</span>
+        <span>JUST BOXING</span>
+        <span>NO SCRIPT</span>
+        <span>NO FIX</span>
+        <span>JUST FISTS</span>
+        <span>EARN</span>
+        <span>YOUR</span>
+        <span>NAME</span>
+
+        <!-- Duplicate content for seamless looping -->
+        <span>NO POLITICS</span>
+        <span>JUST BOXING</span>
+        <span>NO SCRIPT</span>
+        <span>NO FIX</span>
+        <span>JUST FISTS</span>
+        <span>EARN</span>
+        <span>YOUR</span>
+        <span>NAME</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Boxers -->
+  <section class="fx-featured" aria-labelledby="fx-featured-title">
+    <div class="fx-header">
+      <h2 id="fx-featured-title">Featured Boxers</h2>
+      <a class="fx-cta" href="{{ url_for('fighters_page') }}">See All Fighters</a>
     </div>
 
-   <div class="footer-column">
-  <h3>Social Media</h3>
-  <ul>
-    <li>
-      <a href="https://instagram.com/truboxing.co" target="_blank">
-        <i class="fab fa-instagram"></i> Instagram
-      </a>
-    </li>
-    <li>
-      <a href="https://facebook.com/truboxing.co" target="_blank">
-        <i class="fab fa-facebook-f"></i> Facebook
-      </a>
-    </li>
-    <li>
-      <a href="https://youtube.com/@truboxing" target="_blank">
-        <i class="fab fa-youtube"></i> YouTube
-      </a>
-    </li>
-  </ul>
-</div>
+    <div class="fx-grid">
+      {% for f in featured %}
+      <a class="fx-card" href="{{ url_for('fighter_profile', fighter_id=f.id) }}" aria-label="{{ f.display_name }} profile">
+        <!-- Optional ribbons -->
+        {% if f.id == 'shamel' %}<span class="fx-tag fx-red">Most Active</span>{% endif %}
+        {% if f.id == 'bazooka' %}<span class="fx-tag fx-gold">Rising Star</span>{% endif %}
+        {% if f.id == 'danny' %}<span class="fx-tag fx-blue">New Fighter</span>{% endif %}
+        {% if f.id == 'buki' %}<span class="fx-tag fx-purple">Crowd Puller</span>{% endif %}
 
+        <div class="fx-media">
+          <img class="fx-photo"
+               src="{{ url_for('static', filename=f.preview_path) }}"
+               alt="{{ f.display_name }}">
 
-<!-- Bottom Footer Note -->
+          {% if f.flag_file %}
+            <img class="fx-flag"
+                 src="{{ url_for('static', filename='images/flags/states/' ~ f.flag_file) }}"
+                 alt="{{ f.state_label }} flag">
+          {% endif %}
 
-  <p>&copy; 2025 TruRec. All rights reserved.</p>
+          {% if f.state_label %}
+            <span class="fx-pill">{{ f.state_label }}</span>
+          {% endif %}
+        </div>
+
+        <div class="fx-info">
+          <h3 class="fx-name">{{ f.display_name }}</h3>
+          <p class="fx-weight">{{ f.weight_class or '—' }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Merchandise Section -->
+  <div class="main-container">
+    <div class="merch-section">
+      <div class="merch-left">
+        <h2><span>Merchandise</span></h2>
+        <p>From Boxers For Boxers !</p>
+      </div>
+
+      <div class="merch-items">
+        <div class="merch-card">
+          <img src="{{ url_for('static', filename='images/trushrt.png') }}" alt="TruBoxing Shirt" />
+          <div class="merch-btn">Coming soon</div>
+        </div>
+
+        <div class="merch-card">
+          <img src="{{ url_for('static', filename='images/boxingkey.png') }}" alt="TruBoxing Keychain" />
+          <div class="merch-btn">Coming soon</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sponsors Section -->
+  <section id="sponsors" class="sp-section" aria-labelledby="sp-title">
+    <div class="sp-header">
+      <h2 id="sp-title">Our Sponsors</h2>
+      <p class="sp-sub">Big thanks to all our partners</p>
+    </div>
+
+    <div class="sp-grid">
+      {% for s in sponsors %}
+        <a class="sp-logo" href="{{ s.url or '#' }}" target="_blank" rel="noopener" aria-label="{{ s.name }}">
+          <div class="sp-logo-wrap">
+            <img src="{{ url_for('static', filename=s.logo_path) }}" alt="{{ s.name }}">
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+    {% set wa_text = "I'm interested in sponsoring your next event" %}
+    <div class="sp-cta">
+      <a class="sp-btn"
+         href="https://wa.me/601118808511?text={{ wa_text|urlencode }}"
+         target="_blank" rel="noopener"
+         aria-label="WhatsApp us about sponsoring the next event">
+        Become a Sponsor
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-column logo-column">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
+        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
+        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">HOME</a></li>
+          <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
+          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+          <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
+          <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
+          <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact us</h3>
+        <ul>
+          <li>📞 +60 111 8808 511</li>
+          <li>📞 +60 14 360 9582</li>
+          <li>✉️ truboxingmy@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Social Media</h3>
+        <ul>
+          <li>
+            <a href="https://instagram.com/truboxing.co" target="_blank" rel="noopener">
+              <i class="fab fa-instagram"></i> Instagram
+            </a>
+          </li>
+          <li>
+            <a href="https://facebook.com/truboxing.co" target="_blank" rel="noopener">
+              <i class="fab fa-facebook-f"></i> Facebook
+            </a>
+          </li>
+          <li>
+            <a href="https://youtube.com/@truboxing" target="_blank" rel="noopener">
+              <i class="fab fa-youtube"></i> YouTube
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer-note">&copy; 2025 TruRec. All rights reserved.</p>
+  </footer>
 
 </body>
 </html>

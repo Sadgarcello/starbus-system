@@ -41,155 +41,98 @@
     </div>
   </nav>
 
-  <!-- Featured Event Section -->
-  <section class="event-featured" aria-labelledby="tfk-title">
-    <div class="event-card-large">
-      <!-- Clickable poster (keeps your original DOM shape for CSS) -->
-      <a
-        href="https://www.instagram.com/p/DLm0ak9TQ_b/"
-        class="event-media"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="View event details on Instagram: The Fighting Kingdom – Season 1"
-      >
-        <picture>
-          <img
-            src="{{ url_for('static', filename='images/events/Teaser.png') }}"
-            alt="The Fighting Kingdom – Season 1: Join The Fight poster"
-            loading="lazy"
-          />
-        </picture>
-      </a>
 
-      <div class="event-details">
-        <h2 id="tfk-title">TRUBOXING VOLUME 2</h2>
-        <p>
-          <time datetime="2025-09-13">31 August 2025</time>
-          • Location: Heritage Valley Kuala Lumpur
-        </p>
-        <p>Registration RM60</p>
-        <p class="copy-ms">
-          The night where only the brave step into the ring! TRUBOXING VOLUME 2 returns with explosive action, brutal KOs, and unstoppable fighting spirit. From rookies to veterans — all will clash in the same arena. This isn’t just boxing… this is war!
-        </p>
 
-        <div class="event-buttons">
-          <a href="https://l.instagram.com/?u=https%3A%2F%2Fforms.gle%2F76jkofZdp1WmX3R7A%3Ffbclid%3DPAZXh0bgNhZW0CMTEAAac6kAQp5ThM_ZpFR6KWROgY62Y51gt15BbT5dVwPUHwgihTHwymP_d3sAEsVg_aem_izWOc_VEx4_lYttmRUcEnQ&e=AT1jvmhKSu7AeXU0KAofSA9HNuKyDhxB0e6htI_25PY4C-9cJY6bDrcvWf35gxhdv_Lk-Y2nmFTIYsAIPSkfnCwEK_YH9BSyg3TEeA_cb2OhU0Hb97cD9yU" class="btn register" target="_blank" rel="noopener">
-            Register Now
-          </a>
-          <!-- Event Details now points to Instagram -->
-          <a
-            href="https://www.instagram.com/truboxing.co/"
-            class="btn details"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Event Details
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Featured Event Section 2 -->
-  <section class="event-featured" aria-labelledby="tfk-title">
-    <div class="event-card-large">
-      <!-- Clickable poster (keeps your original DOM shape for CSS) -->
-      <a
-        href="https://www.instagram.com/p/DLm0ak9TQ_b/"
-        class="event-media"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="View event details on Instagram: The Fighting Kingdom – Season 1"
-      >
-        <picture>
-          <img
-            src="{{ url_for('static', filename='images/events/TFK.jpg') }}"
-            alt="The Fighting Kingdom – Season 1: Join The Fight poster"
-            loading="lazy"
-          />
-        </picture>
-      </a>
 
-      <div class="event-details">
-        <h2 id="tfk-title">The Fighting Kingdom (TFK) – Season 1: JOIN THE FIGHT</h2>
-        <p>
-          <time datetime="2025-09-13">13 September 2025</time>
-          • Location: Star Avenue Lifestyle Mall
-        </p>
-        <p>Registration RM50 · Powered by TFK × Malaysia Beatdown</p>
-        <p class="copy-ms">
-          Rasa kau ada skill? Masuk gelanggang &amp; tunjuk kau punya power 🔥
-          Slot limited bro. Cepat before penuh!
-        </p>
-
-        <div class="event-buttons">
-          <a href="https://forms.gle/yfcE7nvWobaP3gVD8" class="btn register" target="_blank" rel="noopener">
-            Register Now
-          </a>
-          <!-- Event Details now points to Instagram -->
-          <a
-            href="https://www.instagram.com/p/DLm0ak9TQ_b/"
-            class="btn details"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Event Details
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Featured Event Section 2 -->
-<section class="event-featured" aria-labelledby="f3-title">
-  <div class="event-card-large">
-    <!-- Clickable poster (keeps your original DOM shape for CSS) -->
-    <a
-      href="https://www.instagram.com/f3strike/"
-      class="event-media"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="View event details on Instagram: F3 Strike – International Fight Combat"
-    >
-      <picture>
-        <img
-          src="{{ url_for('static', filename='images/events/F3.jpg') }}"
-          alt="F3 Strike: International Fight Combat poster"
-          loading="lazy"
-        />
-      </picture>
+<section class="evm" aria-labelledby="evm-title">
+  <article class="evm-card">
+    <!-- Poster — just change the src below -->
+    <a class="evm-media"
+       href="https://www.instagram.com/f3strike?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+       target="_blank" rel="noopener">
+      <img src="{{ url_for('static', filename='images/events/f32.jpg') }}"
+           alt="TRUBOXING VOLUME 2 poster" loading="lazy">
+      <span class="evm-tag">31 AUG 2025</span>
     </a>
 
-    <div class="event-details">
-      <h2 id="f3-title">F3 Strike: International Fight Combat – JOIN THE STRIKE</h2>
-      <p>
-        <time datetime="2025-10-12">12 October 2025</time>
-        • Location: Dewan Beringin, Gombak
-      </p>
-      <p>Registration RM50 · Powered by F3 Strike × ONE PRIDE MMA Audition</p>
-      <p class="copy-ms">
-        🔥 ARE YOU READY TO STRIKE? 🔥<br>
-        Step into the Ring and prove your power. This event is also the official
-        audition for ONE PRIDE MMA selection happening the same day. Don’t miss
-        your chance to be scouted! ⚔
+    <div class="evm-body">
+      <h2 id="evm-title" class="evm-title">F3 STRIKE: International Fight Combat</h2>
+
+      <ul class="evm-meta">
+        <li>12 October 2025</li>
+        <li>Dewan Beringin, Gombak!</li>
+        <li>Registration RM80</li>
+      </ul>
+
+      <p class="evm-desc">
+        🔥 ARE YOU READY TO STRIKE? 🔥
+
+💥 REGISTRATION IS NOW OPEN!
+Think you’ve got what it takes? Step into the Ring and prove it.
+
+🚨 MMA Fighters — Register NOW!
+This event also serves as the official audition for ONE PRIDE MMA selection happening on the same day! Don’t miss your chance to be scouted.
+
+⚔ Fighters from all styles. One night. One shot.
+
+📲 Register now before it’s too late!
+
       </p>
 
-      <div class="event-buttons">
-        <a href="https://forms.gle/oVYkaA17eXA1oLyC9" class="btn register" target="_blank" rel="noopener">
-          Register Now
-        </a>
-        <!-- Event Details now points to Instagram -->
-        <a
-          href="https://www.instagram.com/f3strike/"
-          class="btn details"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Event Details
-        </a>
+      <div class="evm-actions">
+        <a class="evm-btn evm-primary"
+           href="https://forms.gle/oVYkaA17eXA1oLyC9"
+           target="_blank" rel="noopener">Register Now</a>
+        <a class="evm-btn evm-ghost"
+           href="https://www.instagram.com/f3strike?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+           target="_blank" rel="noopener">Event Details</a>
       </div>
     </div>
-  </div>
+  </article>
+</section>
+
+<section class="evm" aria-labelledby="evm-title-tfk">
+  <article class="evm-card">
+    <!-- Poster -->
+    <a class="evm-media"
+       href="https://www.instagram.com/tfkchampionships?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+       target="_blank" rel="noopener">
+      <img
+        src="{{ url_for('static', filename='images/events/TFK.jpg') }}"
+        alt="The Fighting Kingdom (TFK) – Season 1: Join The Fight poster"
+        loading="lazy">
+      <span class="evm-tag">13 SEP 2025</span>
+    </a>
+
+    <!-- Body -->
+    <div class="evm-body">
+      <h2 id="evm-title-tfk" class="evm-title">
+        The Fighting Kingdom (TFK) – Season 1: JOIN THE FIGHT
+      </h2>
+
+      <ul class="evm-meta">
+        <li>Sat, 13 Sep 2025</li>
+        <li>Star Avenue Lifestyle Mall</li>
+        <li>Registration RM50</li>
+        <li>Powered by TFK × Malaysia Beatdown</li>
+      </ul>
+
+      <p class="evm-desc">
+        Rasa kau ada skill? Masuk gelanggang &amp; tunjuk kau punya power 🔥
+        Slot limited bro — cepat before penuh!
+      </p>
+
+      <div class="evm-actions">
+        <a class="evm-btn evm-primary"
+           href="https://docs.google.com/forms/d/e/1FAIpQLSfLS7wJKIOQq5C62rJ-ziOl5hAg-oHuGdL9rIQ7xvTEqp8N5Q/viewform"
+           target="_blank" rel="noopener">Register Now</a>
+        <a class="evm-btn evm-ghost"
+           href="https://www.instagram.com/tfkchampionships?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+           target="_blank" rel="noopener">Event Details</a>
+      </div>
+    </div>
+  </article>
 </section>
 
 

@@ -1,0 +1,124 @@
+[1mdiff --git a/templates/index.html b/templates/index.html[m
+[1mindex b50496a..336e3c1 100644[m
+[1m--- a/templates/index.html[m
+[1m+++ b/templates/index.html[m
+[36m@@ -91,21 +91,25 @@[m [mFor Real Boxers.</h1>[m
+ [m
+ <!-- Event Cards -->[m
+ <div class="event-container">[m
+[31m-  <div class="event-card">[m
+[31m-<img src="{{ url_for('static', filename='images/events/Teaser.png') }}" alt="Penang Fight Night poster" />[m
+[32m+[m[32m  <a href="{{ url_for('events_page') }}" class="event-card">[m
+[32m+[m[32m    <img src="{{ url_for('static', filename='images/events/Teaser.png') }}" alt="Penang Fight Night poster" />[m
+     <div class="button">Learn More</div>[m
+[31m-  </div>[m
+[31m-  <div class="event-card">[m
+[31m-    <img src="{{ url_for('static', filename='images/events/truss.png') }}" />[m
+[31m-  </div>[m
+[31m-  <div class="event-card">[m
+[31m-<img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="Penang Fight Night poster" />[m
+[31m-  </div>[m
+[31m-  <div class="event-card see-more">[m
+[32m+[m[32m  </a>[m
+[32m+[m
+[32m+[m[32m  <a href="{{ url_for('events_page') }}" class="event-card">[m
+[32m+[m[32m    <img src="{{ url_for('static', filename='images/events/F32.jpg') }}" />[m
+[32m+[m[32m  </a>[m
+[32m+[m
+[32m+[m[32m  <a href="{{ url_for('events_page') }}" class="event-card">[m
+[32m+[m[32m    <img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="Penang Fight Night poster" />[m
+[32m+[m[32m  </a>[m
+[32m+[m
+[32m+[m[32m  <a href="{{ url_for('events_page') }}" class="event-card see-more">[m
+     See<br />More<br />Events[m
+[31m-  </div>[m
+[32m+[m[32m  </a>[m
+ </div>[m
+ [m
+[32m+[m
+ <!-- Bottom Moving CAUTION Tape -->[m
+ <div class="caution-tape-wrapper">[m
+   <div class="caution-tape">[m
+[36m@@ -135,54 +139,42 @@[m [mFor Real Boxers.</h1>[m
+ [m
+ <div class="boxer-section">[m
+   <div class="boxer-title">Featured Boxers</div>[m
+[31m-[m
+   <div class="boxer-container">[m
+ [m
+[31m-<a href="{{ url_for('fighter_profile', fighter_id='shamel') }}" class="boxer-card">[m
+[31m-      <div class="boxer-card">[m
+[31m-        <div class="ribbon red">Most Active</div>[m
+[31m-        <img src="{{ url_for('static', filename='images/shamelprev.png') }}" alt="Shamel Salahudin" />[m
+[31m-        <div class="boxer-info">[m
+[31m-          <h3>SHAMEL SALAHUDIN</h3>[m
+[31m-          <p>Light Heavyweight</p>[m
+[31m-        </div>[m
+[32m+[m[32m    {% for f in featured %}[m
+[32m+[m[32m    <a href="{{ url_for('fighter_profile', fighter_id=f.id) }}" class="boxer-card">[m
+[32m+[m[32m      {# Example ribbons by ID (optional) #}[m
+[32m+[m[32m      {% if f.id == 'shamel' %}<div class="ribbon red">Most Active</div>{% endif %}[m
+[32m+[m[32m      {% if f.id == 'bazooka' %}<div class="ribbon yellow">Rising Star</div>{% endif %}[m
+[32m+[m[32m      {% if f.id == 'danny' %}<div class="ribbon blue">New Fighter</div>{% endif %}[m
+[32m+[m[32m      {% if f.id == 'koroy' %}<div class="ribbon purple">Featured influencer</div>{% endif %}[m
+[32m+[m
+[32m+[m[32m      <div class="card-img-wrap">[m
+[32m+[m[32m        <img class="card-photo"[m
+[32m+[m[32m             src="{{ url_for('static', filename=f.preview_path) }}"[m
+[32m+[m[32m             alt="{{ f.display_name }}">[m
+[32m+[m
+[32m+[m[32m        {% if f.flag_file %}[m
+[32m+[m[32m          <img class="flag-badge"[m
+[32m+[m[32m               src="{{ url_for('static', filename='images/flags/states/' ~ f.flag_file) }}"[m
+[32m+[m[32m               alt="{{ f.state_label }} flag">[m
+[32m+[m[32m        {% endif %}[m
+[32m+[m
+[32m+[m[32m        {% if f.state_label %}[m
+[32m+[m[32m          <span class="flag-pill">{{ f.state_label }}</span>[m
+[32m+[m[32m        {% endif %}[m
+       </div>[m
+[31m-    </a>[m
+ [m
+[31m-<a href="{{ url_for('fighter_profile', fighter_id='bazooka') }}" class="boxer-card">[m
+[31m-      <div class="boxer-card">[m
+[31m-        <div class="ribbon yellow">Rising Star</div>[m
+[31m-        <img src="{{ url_for('static', filename='images/imranprev.png') }}" alt="Imran bazooka" />[m
+[31m-        <div class="boxer-info">[m
+[31m-          <h3>IMRAN BAZOOKA</h3>[m
+[31m-          <p>Light Heavyweight</p>[m
+[31m-        </div>[m
+[31m-      </div>[m
+[31m-    </a>[m
+[31m-[m
+[31m-<a href="{{ url_for('fighter_profile', fighter_id='danny') }}" class="boxer-card">[m
+[31m-      <div class="boxer-card">[m
+[31m-        <div class="ribbon blue">New Fighter</div>[m
+[31m-        <img src="{{ url_for('static', filename='images/dannyprev.png') }}" alt="danny" />[m
+[31m-        <div class="boxer-info">[m
+[31m-          <h3>DANNY BOYZ</h3>[m
+[31m-          <p>Lightweight</p>[m
+[31m-        </div>[m
+[31m-      </div>[m
+[31m-    </a>[m
+[31m-[m
+[31m-<a href="{{ url_for('fighter_profile', fighter_id='Thanish') }}" class="boxer-card">[m
+[31m-      <div class="boxer-card">[m
+[31m-        <div class="ribbon purple">Crowd Puller</div>[m
+[31m-        <img src="{{ url_for('static', filename='images/thanishprev.png') }}" alt="Thanesh Ganesan" />[m
+[31m-        <div class="boxer-info">[m
+[31m-          <h3>THANESH GANESAN</h3>[m
+[31m-          <p>Middle Weight</p>[m
+[31m-        </div>[m
+[32m+[m[32m      <div class="boxer-info">[m
+[32m+[m[32m        <h3>{{ f.display_name }}</h3>[m
+[32m+[m[32m        <p>{{ f.weight_class or '—' }}</p>[m
+       </div>[m
+     </a>[m
+[32m+[m[32m    {% endfor %}[m
+ [m
+   </div>[m
+[32m+[m[32m</div>[m
+[32m+[m
+ [m
+   <div class="see-all-btn">[m
+     <a href="{{ url_for('fighters_page') }}">See All Fighters</a>[m

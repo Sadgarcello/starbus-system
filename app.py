@@ -1,6 +1,8 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for
-import sqlite3, os, shutil
+import sqlite3
+import os
+import shutil
 
 app = Flask(__name__)
 
@@ -22,16 +24,17 @@ if USE_DISK and (not os.path.exists(DISK_DB)) and os.path.exists(REPO_DB):
 DB_PATH = DISK_DB if USE_DISK else REPO_DB
 print("USING DB:", DB_PATH)
 
+
 def get_conn():
-    # check_same_thread=False for threaded servers; set row_factory later per-conn
+    """Open a SQLite connection to the active DB (repo or Render disk)."""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 # --------------------------------------------------------------------
 
 
-# Fallback list (unchanged)
-fighters = []
+# -------------------------- Data helpers -----------------------------
+fighters_fallback = []
 
 
 def get_fighters_from_db():
@@ -45,14 +48,11 @@ def get_fighters_from_db():
 
 
 def get_fighter_by_id_from_db(fighter_id: str):
-    # sanitize + normalize
     fighter_id = (fighter_id or "").strip().lower()
-
     conn = get_conn()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    # case-insensitive match on id
     c.execute("SELECT * FROM fighters WHERE LOWER(id) = ?", (fighter_id,))
     fighter = c.fetchone()
     if not fighter:
@@ -61,22 +61,98 @@ def get_fighter_by_id_from_db(fighter_id: str):
 
     fighter_dict = dict(fighter)
 
-    # newest fights first
-    c.execute("""
+    c.execute(
+        """
         SELECT result, opponent, date, method, org
         FROM fight_history
         WHERE LOWER(fighter_id) = ?
         ORDER BY date DESC
-    """, (fighter_id,))
+        """,
+        (fighter_id,),
+    )
     fighter_dict["fight_history"] = [dict(r) for r in c.fetchall()]
 
     conn.close()
     return fighter_dict
+# --------------------------------------------------------------------
+
+# Sponsors data (renamed to avoid route name clash)
+SPONSORS = [
+    {"name": "Abang Besi", "logo_path": "images/sponsers/besi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
+    {"name": "FLERR",      "logo_path": "images/sponsers/ko.png",      "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
+    {"name": "Kaboom.my",  "logo_path": "images/sponsers/kaboom.png",     "url": "https://kaboom.my"},
+    {"name": "Shedap",     "logo_path": "images/sponsers/tsl.png",     "url": "https://teamsoundandlight.com/"},
+    {"name": "R8Y",        "logo_path": "images/sponsers/trurec.png",        "url": "https://truboxing.co/fighters"},
+]
+# (Removed the stray module-level `return render_template(...)`)
+
+# ----------------------- Home page featured --------------------------
+FEATURED_IDS = ["shamel", "bazooka", "danny", "buki"]
+
+STATE_FLAG_MAP = {
+    "selangor": "selangor.png",
+    "sarawak": "sarawak.png",
+    "kuala-lumpur": "kuala-lumpur.png",
+    "sabah": "sabah.png",
+    # add more as needed…
+}
 
 
+def normalize_state_from_country(country: str) -> tuple[str, str]:
+    if not country:
+        return ("", "")
+
+    state = ""
+    if "(" in country and ")" in country:
+        state = country.split("(", 1)[1].split(")", 1)[0].strip()
+
+    if not state and country.lower() not in ("malaysia",):
+        state = country.strip()
+
+    state_label = state
+    key = state.lower().replace(" ", "-") if state else ""
+    flag_file = STATE_FLAG_MAP.get(key, "")
+    return (state_label, flag_file)
+# --------------------------------------------------------------------
+
+
+# ------------------------------ Routes -------------------------------
 @app.route("/")
 def home():
-    return render_template("index.html")
+    """Home page: Featured Boxers + Sponsors."""
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    q = f"""
+      SELECT id, name, nickname, weight_class, image_profile, country
+      FROM fighters
+      WHERE id IN ({",".join("?" * len(FEATURED_IDS))})
+      ORDER BY CASE id
+        WHEN 'shamel' THEN 1
+        WHEN 'bazooka' THEN 2
+        WHEN 'danny'   THEN 3
+        WHEN 'buki'    THEN 4
+        ELSE 99 END
+    """
+    rows = [dict(r) for r in conn.execute(q, FEATURED_IDS).fetchall()]
+    conn.close()
+
+    featured = []
+    for f in rows:
+        img = f.get("image_profile") or "placeholders/fighter_placeholder.png"
+        preview_path = "images/fighters/" + img
+        state_label, flag_file = normalize_state_from_country(f.get("country") or "")
+        featured.append(
+            {
+                "id": f.get("id", ""),
+                "display_name": (f.get("name") or "").upper(),
+                "weight_class": f.get("weight_class", ""),
+                "preview_path": preview_path,
+                "state_label": state_label,
+                "flag_file": flag_file,
+            }
+        )
+
+    return render_template("index.html", featured=featured, sponsors=SPONSORS)
 
 
 @app.route("/fighters")
@@ -87,20 +163,20 @@ def fighters_page():
         data = get_fighters_from_db()
     except Exception as e:
         print("⚠ DB Error, using backup list:", e)
-        data = fighters
+        data = fighters_fallback
 
     filtered = []
     for f in data:
-        name_ok = search_query in f.get("name", "").lower()
-        weight_ok = weight_filter in f.get("weight_class", "").lower() if weight_filter else True
+        name_ok = search_query in (f.get("name", "") or "").lower()
+        weight_ok = weight_filter in (f.get("weight_class", "") or "").lower() if weight_filter else True
         if name_ok and weight_ok:
             filtered.append(f)
+
     return render_template("fighters.html", fighters=filtered)
 
 
 @app.route("/fighter/<fighter_id>")
 def fighter_profile(fighter_id):
-    # sanitize + normalize, and redirect if URL is dirty
     clean_id = (fighter_id or "").strip().lower()
     if clean_id != fighter_id:
         return redirect(url_for("fighter_profile", fighter_id=clean_id), code=301)
@@ -109,10 +185,14 @@ def fighter_profile(fighter_id):
         fighter = get_fighter_by_id_from_db(clean_id)
     except Exception as e:
         print("⚠ DB Error, using backup list:", e)
-        fighter = next((f for f in fighters if f.get("id", "").strip().lower() == clean_id), None)
+        fighter = next(
+            (f for f in fighters_fallback if (f.get("id", "") or "").strip().lower() == clean_id),
+            None,
+        )
 
     if not fighter:
         return "Fighter not found", 404
+
     return render_template("fighter_profile.html", fighter=fighter)
 
 
@@ -127,8 +207,9 @@ def merchandise():
 
 
 @app.route("/sponsors")
-def sponsors():
-    return render_template("sponsors.html")
+def sponsors_page():
+    # If you have a dedicated sponsors page, pass the data too.
+    return render_template("sponsors.html", sponsors=SPONSORS)
 
 
 @app.route("/contact")
@@ -145,30 +226,30 @@ def test_db():
         return f"DB error: {e}", 500
 
 
-# quick backend check (optional)
 @app.route("/debug-fights/<fighter_id>")
 def debug_fights(fighter_id):
     fid = (fighter_id or "").strip().lower()
     conn = get_conn()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("""
+    c.execute(
+        """
         SELECT result, opponent, date, method, org
         FROM fight_history
         WHERE LOWER(fighter_id) = ?
         ORDER BY date DESC
-    """, (fid,))
+        """,
+        (fid,),
+    )
     rows = [dict(r) for r in c.fetchall()]
     conn.close()
     return "<br>".join([f"{r['date']} — {r['opponent']} — {r['result']} — {r['org']}" for r in rows])
 
 
-# health check for Render
 @app.route("/healthz")
 def healthz():
     return "ok", 200
-
+# --------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # For local dev only; Render will run via its own start command
     app.run(debug=True)

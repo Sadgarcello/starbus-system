@@ -47,6 +47,7 @@
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsers/tsl.png') }}" alt="TSL"></div>
         <!-- Add more as needed -->
       </div>
+      
 <!-- Minimal Clean Sponsor Block (TruRec) -->
 <section id="trurec" class="sponsor-feature v1" style="--accent:#00e5ff; --text:#0b1220; --bg:#ffffff;">
   <div class="sf2">
@@ -58,7 +59,7 @@
         and career stats. Trusted by promoters and coaches nationwide.
       </p>
       <div class="sf2-cta">
-        <a class="sf2-btn" href="https://truboxing.co/trurec" target="_blank" rel="noopener">Visit Website</a>
+        <a class="sf2-btn" href="https://truboxing.co/fighters" target="_blank" rel="noopener">Visit Website</a>
       </div>
       <ul class="sf2-meta">
         <li>Since 2025</li>
@@ -80,23 +81,23 @@
     </figure>
   </div>
 </section>
+
 <!-- Minimal Clean Sponsor Block (Abang Besi) -->
 <section id="abang-besi" class="sponsor-feature v1" style="--accent:#f97316; --text:#0b1220; --bg:#ffffff;">
   <div class="sf2">
     <div class="sf2-body">
       <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/Besi.png') }}" alt="Abang Besi logo">
-      <h2 class="sf2-title">Shamel “Abang Besi” — Light Heavyweight</h2>
+      <h2 class="sf2-title">Abang Besi</h2>
       <p class="sf2-desc">
-        Fan favorite with heavy hands and relentless pressure. Follow Abang Besi’s journey in the ring,
-        highlights, and upcoming fight announcements.
+       Abang Besi is the backbone behind our ring. From custom steel fabrication to on-site installation,
+        they handled the frame, anchors, trussing and safety checks so our fighters step into a ring that’s solid,
+         square, and fight-ready. Big love to Abang Besi for turning metal into moments. 🥊
       </p>
       <div class="sf2-cta">
-        <a class="sf2-btn" href="/fighters" rel="noopener">View Fighter Profile</a>
-        <a class="sf2-btn ghost" href="/events">Upcoming Bouts</a>
+        <a class="sf2-btn" href="https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" rel="noopener">learn more</a>
       </div>
       <ul class="sf2-meta">
-        <li>Record: 23–17–0 (19 KOs)</li>
-        <li>Stance: Orthodox</li>
+        <li>Category: Infrastructure </li>
         <li>Country: Malaysia</li>
       </ul>
     </div>
@@ -121,15 +122,27 @@
 <section id="kaboom" class="sponsor-feature v1" style="--accent:#f59e0b; --text:#0b1220; --bg:#ffffff;">
   <div class="sf2">
     <div class="sf2-body">
-      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/kaboom.png') }}" alt="Kaboom.my logo">
+      <a href="https://kaboom.my" target="_blank" rel="noopener">
+        <img class="sf2-logo"
+             src="{{ url_for('static', filename='images/sponsers/kaboom.png') }}"
+             alt="Kaboom.my logo">
+      </a>
+
       <h2 class="sf2-title">Kaboom.my — Marketing Partner</h2>
       <p class="sf2-desc">
         Full-service marketing support powering TruBoxing campaigns — brand strategy, social media,
         on-site content, and sponsor activations that actually convert.
       </p>
+
       <div class="sf2-cta">
-        <a class="sf2-btn" href="https://kaboom.my" target="_blank" rel="noopener">Visit Website</a>
+        <a class="sf2-btn"
+           href="https://kaboom.my"
+           target="_blank" rel="noopener"
+           aria-label="Visit Kaboom.my website">
+          Visit Website
+        </a>
       </div>
+
       <ul class="sf2-meta">
         <li>Scope: Strategy & Social</li>
         <li>Activation: Event Coverage</li>
@@ -137,18 +150,12 @@
       </ul>
     </div>
 
-    <!-- Video (replace VIDEO_ID) OR use the commented image fallback -->
+    <!-- Media -->
     <figure class="sf2-media">
-      <iframe
-        class="sf2-video"
-        src="https://www.youtube-nocookie.com/embed/VIDEO_ID?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=VIDEO_ID"
-        title="Kaboom.my reel"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        loading="lazy"
-        referrerpolicy="strict-origin-when-cross-origin"
-      ></iframe>
-      <!-- <img src="{{ url_for('static', filename='images/sponsers/kaboom-hero.jpg') }}" alt="Kaboom.my work"> -->
+      <img
+        src="{{ url_for('static', filename='images/sponsers/kaboomfeed.png') }}"
+        alt="Kaboom.my campaign showcase"
+        loading="lazy">
     </figure>
   </div>
 </section>
@@ -173,23 +180,19 @@
       </ul>
     </div>
 
+    <!-- Image instead of video -->
     <figure class="sf2-media">
-      <iframe
-        class="sf2-video"
-        src="https://www.youtube-nocookie.com/embed/VIDEO_ID?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=VIDEO_ID"
-        title="Knockout Media BTS"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        loading="lazy"
-        referrerpolicy="strict-origin-when-cross-origin"
-      ></iframe>
-      <!-- <img src="{{ url_for('static', filename='images/sponsers/ko-hero.jpg') }}" alt="Knockout Media production"> -->
+      <img
+        src="{{ url_for('static', filename='images/sponsers/komedia.jpg') }}"
+        alt="Knockout Media production highlight"
+        loading="lazy">
     </figure>
   </div>
 </section>
 
 <!-- Team Sound & Light — Event Production -->
 <section id="team-sound-light" class="sponsor-feature v1" style="--accent:#22c55e; --text:#0b1220; --bg:#ffffff;">
+  {% set wa_text = "hi i came from truboxing website sponsers page im interested in working with team sound and light" %}
   <div class="sf2">
     <div class="sf2-body">
       <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsers/tsl.png') }}" alt="Team Sound & Light logo">
@@ -199,8 +202,20 @@
         so every punch lands with impact.
       </p>
       <div class="sf2-cta">
-        <a class="sf2-btn" href="#contact" rel="noopener">Book for Event</a>
-        <a class="sf2-btn ghost" href="/sponsors/team-sound-light">Learn More</a>
+        <!-- WhatsApp with prefilled message -->
+        <a class="sf2-btn"
+           href="https://wa.me/60163700483?text={{ wa_text|urlencode }}"
+           target="_blank" rel="noopener"
+           aria-label="WhatsApp Team Sound & Light">
+          Book for Event
+        </a>
+
+        <!-- Replace the URL below with their actual website if different -->
+        <a class="sf2-btn ghost"
+           href="https://teamsoundandlight.com/"
+           target="_blank" rel="noopener">
+          Learn More
+        </a>
       </div>
       <ul class="sf2-meta">
         <li>Systems: PA & Lighting</li>
@@ -209,17 +224,16 @@
       </ul>
     </div>
 
-<!-- Team Sound & Light — use an image instead of video -->
-<figure class="sf2-media">
-  <img
-    src="{{ url_for('static', filename='images/sponsers/TSL.jpeg') }}"
-    alt="Team Sound & Light stage setup"
-    loading="lazy"
-  >
-</figure>
-
+    <!-- Media -->
+    <figure class="sf2-media">
+      <img
+        src="{{ url_for('static', filename='images/sponsers/TSL.jpeg') }}"
+        alt="Team Sound & Light stage setup"
+        loading="lazy">
+    </figure>
   </div>
 </section>
+
 
  
     </div>

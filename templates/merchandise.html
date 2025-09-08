@@ -4,106 +4,93 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Merchandise | TruBoxing</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/merchandise.css', v='3') }}">
 
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-  @media (min-width: 769px) {
-    .burger {
-      display: none !important;
-    }
-  }
-</style>
-
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <!-- Navbar -->
-<nav class="navbar">
-  <div class="navbar-container">
-<a href="/">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
-    </a>
-    <!-- Burger Icon (For mobile) -->
-  <i class="fas fa-bars burger" id="burger"></i>
 
-
-
-    <!-- Navigation Links -->
-    <ul class="nav-links" id="navLinks">
-      <li><a href="/">Home</a></li>
-      <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-      <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-      <li><a href="/merchandise">MERCHANDISE</a></li>
-      <li><a href="/sponsors">SPONSORS</a></li>
-      <li><a href="/contact">CONTACT US</a></li>
-    </ul>
-  </div>
-</nav>
-
-  <div class="coming-soon-container">
-    <h1>Merchandise</h1>
-    <p>🚧 Coming Soon 🚧</p>
-  </div>
-
-  <!-- Footer Section -->
-<footer class="footer">
-  <div class="footer-content">
-    <div class="footer-column logo-column">
-<img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
-      <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong>
-      </p>
-      <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
-    </div>
-
-    <div class="footer-column">
-      <h3>Quick Links</h3>
-      <ul>
+<body class="page-merch">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing logo" class="logo" /></a>
+      <i class="fas fa-bars burger" id="burger" aria-label="Open menu" role="button" tabindex="0"></i>
+      <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
-        <li><a href="/events">EVENTS</a></li>
+        <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
         <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-        <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors">SPONSORS</a></li>
-        <li><a href="/contact">CONTACT US</a></li>
+        <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
+        <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
+        <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
       </ul>
     </div>
+  </nav>
 
-    <div class="footer-column">
-      <h3>Contact us</h3>
-      <ul>
-        <li>📞 +60 111 8808 511</li>
-        <li>📞 +60 14 360 9582</li>
-        <li>✉️ truboxingmy@gmail.com</li>
-      </ul>
+  <main role="main" class="container">
+    <div class="coming-soon-container">
+      <h1>Merchandise</h1>
+      <p>🚧 Coming Soon 🚧</p>
+
+      <!-- WhatsApp CTA -->
+      <div class="cta-row">
+        <a
+          class="btn btn-whatsapp"
+          href="https://wa.me/601118808511?text=I%20want%20to%20collab%20with%20TruBoxing%20on%20the%20merchandise%20side."
+          target="_blank"
+          rel="noopener"
+        >
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+          WhatsApp: Collaborate on Merchandise
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-column logo-column">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing logo" class="footer-logo">
+        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
+        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">HOME</a></li>
+          <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
+          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+          <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
+          <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
+          <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact us</h3>
+        <ul>
+          <li>📞 +60 111 8808 511</li>
+          <li>📞 +60 14 360 9582</li>
+          <li>✉️ truboxingmy@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Social Media</h3>
+        <ul>
+          <li><a href="https://instagram.com/truboxing.co" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
+          <li><a href="https://facebook.com/truboxing.co" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a></li>
+          <li><a href="https://youtube.com/@truboxing" target="_blank" rel="noopener"><i class="fab fa-youtube"></i> YouTube</a></li>
+        </ul>
+      </div>
     </div>
 
-   <div class="footer-column">
-  <h3>Social Media</h3>
-  <ul>
-    <li>
-      <a href="https://instagram.com/truboxing.co" target="_blank">
-        <i class="fab fa-instagram"></i> Instagram
-      </a>
-    </li>
-    <li>
-      <a href="https://facebook.com/truboxing.co" target="_blank">
-        <i class="fab fa-facebook-f"></i> Facebook
-      </a>
-    </li>
-    <li>
-      <a href="https://youtube.com/@truboxing" target="_blank">
-        <i class="fab fa-youtube"></i> YouTube
-      </a>
-    </li>
-  </ul>
-</div>
-
-
-<!-- Bottom Footer Note -->
-
-  <p>&copy; 2025 TruRec. All rights reserved.</p>
-
+    <p class="bottom-note">&copy; 2025 TruRec. All rights reserved.</p>
+  </footer>
 </body>
 </html>

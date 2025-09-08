@@ -113,8 +113,8 @@ SPONSORS = [
     {"name": "Abang Besi", "logo_path": "images/sponsors/abangbesi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
     {"name": "ko",         "logo_path": "images/sponsors/ko.png",        "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
     {"name": "Kaboom.my",  "logo_path": "images/sponsors/kaboom.png",    "url": "https://kaboom.my"},
-    {"name": "Shedap",     "logo_path": "images/sponsors/trurec.png",    "url": "https://truboxing.co/fighters"},
-    {"name": "R8Y",        "logo_path": "images/sponsors/tsl.png",       "url": "https://teamsoundandlight.com/"},
+    {"name": "trurec",     "logo_path": "images/sponsors/trurec.png",    "url": "https://truboxing.co/fighters"},
+    {"name": "TSL",        "logo_path": "images/sponsors/tsl.png",       "url": "https://teamsoundandlight.com/"},
 ]
 # --------------------------------------------------------------------
 

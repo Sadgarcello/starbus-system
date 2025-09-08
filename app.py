@@ -34,8 +34,7 @@ def get_conn():
 
 
 # -------------------------- Data helpers -----------------------------
-fighters_fallback = []
-
+fighters_fallback = []  # optional in-memory fallback if DB fails
 
 def get_fighters_from_db():
     conn = get_conn()
@@ -76,15 +75,6 @@ def get_fighter_by_id_from_db(fighter_id: str):
     return fighter_dict
 # --------------------------------------------------------------------
 
-# Sponsors data (renamed to avoid route name clash)
-SPONSORS = [
-    {"name": "Abang Besi", "logo_path": "images/sponsers/besi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
-    {"name": "FLERR",      "logo_path": "images/sponsers/ko.png",      "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
-    {"name": "Kaboom.my",  "logo_path": "images/sponsers/kaboom.png",     "url": "https://kaboom.my"},
-    {"name": "Shedap",     "logo_path": "images/sponsers/tsl.png",     "url": "https://teamsoundandlight.com/"},
-    {"name": "R8Y",        "logo_path": "images/sponsers/trurec.png",        "url": "https://truboxing.co/fighters"},
-]
-# (Removed the stray module-level `return render_template(...)`)
 
 # ----------------------- Home page featured --------------------------
 FEATURED_IDS = ["shamel", "bazooka", "danny", "buki"]
@@ -99,6 +89,7 @@ STATE_FLAG_MAP = {
 
 
 def normalize_state_from_country(country: str) -> tuple[str, str]:
+    """Extract a state label from 'Malaysia (Selangor)' style strings and map to a flag file."""
     if not country:
         return ("", "")
 
@@ -107,6 +98,7 @@ def normalize_state_from_country(country: str) -> tuple[str, str]:
         state = country.split("(", 1)[1].split(")", 1)[0].strip()
 
     if not state and country.lower() not in ("malaysia",):
+        # If it's not Malaysia, show the country itself as 'state' label (fallback).
         state = country.strip()
 
     state_label = state
@@ -116,16 +108,29 @@ def normalize_state_from_country(country: str) -> tuple[str, str]:
 # --------------------------------------------------------------------
 
 
+# ----------------------------- Sponsors ------------------------------
+SPONSORS = [
+    {"name": "Abang Besi", "logo_path": "images/sponsors/abangbesi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
+    {"name": "ko",         "logo_path": "images/sponsors/ko.png",        "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
+    {"name": "Kaboom.my",  "logo_path": "images/sponsors/kaboom.png",    "url": "https://kaboom.my"},
+    {"name": "Shedap",     "logo_path": "images/sponsors/trurec.png",    "url": "https://truboxing.co/fighters"},
+    {"name": "R8Y",        "logo_path": "images/sponsors/tsl.png",       "url": "https://teamsoundandlight.com/"},
+]
+# --------------------------------------------------------------------
+
+
 # ------------------------------ Routes -------------------------------
 @app.route("/")
 def home():
     """Home page: Featured Boxers + Sponsors."""
     conn = get_conn()
     conn.row_factory = sqlite3.Row
+
+    placeholders = ",".join("?" * len(FEATURED_IDS))
     q = f"""
       SELECT id, name, nickname, weight_class, image_profile, country
       FROM fighters
-      WHERE id IN ({",".join("?" * len(FEATURED_IDS))})
+      WHERE id IN ({placeholders})
       ORDER BY CASE id
         WHEN 'shamel' THEN 1
         WHEN 'bazooka' THEN 2
@@ -250,6 +255,7 @@ def debug_fights(fighter_id):
 def healthz():
     return "ok", 200
 # --------------------------------------------------------------------
+
 
 if __name__ == "__main__":
     app.run(debug=True)

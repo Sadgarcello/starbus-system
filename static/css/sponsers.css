@@ -33,7 +33,7 @@
   transition: transform .2s ease, box-shadow .2s ease;
 }
 .sponsor-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
-.sponsor-card img { max-width: 100%; max-height: 70px; object-fit: contain; }
+.sponsor-card img { max-width: 100%; max-height: 120px; object-fit: contain; }
 
 /* -----------------------
    SPONSOR BLOCK (Neutral / Pro)

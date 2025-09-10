@@ -1,8 +1,9 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 import sqlite3
 import os
 import shutil
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -73,6 +74,28 @@ def get_fighter_by_id_from_db(fighter_id: str):
 
     conn.close()
     return fighter_dict
+
+
+def list_fighter_ids():
+    """Return a list of fighter IDs for sitemap (lowercased, unique)."""
+    try:
+        conn = get_conn()
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT LOWER(id) AS id FROM fighters")
+        ids = [r["id"] for r in c.fetchall() if r["id"]]
+        conn.close()
+        # Deduplicate while preserving order
+        seen = set()
+        unique = []
+        for fid in ids:
+            if fid not in seen:
+                unique.append(fid)
+                seen.add(fid)
+        return unique
+    except Exception as e:
+        print("⚠ list_fighter_ids DB error:", e)
+        return []
 # --------------------------------------------------------------------
 
 
@@ -251,11 +274,73 @@ def debug_fights(fighter_id):
     return "<br>".join([f"{r['date']} — {r['opponent']} — {r['result']} — {r['org']}" for r in rows])
 
 
+# ------------------------- SEO: robots & sitemap ----------------------
+@app.route("/robots.txt")
+def robots():
+    """
+    Tell crawlers what NOT to index and where the sitemap is.
+    Update as needed if you add private/utility routes.
+    """
+    lines = [
+        "User-agent: *",
+        "Disallow: /watch",
+        "Disallow: /checkout",
+        "Disallow: /thank-you",
+        "Disallow: /test-db",
+        "Disallow: /debug-fights",
+        "Sitemap: https://truboxing.co/sitemap.xml",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    """
+    XML sitemap for search engines. Includes core pages + every fighter profile.
+    When you later add /events/<slug>, generate those URLs here too.
+    """
+    # Public core pages you want indexed
+    core_pages = [
+        url_for("home", _external=True),
+        url_for("fighters_page", _external=True),
+        url_for("events_page", _external=True),
+        url_for("sponsors_page", _external=True),
+        url_for("merchandise", _external=True),
+        url_for("contact", _external=True),
+    ]
+
+    # Dynamic fighter profile URLs
+    fighter_urls = [
+        url_for("fighter_profile", fighter_id=fid, _external=True)
+        for fid in list_fighter_ids()
+    ]
+
+    urls = core_pages + fighter_urls
+    lastmod = datetime.utcnow().date().isoformat()
+
+    # Build XML
+    xml_parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ]
+    for loc in urls:
+        xml_parts.append("<url>")
+        xml_parts.append(f"<loc>{loc}</loc>")
+        xml_parts.append(f"<lastmod>{lastmod}</lastmod>")
+        xml_parts.append("<changefreq>weekly</changefreq>")
+        xml_parts.append("<priority>0.7</priority>")
+        xml_parts.append("</url>")
+    xml_parts.append("</urlset>")
+
+    return Response("\n".join(xml_parts), mimetype="application/xml")
+# ---------------------------------------------------------------------
+
+
 @app.route("/healthz")
 def healthz():
     return "ok", 200
+
+
 # --------------------------------------------------------------------
-
-
 if __name__ == "__main__":
     app.run(debug=True)

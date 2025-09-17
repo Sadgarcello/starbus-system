@@ -1,20 +1,41 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+ <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Events | TruRec</title>
 
-  <!-- FontAwesome (optional) -->
+  <!-- SEO: title + description -->
+  <title>Boxing Events in Malaysia – Dates, Venues, Registration | TruBoxing</title>
+  <meta name="description" content="Upcoming and past TruBoxing events in Malaysia. Dates, venues, fight cards, and registration/PPV info." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ url_for('events_page', _external=True) }}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="TruBoxing"/>
+  <meta property="og:title" content="Boxing Events in Malaysia – Dates, Venues, Registration | TruBoxing"/>
+  <meta property="og:description" content="Upcoming and past TruBoxing events in Malaysia. Dates, venues, fight cards, and registration/PPV info."/>
+  <meta property="og:url" content="{{ url_for('events_page', _external=True) }}"/>
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- WebPage schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TruBoxing Events",
+    "url": "{{ url_for('events_page', _external=True) }}"
+  }
+  </script>
+
+  <!-- Assets -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Events-specific stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-
-  <!-- Load once; defer waits for HTML to parse -->
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </head>
 
@@ -33,13 +54,25 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
         <li><a href="/merchandise">MERCHANDISE</a></li>
         <li><a href="/sponsors">SPONSORS</a></li>
         <li><a href="/contact">CONTACT US</a></li>
       </ul>
     </div>
   </nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">Events</span>
+      <meta itemprop="position" content="2"/>
+    </li>
+  </ol>
+</nav>
 
 
 
@@ -142,47 +175,53 @@ This event also serves as the official audition for ONE PRIDE MMA selection happ
 
     <div class="events-grid" id="eventsGrid">
       <!-- Each card opens WhatsApp with a prefilled message specific to that event -->
-      <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Queensberry%20Promotions%27%20on%20August%2023%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/Teaser.png') }}" alt="Queensberry Promotions">
-        <div class="event-date">August 31</div>
-        <h4 class="event-org">Queensberry Promotions</h4>
-      </a>
+    <a class="event-card" target="_blank" rel="noopener"
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Truboxing%20-%20Vol%202%27%20on%20August%2031%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/Teaser.png') }}" alt="Truboxing - Vol 2">
+  <div class="event-date">August 31</div>
+  <h4 class="event-org">Truboxing - Vol 2</h4>
+</a>
+
 
       <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Most%20Valuable%20Promotions%27%20on%20August%2023%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="Most Valuable Promotions">
-        <div class="event-date">September 13</div>
-        <h4 class="event-org">Most Valuable Promotions</h4>
-      </a>
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27The%20Fighting%20Kingdom%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/TFK.jpg') }}" alt="The Fighting Kingdom">
+  <div class="event-date">September 13</div>
+  <h4 class="event-org">The Fighting Kingdom</h4>
+</a>
+
+
+   <a class="event-card" target="_blank" rel="noopener"
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27MFL%27%20on%20September%2006%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/MFL.png') }}" alt="MFL">
+  <div class="event-date">September 06</div>
+  <h4 class="event-org">MFL</h4>
+</a>
+
+
+    <a class="event-card" target="_blank" rel="noopener"
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Ultimate%20Beatdown%27%20on%20September%2006%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/ultbd.png') }}" alt="Ultimate Beatdown">
+  <div class="event-date">September 06</div>
+  <h4 class="event-org">Ultimate Beatdown</h4>
+</a>
+
+
+   <a class="event-card" target="_blank" rel="noopener"
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Truboxing%20-%20Special%20Series%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/truss.png') }}" alt="Truboxing - Special Series">
+  <div class="event-date">Postponed</div>
+  <h4 class="event-org">Truboxing - Special Series</h4>
+</a>
+
 
       <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Matchroom%20Boxing%27%20on%20September%2006%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/MFL.png') }}" alt="Matchroom Boxing">
-        <div class="event-date">September 06</div>
-        <h4 class="event-org">Matchroom Boxing</h4>
-      </a>
+   href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27F3%20STRIKE:%20International%20Fight%20Combat%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
+  <img src="{{ url_for('static', filename='images/events/f32.jpg') }}" alt="F3 STRIKE: International Fight Combat">
+  <div class="event-date">September 13</div>
+  <h4 class="event-org">F3 STRIKE: International Fight Combat</h4>
+</a>
 
-      <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Ring%20Magazine%27%20on%20September%2006%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/ultbd.png') }}" alt="Ring Magazine">
-        <div class="event-date">September 06</div>
-        <h4 class="event-org">Ring Magazine</h4>
-      </a>
-
-      <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27TruBoxing%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/truss.png') }}" alt="TruBoxing">
-        <div class="event-date">Postponed</div>
-        <h4 class="event-org">TruBoxing</h4>
-      </a>
-
-      <a class="event-card" target="_blank" rel="noopener"
-         href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Malaysia%20Beatdown%27%20on%20September%2013%2C%202025.%20Please%20share%20details%2Fregistration.">
-        <img src="{{ url_for('static', filename='images/events/F3.jpg') }}" alt="Malaysia Beatdown">
-        <div class="event-date">September 13</div>
-        <h4 class="event-org">Malaysia Beatdown</h4>
-      </a>
 
       <a class="event-card" target="_blank" rel="noopener"
          href="https://api.whatsapp.com/send?phone=601118808511&text=Hi%20TruBoxing!%20I%27m%20interested%20in%20%27Johor%20Combat%20Series%27%20on%20October%2004%2C%202025.%20Please%20share%20details%2Fregistration.">

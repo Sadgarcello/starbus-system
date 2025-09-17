@@ -1,15 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ fighter.name }} | Profile</title>
+
+  <!-- SEO: title + description -->
+  <title>{{ fighter.name }} – Boxer Profile | TruBoxing</title>
+  <meta name="description" content="{{ fighter.name }} ({{ fighter.weight_class }}) – record, fights, gym, and highlights on TruBoxing Malaysia."/>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ url_for('fighter_profile', fighter_id=fighter.id, _external=True) }}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="profile"/>
+  <meta property="og:site_name" content="TruBoxing"/>
+  <meta property="og:title" content="{{ fighter.name }} – Boxer Profile | TruBoxing"/>
+  <meta property="og:description" content="{{ fighter.name }} ({{ fighter.weight_class }}) – record, fights, gym, and highlights on TruBoxing Malaysia."/>
+  <meta property="og:url" content="{{ url_for('fighter_profile', fighter_id=fighter.id, _external=True) }}"/>
+  <meta property="og:image" content="{{ url_for('static', filename='images/fighters/' ~ (fighter.image_profile or 'placeholders/fighter_placeholder.png'), _external=True) }}"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- Person schema (rich results) -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Person",
+    "name":"{{ fighter.name|e }}",
+    "jobTitle":"Boxer",
+    "url":"{{ url_for('fighter_profile', fighter_id=fighter.id, _external=True) }}",
+    "image":"{{ url_for('static', filename='images/fighters/' ~ (fighter.image_profile or 'placeholders/fighter_placeholder.png'), _external=True) }}",
+    "affiliation":{"@type":"SportsOrganization","name":"TruBoxing"}
+  }
+  </script>
+
+  <!-- Your assets -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/fighter_profile.css') }}">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
-
-
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 
 </head>
 <body>
@@ -29,12 +59,28 @@
     <ul class="nav-links" id="navLinks">
       <li><a href="/">HOME</a></li>
       <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-      <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+      <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
       <li><a href="/merchandise">MERCHANDISE</a></li>
       <li><a href="/sponsors">SPONSORS</a></li>
       <li><a href="/contact">CONTACT US</a></li>
     </ul>
   </div>
+</nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('fighters_page', _external=True) }}"><span itemprop="name">Fighters</span></a>
+      <meta itemprop="position" content="2"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">{{ fighter.name }}</span>
+      <meta itemprop="position" content="3"/>
+    </li>
+  </ol>
 </nav>
 
 <!-- HERO SECTION with background -->

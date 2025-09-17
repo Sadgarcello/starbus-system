@@ -3,41 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Us | TruBoxing</title>
+
+  <!-- Keep out of Google until the page is real -->
+  <meta name="robots" content="noindex,follow" />
+
+  <title>Contact TruBoxing</title>
+  <meta name="description" content="Get in touch with TruBoxing. WhatsApp, email, or follow us on social channels." />
+  <link rel="canonical" href="{{ url_for('contact', _external=True) }}" />
+
+  <!-- Open Graph / Twitter (for sharing) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="TruBoxing" />
+  <meta property="og:title" content="Contact TruBoxing" />
+  <meta property="og:description" content="WhatsApp or email us—responses are fastest via WhatsApp." />
+  <meta property="og:url" content="{{ url_for('contact', _external=True) }}" />
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}" />
+  <meta name="twitter:card" content="summary_large_image" />
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Quick Fix for Burger Display -->
   <style>
-    @media (min-width: 769px) {
-      .burger {
-        display: none !important;
-      }
-    }
+    /* keep burger hidden on desktop */
+    @media (min-width: 769px){ .burger{ display:none !important; } }
 
-    .coming-soon-container {
-      min-height: 60vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 40px 20px;
-    }
+    /* breadcrumbs styling so it doesn't look like a 2nd navbar */
+    .breadcrumbs{font-size:14px;margin:10px auto 14px;max-width:1200px;padding:0 16px;color:#666}
+    .breadcrumbs ol{display:flex;gap:8px;list-style:none;margin:0;padding:0}
+    .breadcrumbs li::after{content:"›";margin-left:8px;color:#aaa}
+    .breadcrumbs li:last-child::after{content:""}
+    .breadcrumbs a{color:#0a49b7;text-decoration:none}
+    .breadcrumbs a:hover{text-decoration:underline}
 
-    .coming-soon-container h1 {
-      font-size: 48px;
-      color: #0047ab;
-      margin-bottom: 10px;
+    .coming-soon-container{
+      min-height:60vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+      text-align:center;padding:40px 20px
     }
-
-    .coming-soon-container p {
-      font-size: 20px;
-      color: #555;
-    }
+    .coming-soon-container h1{font-size:48px;color:#0047ab;margin-bottom:10px}
+    .coming-soon-container p{font-size:20px;color:#555}
   </style>
 </head>
 
@@ -51,13 +56,25 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
         <li><a href="/merchandise">MERCHANDISE</a></li>
         <li><a href="/sponsors">SPONSORS</a></li>
         <li><a href="/contact">CONTACT US</a></li>
       </ul>
     </div>
   </nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">Contact</span>
+      <meta itemprop="position" content="2"/>
+    </li>
+  </ol>
+</nav>
 
   <!-- Coming Soon Section -->
   <div class="coming-soon-container">

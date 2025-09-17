@@ -84,6 +84,36 @@ main { flex: 1 0 auto; }
   outline-offset: 3px;
   border-radius: 4px;
 }
+.breadcrumbs {
+  font-size: 14px;
+  margin: 10px 20px;
+  color: #666;
+}
+
+.breadcrumbs a {
+  color: #004aad;  /* or gray */
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbs ol {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+}
+
+.breadcrumbs li::after {
+  content: "›";
+  margin-left: 6px;
+  color: #aaa;
+}
+
+.breadcrumbs li:last-child::after {
+  content: "";
+}
 
 /* Burger */
 .burger {

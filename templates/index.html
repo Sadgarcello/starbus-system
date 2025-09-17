@@ -1,10 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TruBoxing | Home</title>
 
+  <!-- SEO: title + description -->
+  <title>TruBoxing Malaysia – Events, Fighters, PPV</title>
+  <meta name="description" content="Official grassroots boxing in Malaysia: upcoming events, PPV info, and fighter records (TruRec)."/>
+
+  <!-- Canonical (force https) -->
+  <link rel="canonical" href="{{ request.url|replace('http://','https://') }}"/>
+
+  <!-- Open Graph (WhatsApp/FB previews) -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="TruBoxing"/>
+  <meta property="og:title" content="TruBoxing Malaysia – Events, Fighters, PPV"/>
+  <meta property="og:description" content="Official grassroots boxing in Malaysia: upcoming events, PPV info, and fighter records (TruRec)."/>
+  <meta property="og:url" content="{{ request.url|replace('http://','https://') }}"/>
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- Organization schema (site-wide) -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"TruBoxing",
+    "url":"https://truboxing.co",
+    "logo":"https://truboxing.co/static/images/logo.png",
+    "sameAs":[
+      "https://www.instagram.com/truboxing.co",
+      "https://www.tiktok.com/@truboxing.co",
+      "https://www.youtube.com/@truboxing"
+    ]
+  }
+  </script>
+
+  <!-- Your existing assets -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
@@ -28,10 +62,12 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
         <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
         <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
         <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
+        <li><a href="{{ url_for('rankings') }}">Rankings</a></li>
+
       </ul>
     </div>
   </nav>

@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Merchandise | TruBoxing</title>
 
+  <!-- Noindex while it's just a placeholder -->
+  <meta name="robots" content="noindex,follow" />
+
+  <title>Merchandise – Coming Soon | TruBoxing</title>
+  <meta name="description" content="Official TruBoxing merchandise is coming soon. WhatsApp us to collaborate on apparel and gear." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ url_for('merchandise', _external=True) }}" />
+
+  <!-- Open Graph (still useful for sharing on WhatsApp/FB) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="TruBoxing" />
+  <meta property="og:title" content="Merchandise – Coming Soon | TruBoxing" />
+  <meta property="og:description" content="Official TruBoxing merchandise is coming soon. WhatsApp us to collaborate on apparel and gear." />
+  <meta property="og:url" content="{{ url_for('merchandise', _external=True) }}" />
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Assets -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/merchandise.css', v='3') }}">
-
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,13 +40,25 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="/">HOME</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
         <li><a href="{{ url_for('merchandise') }}">MERCHANDISE</a></li>
         <li><a href="{{ url_for('sponsors_page') }}">SPONSORS</a></li>
         <li><a href="{{ url_for('contact') }}">CONTACT US</a></li>
       </ul>
     </div>
   </nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">Merchandise</span>
+      <meta itemprop="position" content="2"/>
+    </li>
+  </ol>
+</nav>
 
   <main role="main" class="container">
     <div class="coming-soon-container">

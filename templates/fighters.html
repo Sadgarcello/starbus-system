@@ -1,9 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fighters | TruBoxing</title>
+
+  <!-- SEO: title + description -->
+  <title>Fighters in Malaysia – Records & Profiles | TruBoxing</title>
+  <meta name="description" content="Browse TruBoxing fighter profiles in Malaysia. See weight class, records, and recent bouts on TruRec." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ url_for('fighters_page', _external=True) }}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="TruBoxing"/>
+  <meta property="og:title" content="Fighters in Malaysia – Records & Profiles | TruBoxing"/>
+  <meta property="og:description" content="Browse TruBoxing fighter profiles in Malaysia. See weight class, records, and recent bouts on TruRec."/>
+  <meta property="og:url" content="{{ url_for('fighters_page', _external=True) }}"/>
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- WebPage + site search schema (lets Google show a search box) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Fighters – TruBoxing",
+    "url": "{{ url_for('fighters_page', _external=True) }}",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "{{ url_for('fighters_page', _external=True) }}?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Assets -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/fighters.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
@@ -24,13 +58,27 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="/">Home</a></li>
         <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
         <li><a href="/merchandise">MERCHANDISE</a></li>
         <li><a href="/sponsors">SPONSORS</a></li>
         <li><a href="/contact">CONTACT US</a></li>
       </ul>
     </div>
   </nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}">
+        <span itemprop="name">Home</span>
+      </a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">Fighters</span>
+      <meta itemprop="position" content="2"/>
+    </li>
+  </ol>
+</nav>
 
   <!-- Page Title & Search Bar -->
   <div class="fighters-header">

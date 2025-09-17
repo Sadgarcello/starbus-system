@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+  <title>TruRec Leaderboard</title>
+
+  <style>
+    :root{
+      --bg:#0b1220;          /* deep navy */
+      --card:#0f172a;        /* slate */
+      --ink:#e5e7eb;         /* light text */
+      --muted:#9ca3af;
+      --brand:#22d3ee;       /* cyan */
+      --line:#1f2937;
+      --row:#0e1528;
+      --row2:#111a30;
+      --accent:#10b981;      /* green for numbers */
+      --chip:#0b2a24;        /* green-ish chip bg */
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#0b1220 0%, #0b1220 60%, #0d152a 100%);
+      color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+      line-height:1.5;
+    }
+
+    .page{ max-width:1100px; margin:0 auto; padding:24px 16px 56px; }
+
+    /* breadcrumbs */
+    .breadcrumbs{ font-size:14px; color:var(--muted); margin:6px 0 10px; }
+    .breadcrumbs a{ color:var(--ink); text-decoration:none; }
+    .breadcrumbs a:hover{ text-decoration:underline; }
+
+    h1{ font-size: clamp(24px, 3.5vw, 36px); margin: 4px 0 8px; letter-spacing:.5px; }
+    .subline{ color:var(--muted); margin:0 0 18px; font-size:14px; }
+    .subline .u-time{
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,.04); border:1px solid var(--line);
+      padding:3px 8px; border-radius:999px; font-size:12px; color:#cbd5e1;
+      margin-left:8px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 8px 30px rgba(0,0,0,.25);
+    }
+
+    .table-wrap{ width:100%; overflow:auto; }
+    table{ width:100%; border-collapse:collapse; min-width:760px; }
+    thead th{
+      position:sticky; top:0;
+      background:rgba(17,24,39,.85);
+      backdrop-filter:saturate(140%) blur(6px);
+      border-bottom:1px solid var(--line);
+      text-transform:uppercase;
+      font-size:12px; letter-spacing:.06em;
+      padding:12px 10px; text-align:left; white-space:nowrap;
+    }
+
+    tbody tr:nth-child(odd){ background:var(--row); }
+    tbody tr:nth-child(even){ background:var(--row2); }
+    tbody td{
+      padding:12px 10px;
+      border-bottom:1px solid var(--line);
+      vertical-align:middle;
+    }
+
+    th.num, td.num{ text-align:right; font-variant-numeric: tabular-nums; }
+    .pos{ font-weight:700; color:var(--brand); width:36px; }
+
+    .avatar{
+      width:44px; height:44px; border-radius:10px; object-fit:cover;
+      display:block; box-shadow:0 0 0 1px rgba(255,255,255,.1);
+    }
+    .avatar-link{ display:inline-block; border-radius:10px; }
+    .avatar-link:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+
+    .name a{ color:var(--ink); text-decoration:none; font-weight:600; }
+    .name a:hover{ color:var(--brand); }
+
+    .country{ display:flex; align-items:center; gap:8px; white-space:nowrap; }
+    .flag{ height:14px; width:auto; vertical-align:middle; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.1); }
+    .country small{ color:var(--muted); text-transform:lowercase; }
+
+    .pts{ color:var(--accent); font-weight:700; }
+    .record-chip{
+      display:inline-flex; gap:8px; align-items:center;
+      background:var(--chip); border:1px solid #134e4a;
+      padding:2px 8px; border-radius:999px; font-size:12px;
+    }
+    .record-chip b{ color:#a7f3d0; font-variant-numeric: tabular-nums; }
+
+    /* Mobile: compress columns */
+    @media (max-width: 720px){
+      table{ min-width:0; }
+      .col-country, .col-losses, .col-draws, .col-kos{ display:none; }
+      .col-compact{ display:table-cell; }
+      .subline{ font-size:13px; }
+    }
+    /* Desktop show wide columns, hide compact */
+    .col-compact{ display:none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <nav aria-label="Breadcrumb" class="breadcrumbs">
+      <a href="{{ url_for('home') }}">Home</a> / <span>Leaderboard</span>
+    </nav>
+
+    <h1>TruRec Leaderboard</h1>
+    <p class="subline">
+      Top fighters by points — updated automatically from recent bouts.
+      {% if last_updated %}
+        <span class="u-time" title="This is the latest bout date indexed">Updated: {{ last_updated }}</span>
+      {% endif %}
+    </p>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Photo</th>
+            <th>Name</th>
+            <th class="col-country">Country</th>
+            <th class="num">Pts</th>
+            <th class="num">W</th>
+            <th class="num col-losses">L</th>
+            <th class="num col-draws">D</th>
+            <th class="num col-kos">KO</th>
+            <th class="num col-compact">W-L-D <small>(KO)</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in fighters %}
+          {% set img = (r['image_profile'] if 'image_profile' in r.keys() and r['image_profile'] else 'placeholders/fighter_placeholder.png') %}
+          <tr>
+            <td class="num pos">{{ loop.index }}</td>
+
+            <td>
+              <a class="avatar-link" href="{{ url_for('fighter_profile', fighter_id=r['id']) }}">
+                <img
+                  class="avatar"
+                  src="{{ url_for('static', filename='images/fighters/' ~ img) }}"
+                  alt="{{ r['name'] }} profile photo"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+            </td>
+
+            <td class="name">
+              <a href="{{ url_for('fighter_profile', fighter_id=r['id']) }}">{{ r['name'] }}</a>
+            </td>
+
+            <td class="col-country">
+              <span class="country">
+                {% set cc = (r['country'] or '') | lower %}
+                {% set flag_file = 'images/flags/' ~ (cc|replace(' ','_')) ~ '.png' %}
+                <img class="flag"
+                     src="{{ url_for('static', filename=flag_file) }}"
+                     alt="{{ r['country'] }} flag"
+                     loading="lazy"
+                     onerror="this.style.display='none'">
+                <small>{{ r['country'] }}</small>
+              </span>
+            </td>
+
+            <td class="num pts">{{ '%.1f'|format(r['total_points']) }}</td>
+            <td class="num">{{ r['wins'] }}</td>
+            <td class="num col-losses">{{ r['losses'] }}</td>
+            <td class="num col-draws">{{ r['draws'] }}</td>
+            <td class="num col-kos">{{ r['kos'] }}</td>
+
+            <!-- Mobile compact record -->
+            <td class="num col-compact">
+              <span class="record-chip">
+                <b>{{ r['wins'] }}</b>-<b>{{ r['losses'] }}</b>-<b>{{ r['draws'] }}</b>
+                <small>(KO {{ r['kos'] }})</small>
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" class="empty">No fighters yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

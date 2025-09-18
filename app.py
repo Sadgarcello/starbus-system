@@ -12,9 +12,8 @@ REPO_DB = os.path.join(os.path.dirname(__file__), "fighters.db")   # DB inside r
 DISK_DIR = "/var/data"                                             # Render disk mount
 DISK_DB = os.path.join(DISK_DIR, "fighters.db")
 
-USE_DISK = os.path.exists(DISK_DIR)  # True on Render when disk is mounted
+USE_DISK = os.path.exists(DISK_DIR)
 
-# Seed the disk the first time if it's empty
 if USE_DISK and (not os.path.exists(DISK_DB)) and os.path.exists(REPO_DB):
     try:
         shutil.copyfile(REPO_DB, DISK_DB)
@@ -27,7 +26,6 @@ print("USING DB:", DB_PATH)
 
 
 def get_conn():
-    """Open a SQLite connection to the active DB (repo or Render disk)."""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
@@ -35,8 +33,7 @@ def get_conn():
 
 
 # -------------------------- Data helpers -----------------------------
-# -------------------------- Data helpers -----------------------------
-fighters_fallback = []  # optional in-memory fallback if DB fails
+fighters_fallback = []
 
 def get_fighters_from_db():
     conn = get_conn()
@@ -54,7 +51,7 @@ def get_fighter_by_id_from_db(fighter_id: str):
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    # Base fighter row
+    # Base fighter row (already includes W/L/D/KO from fighters table)
     c.execute("SELECT * FROM fighters WHERE LOWER(id) = ?", (fid,))
     fighter = c.fetchone()
     if not fighter:
@@ -63,7 +60,7 @@ def get_fighter_by_id_from_db(fighter_id: str):
 
     fighter_dict = dict(fighter)
 
-    # Pull fight history (newest first)
+    # Attach fight history (don’t override stats — keep DB values)
     c.execute(
         """
         SELECT result, opponent, date, method, org
@@ -73,56 +70,13 @@ def get_fighter_by_id_from_db(fighter_id: str):
         """,
         (fid,),
     )
-    fights = [dict(r) for r in c.fetchall()]
-    fighter_dict["fight_history"] = fights
-
-    # ---- derive live totals from history so profile matches leaderboard ----
-    def norm_result(x: str) -> str:
-        """Map many spellings to W/L/D."""
-        v = (x or "").strip().upper()
-        if v in {"W", "WIN"}:
-            return "W"
-        if v in {"L", "LOSS", "LOSE"}:
-            return "L"
-        if v in {"D", "DRAW"}:
-            return "D"
-        return ""  # unknown/empty/TBA
-
-    def is_ko(method: str) -> bool:
-        """Count KOs only on wins; treat anything containing KO or TKO as a KO."""
-        m = (method or "").upper()
-        return ("KO" in m)  # matches KO, TKO, TKO (CUT), etc.
-
-    wins   = 0
-    losses = 0
-    draws  = 0
-    kos    = 0
-
-    for r in fights:
-        res = norm_result(r.get("result"))
-        if res == "W":
-            wins += 1
-            if is_ko(r.get("method")):
-                kos += 1
-        elif res == "L":
-            losses += 1
-        elif res == "D":
-            draws += 1
-
-    fighter_dict.update({
-        "wins":   wins,
-        "losses": losses,
-        "draws":  draws,
-        "kos":    kos,
-    })
-    # -----------------------------------------------------------------------
+    fighter_dict["fight_history"] = [dict(r) for r in c.fetchall()]
 
     conn.close()
     return fighter_dict
 
 
 def list_fighter_ids():
-    """Return a list of fighter IDs for sitemap (lowercased, unique)."""
     try:
         conn = get_conn()
         conn.row_factory = sqlite3.Row
@@ -130,7 +84,6 @@ def list_fighter_ids():
         c.execute("SELECT LOWER(id) AS id FROM fighters")
         ids = [r["id"] for r in c.fetchall() if r["id"]]
         conn.close()
-        # Deduplicate while preserving order
         seen, unique = set(), []
         for fid in ids:
             if fid not in seen:
@@ -142,8 +95,6 @@ def list_fighter_ids():
         return []
 # --------------------------------------------------------------------
 
-# --------------------------------------------------------------------
-
 
 # ----------------------- Home page featured --------------------------
 FEATURED_IDS = ["shamel", "bazooka", "danny", "buki"]
@@ -153,12 +104,9 @@ STATE_FLAG_MAP = {
     "sarawak": "sarawak.png",
     "kuala-lumpur": "kuala-lumpur.png",
     "sabah": "sabah.png",
-    # add more as needed…
 }
 
-
 def normalize_state_from_country(country: str) -> tuple[str, str]:
-    """Extract a state label from 'Malaysia (Selangor)' style strings and map to a flag file."""
     if not country:
         return ("", "")
 
@@ -167,7 +115,6 @@ def normalize_state_from_country(country: str) -> tuple[str, str]:
         state = country.split("(", 1)[1].split(")", 1)[0].strip()
 
     if not state and country.lower() not in ("malaysia",):
-        # If it's not Malaysia, show the country itself as 'state' label (fallback).
         state = country.strip()
 
     state_label = state
@@ -179,8 +126,8 @@ def normalize_state_from_country(country: str) -> tuple[str, str]:
 
 # ----------------------------- Sponsors ------------------------------
 SPONSORS = [
-    {"name": "Abang Besi", "logo_path": "images/sponsors/abangbesi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
-    {"name": "ko",         "logo_path": "images/sponsors/ko.png",        "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
+    {"name": "Abang Besi", "logo_path": "images/sponsors/abangbesi.png", "url": "https://www.instagram.com/abangbesigallery"},
+    {"name": "ko",         "logo_path": "images/sponsors/ko.png",        "url": "https://www.instagram.com/knockoutmediasg"},
     {"name": "Kaboom.my",  "logo_path": "images/sponsors/kaboom.png",    "url": "https://kaboom.my"},
     {"name": "trurec",     "logo_path": "images/sponsors/trurec.png",    "url": "https://truboxing.co/fighters"},
     {"name": "TSL",        "logo_path": "images/sponsors/tsl.png",       "url": "https://teamsoundandlight.com/"},
@@ -191,7 +138,6 @@ SPONSORS = [
 # ------------------------------ Routes -------------------------------
 @app.route("/")
 def home():
-    """Home page: Featured Boxers + Sponsors."""
     conn = get_conn()
     conn.row_factory = sqlite3.Row
 
@@ -268,143 +214,25 @@ def fighter_profile(fighter_id):
         return "Fighter not found", 404
 
     return render_template("fighter_profile.html", fighter=fighter)
+# --------------------------------------------------------------------
 
-
-@app.route("/events")
-def events_page():
-    return render_template("events.html")
-
-
-@app.route("/merchandise")
-def merchandise():
-    return render_template("merchandise.html")
-
-
-@app.route("/sponsors")
-def sponsors_page():
-    return render_template("sponsors.html", sponsors=SPONSORS)
-
-
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
-
-
-@app.route("/test-db")
-def test_db():
-    try:
-        names = [f["name"] for f in get_fighters_from_db()]
-        return "<br>".join(names)
-    except Exception as e:
-        return f"DB error: {e}", 500
-
-
-@app.route("/debug-fights/<fighter_id>")
-def debug_fights(fighter_id):
-    fid = (fighter_id or "").strip().lower()
-    conn = get_conn()
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute(
-        """
-        SELECT result, opponent, date, method, org
-        FROM fight_history
-        WHERE LOWER(fighter_id) = ?
-        ORDER BY date DESC
-        """,
-        (fid,),
-    )
-    rows = [dict(r) for r in c.fetchall()]
-    conn.close()
-    return "<br>".join([f"{r['date']} — {r['opponent']} — {r['result']} — {r['org']}" for r in rows])
-
-
-# ------------------------- SEO: robots & sitemap ----------------------
-@app.route("/robots.txt")
-def robots():
-    lines = [
-        "User-agent: *",
-        "Disallow: /watch",
-        "Disallow: /checkout",
-        "Disallow: /thank-you",
-        "Disallow: /test-db",
-        "Disallow: /debug-fights",
-        "Sitemap: https://truboxing.co/sitemap.xml",
-    ]
-    return Response("\n".join(lines), mimetype="text/plain")
-
-
-@app.route("/sitemap.xml")
-def sitemap():
-    core_pages = [
-        url_for("home", _external=True),
-        url_for("fighters_page", _external=True),
-        url_for("events_page", _external=True),
-        url_for("sponsors_page", _external=True),
-        url_for("merchandise", _external=True),
-        url_for("contact", _external=True),
-    ]
-    # Include rankings only when enabled
-    if os.getenv("FEATURE_RANKINGS", "1") == "1":
-        core_pages.append(url_for("rankings", _external=True))
-
-    fighter_urls = [
-        url_for("fighter_profile", fighter_id=fid, _external=True)
-        for fid in list_fighter_ids()
-    ]
-    urls = core_pages + fighter_urls
-    lastmod = datetime.utcnow().date().isoformat()
-
-    xml_parts = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-    ]
-    for loc in urls:
-        xml_parts.append("<url>")
-        xml_parts.append(f"<loc>{loc}</loc>")
-        xml_parts.append(f"<lastmod>{lastmod}</lastmod>")
-        xml_parts.append("<changefreq>weekly</changefreq>")
-        xml_parts.append("<priority>0.7</priority>")
-        xml_parts.append("</url>")
-    xml_parts.append("</urlset>")
-
-    return Response("\n".join(xml_parts), mimetype="application/xml")
-# ---------------------------------------------------------------------
-
-
-@app.route("/healthz")
-def healthz():
-    return "ok", 200
-
-
-# --------------------------- Rankings page ---------------------------
-FEATURE_RANKINGS = os.getenv("FEATURE_RANKINGS", "1") == "1"  # enable by default
 
 @app.route("/rankings")
 def rankings():
-    if not FEATURE_RANKINGS:
-        return "Rankings feature is disabled.", 404
-
     conn = get_conn()
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     try:
-        # Aggregate raw fight history into per-fighter stats
         rows = cur.execute("""
             WITH stats AS (
                 SELECT
-                    LOWER(fh.fighter_id)                      AS fid,
+                    LOWER(fh.fighter_id) AS fid,
                     SUM(CASE WHEN fh.result='W' THEN 1 ELSE 0 END) AS wins,
                     SUM(CASE WHEN fh.result='L' THEN 1 ELSE 0 END) AS losses,
                     SUM(CASE WHEN fh.result='D' THEN 1 ELSE 0 END) AS draws,
-                    SUM(
-                        CASE
-                          WHEN fh.result='W'
-                           AND UPPER(COALESCE(fh.method,'')) LIKE '%KO%'
-                          THEN 1 ELSE 0
-                        END
-                    ) AS kos,
-                    MAX(fh.date) AS last_fight
+                    SUM(CASE WHEN fh.result='W'
+                             AND UPPER(COALESCE(fh.method,'')) LIKE '%KO%'
+                             THEN 1 ELSE 0 END) AS kos
                 FROM fight_history fh
                 GROUP BY LOWER(fh.fighter_id)
             )
@@ -413,28 +241,19 @@ def rankings():
                 f.name,
                 f.country,
                 COALESCE(f.image_profile, 'placeholders/fighter_placeholder.png') AS image_profile,
-                COALESCE(s.wins,   0) AS wins,
-                COALESCE(s.losses, 0) AS losses,
-                COALESCE(s.draws,  0) AS draws,
-                COALESCE(s.kos,    0) AS kos,
-                -- scoring: 3*W + 1*KO - 1*L
+                COALESCE(s.wins,0)   AS wins,
+                COALESCE(s.losses,0) AS losses,
+                COALESCE(s.draws,0)  AS draws,
+                COALESCE(s.kos,0)    AS kos,
                 (3.0*COALESCE(s.wins,0) + 1.0*COALESCE(s.kos,0) - 1.0*COALESCE(s.losses,0)) AS total_points
             FROM fighters f
-            LEFT JOIN stats s
-              ON LOWER(f.id) = s.fid
+            LEFT JOIN stats s ON LOWER(f.id) = s.fid
             ORDER BY total_points DESC, s.wins DESC, s.kos DESC, f.name ASC
             LIMIT 10
         """).fetchall()
 
-        # Last updated = most recent bout date across all history
         last_raw = cur.execute("SELECT MAX(date) FROM fight_history").fetchone()[0]
-        last_updated = ""
-        if last_raw:
-            try:
-                dt = datetime.fromisoformat(str(last_raw))
-                last_updated = dt.strftime("%Y-%m-%d %H:%M")
-            except Exception:
-                last_updated = str(last_raw)
+        last_updated = str(last_raw) if last_raw else ""
 
     except sqlite3.OperationalError as e:
         conn.close()
@@ -444,6 +263,10 @@ def rankings():
     return render_template("rankings.html", fighters=rows, last_updated=last_updated)
 # --------------------------------------------------------------------
 
+
+@app.route("/healthz")
+def healthz():
+    return "ok", 200
 
 
 if __name__ == "__main__":

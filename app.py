@@ -35,6 +35,7 @@ def get_conn():
 
 
 # -------------------------- Data helpers -----------------------------
+# -------------------------- Data helpers -----------------------------
 fighters_fallback = []  # optional in-memory fallback if DB fails
 
 def get_fighters_from_db():
@@ -53,6 +54,7 @@ def get_fighter_by_id_from_db(fighter_id: str):
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
+    # Base fighter row
     c.execute("SELECT * FROM fighters WHERE LOWER(id) = ?", (fid,))
     fighter = c.fetchone()
     if not fighter:
@@ -61,6 +63,7 @@ def get_fighter_by_id_from_db(fighter_id: str):
 
     fighter_dict = dict(fighter)
 
+    # Pull fight history (newest first)
     c.execute(
         """
         SELECT result, opponent, date, method, org
@@ -70,7 +73,49 @@ def get_fighter_by_id_from_db(fighter_id: str):
         """,
         (fid,),
     )
-    fighter_dict["fight_history"] = [dict(r) for r in c.fetchall()]
+    fights = [dict(r) for r in c.fetchall()]
+    fighter_dict["fight_history"] = fights
+
+    # ---- derive live totals from history so profile matches leaderboard ----
+    def norm_result(x: str) -> str:
+        """Map many spellings to W/L/D."""
+        v = (x or "").strip().upper()
+        if v in {"W", "WIN"}:
+            return "W"
+        if v in {"L", "LOSS", "LOSE"}:
+            return "L"
+        if v in {"D", "DRAW"}:
+            return "D"
+        return ""  # unknown/empty/TBA
+
+    def is_ko(method: str) -> bool:
+        """Count KOs only on wins; treat anything containing KO or TKO as a KO."""
+        m = (method or "").upper()
+        return ("KO" in m)  # matches KO, TKO, TKO (CUT), etc.
+
+    wins   = 0
+    losses = 0
+    draws  = 0
+    kos    = 0
+
+    for r in fights:
+        res = norm_result(r.get("result"))
+        if res == "W":
+            wins += 1
+            if is_ko(r.get("method")):
+                kos += 1
+        elif res == "L":
+            losses += 1
+        elif res == "D":
+            draws += 1
+
+    fighter_dict.update({
+        "wins":   wins,
+        "losses": losses,
+        "draws":  draws,
+        "kos":    kos,
+    })
+    # -----------------------------------------------------------------------
 
     conn.close()
     return fighter_dict
@@ -95,6 +140,8 @@ def list_fighter_ids():
     except Exception as e:
         print("⚠ list_fighter_ids DB error:", e)
         return []
+# --------------------------------------------------------------------
+
 # --------------------------------------------------------------------
 
 

@@ -342,26 +342,44 @@ def rankings():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     try:
-        # Leaderboard with profile photo
+        # Aggregate raw fight history into per-fighter stats
         rows = cur.execute("""
+            WITH stats AS (
+                SELECT
+                    LOWER(fh.fighter_id)                      AS fid,
+                    SUM(CASE WHEN fh.result='W' THEN 1 ELSE 0 END) AS wins,
+                    SUM(CASE WHEN fh.result='L' THEN 1 ELSE 0 END) AS losses,
+                    SUM(CASE WHEN fh.result='D' THEN 1 ELSE 0 END) AS draws,
+                    SUM(
+                        CASE
+                          WHEN fh.result='W'
+                           AND UPPER(COALESCE(fh.method,'')) LIKE '%KO%'
+                          THEN 1 ELSE 0
+                        END
+                    ) AS kos,
+                    MAX(fh.date) AS last_fight
+                FROM fight_history fh
+                GROUP BY LOWER(fh.fighter_id)
+            )
             SELECT
-                l.id,
-                l.name,
-                l.country,
-                l.total_points,
-                l.wins,
-                l.losses,
-                l.draws,
-                l.kos,
-                COALESCE(f.image_profile, 'placeholders/fighter_placeholder.png') AS image_profile
-            FROM v_leaderboard AS l
-            LEFT JOIN fighters AS f
-              ON LOWER(f.id) = LOWER(l.id)
-            ORDER BY l.total_points DESC, l.kos DESC, l.wins DESC
-            LIMIT 50
+                f.id,
+                f.name,
+                f.country,
+                COALESCE(f.image_profile, 'placeholders/fighter_placeholder.png') AS image_profile,
+                COALESCE(s.wins,   0) AS wins,
+                COALESCE(s.losses, 0) AS losses,
+                COALESCE(s.draws,  0) AS draws,
+                COALESCE(s.kos,    0) AS kos,
+                -- scoring: 3*W + 1*KO - 1*L
+                (3.0*COALESCE(s.wins,0) + 1.0*COALESCE(s.kos,0) - 1.0*COALESCE(s.losses,0)) AS total_points
+            FROM fighters f
+            LEFT JOIN stats s
+              ON LOWER(f.id) = s.fid
+            ORDER BY total_points DESC, s.wins DESC, s.kos DESC, f.name ASC
+            LIMIT 10
         """).fetchall()
 
-        # Latest bout date for "Updated:" subline
+        # Last updated = most recent bout date across all history
         last_raw = cur.execute("SELECT MAX(date) FROM fight_history").fetchone()[0]
         last_updated = ""
         if last_raw:
@@ -370,17 +388,15 @@ def rankings():
                 last_updated = dt.strftime("%Y-%m-%d %H:%M")
             except Exception:
                 last_updated = str(last_raw)
+
     except sqlite3.OperationalError as e:
         conn.close()
-        return (
-            "Ranking views not found. Please run the SQL that creates "
-            "v_fighter_stats, v_activity_365, v_points, and v_leaderboard.<br><br>"
-            f"SQLite error: {e}", 500
-        )
-    conn.close()
+        return f"SQLite error while computing rankings: {e}", 500
 
+    conn.close()
     return render_template("rankings.html", fighters=rows, last_updated=last_updated)
 # --------------------------------------------------------------------
+
 
 
 if __name__ == "__main__":

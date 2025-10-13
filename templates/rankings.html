@@ -1,199 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruRec — Top 10 Rankings</title>
+  <meta name="description" content="Top 10 ranked fighters on TruRec with photos, flags, and short bios." />
 
-  <title>TruRec Leaderboard</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Anton&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#0b1220;          /* deep navy */
-      --card:#0f172a;        /* slate */
-      --ink:#e5e7eb;         /* light text */
-      --muted:#9ca3af;
-      --brand:#22d3ee;       /* cyan */
-      --line:#1f2937;
-      --row:#0e1528;
-      --row2:#111a30;
-      --accent:#10b981;      /* green for numbers */
-      --chip:#0b2a24;        /* green-ish chip bg */
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,#0b1220 0%, #0b1220 60%, #0d152a 100%);
-      color:var(--ink);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial,sans-serif;
-      line-height:1.5;
+      --primary:#0052cc;           /* Core blue */
+      --primary-strong:#2f54eb;    /* Stronger blue */
+      --nav:#0047ab;               /* Navbar blue */
+      --accent:#ffcc00;            /* Yellow accent */
+      --dark:#0f0f10;              /* Dark surface */
+      --card-bg:#ffffff;           /* Card base */
+      --muted:#5b5e66;            /* Muted text */
+      --maxw:1200px;               /* Container width */
+      --radius-card:20px;          /* Card radius */
+      --radius-pill:999px;         /* Pill radius */
+      --shadow-card:0 10px 24px rgba(0,0,0,.28);
+      --shadow-card-hover:0 16px 34px rgba(0,0,0,.34);
     }
 
-    .page{ max-width:1100px; margin:0 auto; padding:24px 16px 56px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Montserrat',sans-serif;background:#fff;color:#000;}
 
-    /* breadcrumbs */
-    .breadcrumbs{ font-size:14px; color:var(--muted); margin:6px 0 10px; }
-    .breadcrumbs a{ color:var(--ink); text-decoration:none; }
-    .breadcrumbs a:hover{ text-decoration:underline; }
+    /* ===== Navbar ===== */
+    .navbar{background:var(--nav);color:#fff;width:100%}
+    .navbar .inner{max-width:var(--maxw);margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+    .brand img{height:44px;width:auto;border-radius:10px}
+    .brand h1{font-family:'Anton',sans-serif;font-size:28px;letter-spacing:.5px}
+    .add-link{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#131313;font-weight:900;text-decoration:none;padding:10px 16px;border-radius:var(--radius-pill);box-shadow:0 6px 16px rgba(255,204,0,.35);transition:transform .15s ease, box-shadow .15s ease}
+    .add-link:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,204,0,.45)}
 
-    h1{ font-size: clamp(24px, 3.5vw, 36px); margin: 4px 0 8px; letter-spacing:.5px; }
-    .subline{ color:var(--muted); margin:0 0 18px; font-size:14px; }
-    .subline .u-time{
-      display:inline-flex; align-items:center; gap:6px;
-      background:rgba(255,255,255,.04); border:1px solid var(--line);
-      padding:3px 8px; border-radius:999px; font-size:12px; color:#cbd5e1;
-      margin-left:8px;
+    /* ===== Header ===== */
+    .header{max-width:var(--maxw);margin:28px auto 10px;padding:0 16px;display:flex;align-items:end;justify-content:space-between;gap:12px}
+    .title{font-family:'Anton',sans-serif;font-size:clamp(28px,4vw,54px);line-height:1;color:#000;letter-spacing:.5px;text-transform:uppercase}
+    .subtitle{color:#444;font-style:italic}
+
+    /* ===== Grids ===== */
+    .grid{max-width:var(--maxw);margin:18px auto 0;padding:0 16px;display:grid;gap:22px}
+    .grid-top3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-bottom:22px}
+    .grid-rest{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-bottom:60px}
+
+    /* Desktop layout: top3 in 3 columns, rest in 4 columns */
+    @media (min-width:1100px){
+      .grid-top3{grid-template-columns:repeat(3,1fr)}
+      .grid-rest{grid-template-columns:repeat(4,1fr)}
     }
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      overflow:hidden;
-      box-shadow:0 8px 30px rgba(0,0,0,.25);
+    .card{position:relative;background:var(--card-bg);border-radius:var(--radius-card);overflow:hidden;box-shadow:var(--shadow-card);transition:transform .18s ease, box-shadow .18s ease;display:flex;flex-direction:column}
+    .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover)}
+
+    .media{position:relative;aspect-ratio:4/5;background:radial-gradient(120% 80% at 50% 10%,#1c1c1f 0,var(--dark) 40%,var(--dark) 100%);display:grid;place-items:center}
+    .photo{width:100%;height:100%;object-fit:contain}
+
+    .rank-badge{position:absolute;top:12px;left:12px;background:var(--accent);color:#131313;font-weight:900;border-radius:10px;padding:6px 10px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+    .flag{position:absolute;right:12px;bottom:12px;width:34px;height:22px;object-fit:cover;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+
+    .content{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column}
+    .name{margin:0 0 6px;font-weight:900;font-size:18px;letter-spacing:.3px;text-transform:uppercase}
+    .meta{margin:0 0 10px;color:var(--muted);font-weight:600;font-size:13px}
+    .bio{margin:0 0 12px;color:#222;line-height:1.45;flex-grow:1}
+
+    .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-width:132px;padding:12px 20px;border-radius:var(--radius-pill);font-weight:800;letter-spacing:.2px;text-decoration:none;text-align:center;white-space:nowrap}
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 6px 16px rgba(0,82,204,.35)}
+    .btn-primary:hover{background:var(--primary-strong)}
+    .btn-ghost{border:1px solid #e5e7eb;color:#111;background:#fff}
+
+    /* Footer */
+    footer{background:var(--primary);color:#fff;padding:28px 16px}
+    .foot-inner{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .crumbs{font-size:14px}
+    .crumbs a{color:#fff;text-decoration:underline}
+
+    @media (max-width:720px){
+      .foot-inner{flex-direction:column;gap:10px;text-align:center}
     }
-
-    .table-wrap{ width:100%; overflow:auto; }
-    table{ width:100%; border-collapse:collapse; min-width:760px; }
-    thead th{
-      position:sticky; top:0;
-      background:rgba(17,24,39,.85);
-      backdrop-filter:saturate(140%) blur(6px);
-      border-bottom:1px solid var(--line);
-      text-transform:uppercase;
-      font-size:12px; letter-spacing:.06em;
-      padding:12px 10px; text-align:left; white-space:nowrap;
-    }
-
-    tbody tr:nth-child(odd){ background:var(--row); }
-    tbody tr:nth-child(even){ background:var(--row2); }
-    tbody td{
-      padding:12px 10px;
-      border-bottom:1px solid var(--line);
-      vertical-align:middle;
-    }
-
-    th.num, td.num{ text-align:right; font-variant-numeric: tabular-nums; }
-    .pos{ font-weight:700; color:var(--brand); width:36px; }
-
-    .avatar{
-      width:44px; height:44px; border-radius:10px; object-fit:cover;
-      display:block; box-shadow:0 0 0 1px rgba(255,255,255,.1);
-    }
-    .avatar-link{ display:inline-block; border-radius:10px; }
-    .avatar-link:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
-
-    .name a{ color:var(--ink); text-decoration:none; font-weight:600; }
-    .name a:hover{ color:var(--brand); }
-
-    .country{ display:flex; align-items:center; gap:8px; white-space:nowrap; }
-    .flag{ height:14px; width:auto; vertical-align:middle; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.1); }
-    .country small{ color:var(--muted); text-transform:lowercase; }
-
-    .pts{ color:var(--accent); font-weight:700; }
-    .record-chip{
-      display:inline-flex; gap:8px; align-items:center;
-      background:var(--chip); border:1px solid #134e4a;
-      padding:2px 8px; border-radius:999px; font-size:12px;
-    }
-    .record-chip b{ color:#a7f3d0; font-variant-numeric: tabular-nums; }
-
-    /* Mobile: compress columns */
-    @media (max-width: 720px){
-      table{ min-width:0; }
-      .col-country, .col-losses, .col-draws, .col-kos{ display:none; }
-      .col-compact{ display:table-cell; }
-      .subline{ font-size:13px; }
-    }
-    /* Desktop show wide columns, hide compact */
-    .col-compact{ display:none; }
   </style>
 </head>
 <body>
-  <div class="page">
-
-    <nav aria-label="Breadcrumb" class="breadcrumbs">
-      <a href="{{ url_for('home') }}">Home</a> / <span>Leaderboard</span>
-    </nav>
-
-    <h1>TruRec Leaderboard</h1>
-    <p class="subline">
-      Top fighters by points — updated automatically from recent bouts.
-      {% if last_updated %}
-        <span class="u-time" title="This is the latest bout date indexed">Updated: {{ last_updated }}</span>
-      {% endif %}
-    </p>
-
-    <div class="card table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="num">#</th>
-            <th>Photo</th>
-            <th>Name</th>
-            <th class="col-country">Country</th>
-            <th class="num">Pts</th>
-            <th class="num">W</th>
-            <th class="num col-losses">L</th>
-            <th class="num col-draws">D</th>
-            <th class="num col-kos">KO</th>
-            <th class="num col-compact">W-L-D <small>(KO)</small></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in fighters %}
-          {% set img = (r['image_profile'] if 'image_profile' in r.keys() and r['image_profile'] else 'placeholders/fighter_placeholder.png') %}
-          <tr>
-            <td class="num pos">{{ loop.index }}</td>
-
-            <td>
-              <a class="avatar-link" href="{{ url_for('fighter_profile', fighter_id=r['id']) }}">
-                <img
-                  class="avatar"
-                  src="{{ url_for('static', filename='images/fighters/' ~ img) }}"
-                  alt="{{ r['name'] }} profile photo"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-            </td>
-
-            <td class="name">
-              <a href="{{ url_for('fighter_profile', fighter_id=r['id']) }}">{{ r['name'] }}</a>
-            </td>
-
-            <td class="col-country">
-              <span class="country">
-                {% set cc = (r['country'] or '') | lower %}
-                {% set flag_file = 'images/flags/' ~ (cc|replace(' ','_')) ~ '.png' %}
-                <img class="flag"
-                     src="{{ url_for('static', filename=flag_file) }}"
-                     alt="{{ r['country'] }} flag"
-                     loading="lazy"
-                     onerror="this.style.display='none'">
-                <small>{{ r['country'] }}</small>
-              </span>
-            </td>
-
-            <td class="num pts">{{ '%.1f'|format(r['total_points']) }}</td>
-            <td class="num">{{ r['wins'] }}</td>
-            <td class="num col-losses">{{ r['losses'] }}</td>
-            <td class="num col-draws">{{ r['draws'] }}</td>
-            <td class="num col-kos">{{ r['kos'] }}</td>
-
-            <!-- Mobile compact record -->
-            <td class="num col-compact">
-              <span class="record-chip">
-                <b>{{ r['wins'] }}</b>-<b>{{ r['losses'] }}</b>-<b>{{ r['draws'] }}</b>
-                <small>(KO {{ r['kos'] }})</small>
-              </span>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="10" class="empty">No fighters yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="inner">
+      <a class="brand" href="/">
+        <img src="static/images/logo/truboxing-logo.png" alt="TruRec" />
+        <h1>TruRec Rankings</h1>
+      </a>
+      <a class="add-link" href="#" title="Add/Update rankings via form">Add / Update Rankings</a>
     </div>
-  </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="header">
+    <div>
+      <div class="title">Top 10 — Malaysia</div>
+      <div class="subtitle">Updated weekly • Criteria: results, activity, opposition, and momentum</div>
+    </div>
+  </header>
+
+  <!-- Ranking Grids -->
+  <section class="grid grid-top3" id="gridTop3"></section>
+  <section class="grid grid-rest" id="gridRest"></section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="foot-inner">
+      <div>© <span id="year"></span> TruRec. No politics, just boxing.</div>
+      <div class="crumbs">
+        <a href="/">Home</a> · <a href="/fighters">Fighters</a> · <a href="/events">Events</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Full Rankings Data (sample) =====
+    const rankings = [
+      { rank: 1, name: 'IMRAN HANAFI', nickname: 'THE BAZOOKA', weight: 'Lightweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/bazooka.png', profileUrl: '/fighter/bazooka', bio: '7–0 in TruBoxing bouts this year, 4 KOs. Beat two ranked opponents and defended his spot twice in August.' },
+      { rank: 2, name: 'DANNY BOYZ', nickname: '', weight: 'Lightweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/danny.png', profileUrl: '/fighter/danny', bio: 'High-volume pressure, three-fight streak, edged a split decision over a top-5 rival.' },
+      { rank: 3, name: 'FAVIEN JANANG', nickname: 'SUPERKAI', weight: 'Lightweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/superkai.png', profileUrl: '/fighter/superkai', bio: 'Elite footwork and jab—dominant UD in last outing; needs one more top win to challenge #1.' },
+      { rank: 4, name: 'ABANG KOROY', nickname: '', weight: 'Middleweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/koroy.png', profileUrl: '/fighter/koroy', bio: 'Moved down a class, looked sharper; big body work carried him to a late stoppage.' },
+      { rank: 5, name: 'AWAB', nickname: '', weight: 'Heavyweight', country: 'SD', flag: 'static/images/flags/sudan.png', photo: 'static/images/fighters/profiles/awab.png', profileUrl: '/fighter/awab', bio: 'Power puncher with improving defense; outpointed a veteran in July and rallied in August.' },
+      { rank: 6, name: 'ALI MASKUR', nickname: '', weight: 'Heavyweight', country: 'ID', flag: 'static/images/flags/indonesia.png', photo: 'static/images/fighters/profiles/ali.png', profileUrl: '/fighter/ali', bio: '1–1 vs ranked opponents this season; bounce-back KO keeps him in the mix.' },
+      { rank: 7, name: 'AIDIL DANIAL', nickname: 'SUPERBONG', weight: 'Light Heavyweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/superbong.png', profileUrl: '/fighter/superbong', bio: 'Strong ring IQ and gas tank—won a tactical chess match over 3 rounds.' },
+      { rank: 8, name: 'BELLULOK EDISON', nickname: '', weight: 'Middleweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/bellulok.png', profileUrl: '/fighter/bellulok_edison', bio: 'Heavy hands but inconsistent pace; still dangerous against any style.' },
+      { rank: 9, name: 'ABDULLAH FAJAR', nickname: '', weight: 'Welterweight', country: 'ID', flag: 'static/images/flags/indonesia.png', photo: 'static/images/fighters/profiles/abdullah_fajar.png', profileUrl: '/fighter/abdullah_fajar', bio: 'Breakout year with two dominant UDs; stepping up in competition next.' },
+      { rank: 10, name: 'AMIRUL AKMAL', nickname: '', weight: 'Welterweight', country: 'MY', flag: 'static/images/flags/malaysia.png', photo: 'static/images/fighters/profiles/amirul.png', profileUrl: '/fighter/amirul', bio: 'Sniper counters and disciplined footwork; needs activity to climb again.' }
+    ];
+
+    // Split into top3 and rest
+    const top3 = rankings.slice(0,3);
+    const rest = rankings.slice(3);
+
+    const gridTop3 = document.getElementById('gridTop3');
+    const gridRest = document.getElementById('gridRest');
+
+    function cardTemplate(f){
+      return `
+        <article class="card">
+          <div class="media">
+            <span class="rank-badge">#${f.rank}</span>
+            <img class="flag" src="${f.flag}" alt="${f.country} flag" />
+            <img class="photo" src="${f.photo}" alt="${f.name}" />
+          </div>
+          <div class="content">
+            <h3 class="name">${f.name}${f.nickname?` — ${f.nickname}`:''}</h3>
+            <p class="meta">${f.weight} • ${f.country}</p>
+            <p class="bio">${f.bio}</p>
+            <div class="actions">
+              <a class="btn btn-primary" href="${f.profileUrl}">View Profile</a>
+              <a class="btn btn-ghost" href="#" title="Suggest edit for ${f.name}">Suggest Edit</a>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    gridTop3.innerHTML = top3.map(cardTemplate).join('');
+    gridRest.innerHTML = rest.map(cardTemplate).join('');
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Admin/Add link — set to your form or admin URL
+    // document.querySelector('.add-link').href = 'https://forms.gle/your-form-id';
+    // or
+    // document.querySelector('.add-link').href = '/admin/rankings';
+  </script>
 </body>
 </html>

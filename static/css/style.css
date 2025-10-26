@@ -8,40 +8,86 @@ body {
 
 /* ========== Navbar ========== */
 .navbar {
-  width: 100%;
-  background: #0047ab;
-  padding: 12px 20px;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 1000;
+  background: rgba(10,10,12,0.7);           /* dark glass */
+  backdrop-filter: blur(10px);               /* blur = modern */
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 12px 20px;
+  width: 100%;
 }
-.navbar-container {
-  display: flex; justify-content: space-between; align-items: center;
-  max-width: 1200px; margin: 0 auto;
-}
-.logo { max-height: 100px; }
 
-/* links */
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  max-height: 64px;                          /* tighter logo so it looks legit */
+}
+
 .nav-links {
-  display: flex; gap: 50px;
-  list-style: none; transition: all .3s ease;
+  display: flex;
+  gap: 32px;                                 /* tighter gap for pro feel */
+  list-style: none;
+  transition: all .3s ease;
 }
-.navbar .nav-links a { text-transform: uppercase !important; }
+
 .nav-links a {
-  color: #fff; text-decoration: none; font-weight: 500; font-size: 14px; letter-spacing: 1px;
-  position: relative; transition: color .3s ease;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: .05em;
+  position: relative;
+  transition: color .2s ease;
 }
+
+.nav-links a:hover {
+  color: #fff;
+}
+
 .nav-links a::after {
-  content: ""; position: absolute; left: 0; bottom: -4px; width: 0%; height: 2px;
-  background: #ffcc00; transition: width .3s ease;
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg,#ff2d2d,#ffcc00);
+  transition: width .2s ease;
 }
-.nav-links a:hover { color: #ffcc00; }
 .nav-links a:hover::after { width: 100%; }
 
-/* burger (now a button) */
-.burger {
-  display: none; font-size: 24px; color: #fff; cursor: pointer;
-  background: none; border: 0; padding: 6px;
+/* CTA button in navbar (desktop only) */
+.nav-cta {
+  background: linear-gradient(90deg,#ff2d2d,#ff7b00);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(255,50,50,.4);
+  text-decoration: none;
+  white-space: nowrap;
 }
+
+/* burger */
+.burger {
+  display: none;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 6px;
+}
+
 
 /* ========== Hero Slider ========== */
 .hero-slider {

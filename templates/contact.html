@@ -4,125 +4,1350 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Keep out of Google until the page is real -->
-  <meta name="robots" content="noindex,follow" />
-
-  <title>Contact TruBoxing</title>
-  <meta name="description" content="Get in touch with TruBoxing. WhatsApp, email, or follow us on social channels." />
+  <!-- SEO -->
+  <title>Contact TruBoxing / TruRec</title>
+  <meta name="description" content="Talk to TruBoxing. WhatsApp us for fights, sponsorship, media and business. Fastest reply via WhatsApp." />
   <link rel="canonical" href="{{ url_for('contact', _external=True) }}" />
 
-  <!-- Open Graph / Twitter (for sharing) -->
+  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="TruBoxing" />
-  <meta property="og:title" content="Contact TruBoxing" />
-  <meta property="og:description" content="WhatsApp or email us—responses are fastest via WhatsApp." />
+  <meta property="og:title" content="Contact TruBoxing / TruRec" />
+  <meta property="og:description" content="Boxers, brands, gyms, promoters — reach us directly on WhatsApp." />
   <meta property="og:url" content="{{ url_for('contact', _external=True) }}" />
   <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  <!-- Assets -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <!-- (Optional) your base/global CSS if you have common stuff -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
   <style>
-    /* keep burger hidden on desktop */
-    @media (min-width: 769px){ .burger{ display:none !important; } }
+  /* ====== NAVBAR + FOOTER STYLES (same as sponsors/trurec pages) ====== */
+  :root {
+    --blue-900: #002766;
+    --blue-800: #003d99;
+    --blue-700: #0047b8;
+    --blue-600: #0053e0;
+    --blue-glow: rgba(0,123,255,0.4);
 
-    /* breadcrumbs styling so it doesn't look like a 2nd navbar */
-    .breadcrumbs{font-size:14px;margin:10px auto 14px;max-width:1200px;padding:0 16px;color:#666}
-    .breadcrumbs ol{display:flex;gap:8px;list-style:none;margin:0;padding:0}
-    .breadcrumbs li::after{content:"›";margin-left:8px;color:#aaa}
-    .breadcrumbs li:last-child::after{content:""}
-    .breadcrumbs a{color:#0a49b7;text-decoration:none}
-    .breadcrumbs a:hover{text-decoration:underline}
+    --panel-border: rgba(255,255,255,0.08);
+    --panel-solid: rgba(0,30,95,0.9);
 
-    .coming-soon-container{
-      min-height:60vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
-      text-align:center;padding:40px 20px
+    --text-primary: #fff;
+    --text-dim: rgba(255,255,255,0.6);
+    --text-faint: rgba(255,255,255,0.4);
+
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    --transition-fast: 0.16s ease;
+
+    --max-width: 1400px;
+    --header-h-desktop: 72px;
+    --header-h-mobile: 64px;
+  }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: #0b0f16;
+    background-image:
+      radial-gradient(1200px 800px at 10% 10%, #1a2033 0%, transparent 60%),
+      radial-gradient(1300px 900px at 90% 20%, #1b0f0f 0%, transparent 62%),
+      linear-gradient(120deg, #0b0f16 0%, #10182a 60%, #0b0f16 100%);
+    color: #eef3fb;
+  }
+
+  /* ---------- NAV ---------- */
+  .site-header {
+    background: radial-gradient(
+      at 10% -20%,
+      var(--blue-600) 0%,
+      var(--blue-800) 40%,
+      var(--blue-900) 80%
+    );
+    color: var(--text-primary);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav-shell {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    height: var(--header-h-desktop);
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+  .brand-logo { height: 46px; filter: drop-shadow(0 8px 12px rgba(0,0,0,.6)); }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+  .brand-title {
+    color: var(--text-primary);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .brand-sub {
+    color: var(--text-dim);
+    font-size: .6rem;
+    font-weight: 500;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .nav-links-global {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .nav-links-global a {
+    color: var(--text-primary);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 4px;
+  }
+  .nav-links-global a::after {
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:0;
+    width:0;
+    height:2px;
+    background:#fff;
+    transform:translateX(-50%);
+    transition:width var(--transition-fast);
+  }
+  .nav-links-global a:hover::after { width:100%; }
+
+  .claim-btn {
+    background:#fff;
+    color:#001a4d;
+    font-size:0.8rem;
+    font-weight:700;
+    padding:0.6rem 0.9rem;
+    border-radius:var(--radius-md);
+    border:1px solid rgba(255,255,255,0.4);
+    text-decoration:none;
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.8),
+      0 0 20px var(--blue-glow);
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    transition:all var(--transition-fast);
+    line-height:1;
+    position:relative;
+    z-index:100;
+  }
+  .claim-btn i { font-size:.8rem; }
+  .claim-btn:hover { filter:brightness(1.08); }
+
+  .burger {
+    display:none;
+    background:none;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:var(--radius-md);
+    padding:.4rem .5rem;
+    cursor:pointer;
+    box-shadow:0 10px 24px rgba(0,0,0,0.5);
+    background:rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+  }
+  .burger span {
+    display:block;
+    width:22px;
+    height:2px;
+    background:#fff;
+    margin:5px 0;
+    border-radius:1px;
+  }
+
+  .mobile-panel {
+    display:none;
+    flex-direction:column;
+    background:rgba(0,20,70,0.75);
+    border-top:1px solid var(--panel-border);
+    text-align:center;
+    box-shadow:0 40px 120px rgba(0,0,0,0.9) inset;
+    backdrop-filter: blur(10px);
+
+    position:absolute;
+    left:0;
+    right:0;
+    top:var(--header-h-mobile);
+    z-index:1500;
+  }
+  .mobile-panel a {
+    color:#fff;
+    text-decoration:none;
+    padding:1rem;
+    font-weight:600;
+    text-transform:uppercase;
+    border-top:1px solid rgba(255,255,255,0.08);
+    font-size:.9rem;
+    letter-spacing:.05em;
+  }
+  .mobile-panel.open { display:flex; }
+
+  .mobile-claim-link {
+    width:90%;
+    max-width:260px;
+    margin:1rem auto 1.5rem;
+    background:#fff;
+    color:#001a4d;
+    font-size:.8rem;
+    font-weight:700;
+    padding:.8rem 1rem;
+    border-radius:var(--radius-md);
+    line-height:1.3;
+    border:1px solid rgba(255,255,255,0.4);
+    box-shadow:
+      0 24px 48px rgba(0,0,0,0.8),
+      0 0 24px var(--blue-glow);
+    text-decoration:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.4rem;
+    text-align:center;
+  }
+  .mobile-claim-headline {
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    font-weight:700;
+    font-size:.8rem;
+    color:#001a4d;
+  }
+  .mobile-claim-sub {
+    font-size:.7rem;
+    color:#001a4dcf;
+  }
+
+  @media(max-width:900px){
+    .nav-links-global,
+    .claim-btn,
+    .brand-text {
+      display:none;
     }
-    .coming-soon-container h1{font-size:48px;color:#0047ab;margin-bottom:10px}
-    .coming-soon-container p{font-size:20px;color:#555}
+    .burger{display:block;}
+    .nav-shell{
+      grid-template-columns:1fr auto 1fr;
+      height:var(--header-h-mobile);
+      position: relative;
+    }
+    .brand-logo{height:42px;}
+  }
+
+  /* ---------- BREADCRUMBS ---------- */
+  .breadcrumbs{
+    font-size:14px;
+    margin:16px auto 24px;
+    max-width:var(--max-width);
+    padding:0 1rem;
+    color:#a9b4c3;
+  }
+  .breadcrumbs ol{
+    display:flex;
+    gap:8px;
+    list-style:none;
+    margin:0;
+    padding:0;
+    flex-wrap:wrap;
+  }
+  .breadcrumbs li::after{
+    content:"›";
+    margin-left:8px;
+    color:#4a5166;
+  }
+  .breadcrumbs li:last-child::after{content:""}
+  .breadcrumbs a{
+    color:#3aa0ff;
+    text-decoration:none;
+  }
+  .breadcrumbs a:hover{text-decoration:underline}
+
+  /* ---------- PAGE LAYOUT ---------- */
+  .contact-page-wrap {
+    max-width: var(--max-width);
+    margin: 0 auto 4rem;
+    padding: 0 1rem 4rem;
+    display: grid;
+    gap: 2rem;
+  }
+  @media(min-width:900px){
+    .contact-page-wrap {
+      grid-template-columns: 2fr 1fr;
+      align-items:start;
+    }
+  }
+
+  /* HERO BLOCK */
+  .contact-hero-card {
+    border-radius: var(--radius-xl);
+    background: rgba(10,15,35,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 1.5rem 1.25rem 1.25rem;
+    box-shadow:
+      0 40px 120px rgba(0,0,0,0.8),
+      0 0 120px rgba(0,102,255,0.18);
+  }
+  .hero-eyebrow {
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#33b5fb;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+  }
+  .hero-eyebrow .dot {
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background: radial-gradient(circle,#00ffbd 0%,#0053e0 70%);
+    box-shadow:0 0 16px #00ffbd;
+  }
+  .hero-headline {
+    font-family: "Anton", Inter, system-ui, sans-serif;
+    font-size: clamp(2rem, 1vw + 1rem, 2.6rem);
+    line-height:1.1;
+    letter-spacing:.02em;
+    font-weight: 900;
+    color:#fff;
+    margin-top:.5rem;
+    text-shadow:0 2px 12px rgba(0,0,0,.8);
+  }
+  .hero-copy {
+    margin-top:1rem;
+    color:#cfd6e6;
+    font-weight:500;
+    line-height:1.5;
+    max-width:60ch;
+    font-size:.95rem;
+  }
+
+  .hero-flex-row {
+    margin-top:1.25rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.75rem;
+  }
+  .quick-pill {
+    font-size:.75rem;
+    font-weight:600;
+    letter-spacing:.04em;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.18);
+    color:#fff;
+    padding:.5rem .75rem;
+    border-radius:.6rem;
+    line-height:1.2;
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+    box-shadow:0 24px 60px rgba(0,0,0,0.8);
+  }
+  .quick-pill i { font-size:.8rem; }
+
+  /* CONTACT GRID LEFT */
+  .contact-grid {
+    margin-top:2rem;
+    display:grid;
+    gap:1rem;
+  }
+  @media(min-width:600px){
+    .contact-grid {
+      grid-template-columns: repeat(2,1fr);
+    }
+  }
+  @media(min-width:1100px){
+    .contact-grid {
+      grid-template-columns: repeat(3,1fr);
+    }
+  }
+
+  .contact-card {
+    background:#0e152b;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-lg);
+    box-shadow:0 30px 80px rgba(0,0,0,.8), 0 0 80px rgba(0,102,255,.12);
+    padding:1rem 1rem 1.1rem;
+    display:flex;
+    flex-direction:column;
+    min-height:180px;
+    position:relative;
+    overflow:hidden;
+  }
+  .contact-card-header {
+    display:flex;
+    align-items:flex-start;
+    gap:.75rem;
+  }
+  .contact-icon-bubble {
+    width:2.4rem;
+    height:2.4rem;
+    min-width:2.4rem;
+    border-radius:.7rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: radial-gradient(circle at 30% 30%, #00ffbd 0%, #0053e0 70%);
+    border:1px solid rgba(255,255,255,0.4);
+    box-shadow:0 20px 50px rgba(0,0,0,.9),0 0 24px rgba(0,255,200,.4);
+    color:#000;
+    font-size:1rem;
+    font-weight:700;
+  }
+  .contact-label-group{
+    display:flex;
+    flex-direction:column;
+    line-height:1.2;
+  }
+  .contact-card-title{
+    font-size:.9rem;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:.03em;
+  }
+  .contact-card-desc{
+    font-size:.75rem;
+    color:#9fb2d8;
+    font-weight:500;
+    margin-top:.25rem;
+  }
+  .contact-mainlines{
+    margin-top:1rem;
+    font-size:.9rem;
+    font-weight:600;
+    color:#fff;
+    line-height:1.5;
+  }
+  .contact-mainlines a{
+    color:#fff;
+    text-decoration:none;
+    word-break:break-word;
+  }
+  .contact-mainlines a:hover{
+    text-decoration:underline;
+  }
+
+  .contact-cta-row{
+    margin-top:auto;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.5rem;
+  }
+  .contact-btn{
+    background:#fff;
+    color:#001a4d;
+    border-radius:.6rem;
+    font-size:.75rem;
+    font-weight:700;
+    border:1px solid rgba(255,255,255,0.4);
+    text-decoration:none;
+    padding:.6rem .75rem;
+    line-height:1.2;
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+    box-shadow:0 24px 48px rgba(0,0,0,.85),0 0 24px rgba(0,255,200,.4);
+  }
+  .contact-btn i{font-size:.8rem;}
+  .contact-btn.secondary{
+    background:rgba(255,255,255,0.07);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.4);
+    box-shadow:0 24px 48px rgba(0,0,0,.85),0 0 24px rgba(0,123,255,.4);
+  }
+  .contact-btn.secondary:hover{
+    background:rgba(255,255,255,.12);
+  }
+
+  /* RIGHT COLUMN (FAQ / guidance) */
+  .info-side-card{
+    background:#0e152b;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:var(--radius-xl);
+    padding:1.25rem 1rem 1rem;
+    box-shadow:0 30px 80px rgba(0,0,0,.8),0 0 80px rgba(0,102,255,.12);
+    height:fit-content;
+  }
+  .info-side-head{
+    font-size:.8rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#33b5fb;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    margin-bottom:.75rem;
+  }
+  .info-side-head i{
+    font-size:.8rem;
+    color:#33b5fb;
+  }
+  .info-block{
+    border-top:1px solid rgba(255,255,255,0.07);
+    padding-top:.75rem;
+    margin-top:.75rem;
+  }
+  .info-block-title{
+    color:#fff;
+    font-size:.9rem;
+    font-weight:700;
+    margin-bottom:.4rem;
+  }
+  .info-block-text{
+    font-size:.8rem;
+    color:#9fb2d8;
+    font-weight:500;
+    line-height:1.5;
+  }
+
+  /* ---------- FOOTER (same global footer) ---------- */
+  .site-footer {
+    position: relative;
+    background: radial-gradient(at 20% 20%, var(--blue-700) 0%, var(--blue-900) 60%);
+    color: var(--text-primary);
+    overflow: hidden;
+    margin-top:4rem;
+  }
+  .site-footer::before,
+  .site-footer::after {
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:.4;
+    pointer-events:none;
+  }
+  .site-footer::before {
+    width:320px; height:320px;
+    background:radial-gradient(circle,var(--blue-600) 0%,transparent 70%);
+    top:-80px; left:-80px;
+  }
+  .site-footer::after {
+    width:260px; height:260px;
+    background:radial-gradient(circle,#0094ff 0%,transparent 70%);
+    bottom:-60px; right:-60px;
+    opacity:.2;
+  }
+
+  .footer-topwrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 3rem 1rem 2rem;
+    display:grid;
+    gap:2rem;
+  }
+  @media(min-width:800px){
+    .footer-topwrap {
+      grid-template-columns: 2fr 1fr;
+      align-items:stretch;
+    }
+  }
+
+  .pitch-card {
+    background: var(--panel-solid);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-xl);
+    padding:1.5rem 1.25rem;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.8),
+      0 0 80px rgba(0,102,255,0.25);
+    position:relative;
+  }
+  .pitch-head {
+    display:flex;
+    align-items:flex-start;
+    gap:1rem;
+    flex-wrap:wrap;
+  }
+  .pitch-logo {
+    width:64px;
+    height:auto;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,.8));
+  }
+  .pitch-title-group { flex:1; min-width:200px; }
+  .pitch-kicker {
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .pitch-headline {
+    margin-top:.25rem;
+    color:var(--text-primary);
+    font-size:1.05rem;
+    font-weight:700;
+    line-height:1.4;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .pitch-text {
+    margin-top:1rem;
+    color:var(--text-dim);
+    font-size:.9rem;
+    line-height:1.5;
+    max-width:55ch;
+  }
+
+  .claim-card {
+    border-radius: var(--radius-xl);
+    padding:1.25rem 1.25rem 1rem;
+    background: radial-gradient(at 20% 20%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0) 60%),
+                rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.2);
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.8),
+      0 0 80px rgba(0,102,255,0.4);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height: 190px;
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+    color:#fff;
+  }
+  .claim-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 80% 20%, rgba(0,140,255,0.35) 0%, transparent 70%);
+    mix-blend-mode:screen;
+    pointer-events:none;
+  }
+  .claim-eyebrow {
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+  }
+  .claim-eyebrow .dot {
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background: radial-gradient(circle,#00ffbd 0%,#0053e0 70%);
+    box-shadow:0 0 16px #00ffbd;
+  }
+  .claim-headline {
+    margin-top:.5rem;
+    color:#fff;
+    font-size:1rem;
+    font-weight:700;
+    line-height:1.4;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .claim-copy {
+    margin-top:.5rem;
+    font-size:0.8rem;
+    font-weight:500;
+    color:var(--text-dim);
+    line-height:1.4;
+    max-width:40ch;
+  }
+  .claim-action-row {
+    margin-top:1rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.75rem;
+  }
+  .cta-main {
+    background:#fff;
+    color:#001a4d;
+    font-size:.8rem;
+    font-weight:700;
+    padding:.6rem .8rem;
+    border-radius:var(--radius-md);
+    border:1px solid rgba(255,255,255,0.4);
+    text-decoration:none;
+    line-height:1.1;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    box-shadow:
+      0 22px 44px rgba(0,0,0,0.85),
+      0 0 24px rgba(0,255,200,0.5);
+    transition:all var(--transition-fast);
+  }
+  .cta-main:hover { filter:brightness(1.08); }
+  .cta-ghost {
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:var(--radius-md);
+    color:#fff;
+    font-size:.8rem;
+    font-weight:600;
+    text-decoration:none;
+    padding:.6rem .8rem;
+    line-height:1.1;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    transition:all var(--transition-fast);
+  }
+  .cta-ghost:hover { background:rgba(255,255,255,0.1); }
+
+  .footer-midwrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+    display:grid;
+    row-gap:2rem;
+    column-gap:2rem;
+  }
+  @media(min-width:700px){
+    .footer-midwrap {
+      grid-template-columns: repeat(3,1fr);
+    }
+  }
+  .footer-col h5 {
+    color:#fff;
+    font-size:.8rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:0 0 .75rem;
+  }
+  .footer-col ul {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:.5rem;
+  }
+  .footer-col a {
+    color:var(--text-primary);
+    font-size:.9rem;
+    font-weight:500;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+  }
+  .footer-col a .icon {
+    width:1.25rem;
+    height:1.25rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:0.4rem;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.15);
+    font-size:.7rem;
+    box-shadow:0 10px 20px rgba(0,0,0,0.6);
+  }
+
+  .contact-block li,
+  .social-block li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .contact-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.45rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    font-size: 0.8rem;
+    color: #fff;
+  }
+  .ig-icon { background: radial-gradient(circle at 30% 30%, #ffdc80 0%, #f77737 30%, #c13584 60%, #6c34ad 80%) border-box; border:1px solid rgba(255,255,255,0.3); }
+  .tt-icon { background:#000; color:#fff; border:1px solid rgba(255,255,255,0.3); }
+  .fb-icon { background:#1877f2; border:1px solid rgba(255,255,255,0.4); }
+  .yt-icon { background:#ff0000; border:1px solid rgba(255,255,255,0.4); }
+
+  .contact-detail-footer {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+  .contact-detail-footer span {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-top: 0.15rem;
+  }
+
+  @media(max-width:700px) {
+    .footer-midwrap { text-align: center; }
+    .footer-col { text-align: center; }
+    .footer-col h5 { text-align: center; }
+    .footer-col ul {
+      justify-content: center;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .footer-col ul li a {
+      justify-content: center;
+    }
+    .contact-block li,
+    .social-block li {
+      justify-content: center;
+      text-align: left;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .contact-detail-footer {
+      align-items: flex-start;
+    }
+  }
+
+  .footer-bottom {
+    background:rgba(0,0,0,0.25);
+    border-top:1px solid rgba(255,255,255,0.1);
+    text-align:center;
+    padding:1rem;
+    font-size:0.75rem;
+    color:var(--text-faint);
+    letter-spacing:.03em;
+  }
   </style>
 </head>
 
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="navbar-container">
-<a href="/">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
-    </a>      <i class="fas fa-bars burger" id="burger"></i>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="/">HOME</a></li>
-        <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
-        <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors">SPONSORS</a></li>
-        <li><a href="/contact">CONTACT US</a></li>
-      </ul>
+
+  <!-- GLOBAL NAVBAR -->
+  <header class="site-header">
+    <div class="nav-shell">
+      <div class="brand-wrap">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="brand-logo" alt="TruBoxing"/>
+        <div class="brand-text">
+          <div class="brand-title">TruBoxing / TruRec</div>
+          <div class="brand-sub">No politics. Just boxing.</div>
+        </div>
+      </div>
+
+      <nav class="nav-links-global">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('events_page') }}">Events</a>
+        <a href="{{ url_for('fighters_page') }}">TruRec</a>
+        <a href="{{ url_for('merchandise') }}">Merchandise</a>
+        <a href="{{ url_for('sponsors_page') }}">Sponsors</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+      </nav>
+
+      <a class="claim-btn"
+         href="https://wa.me/601155480258?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+         target="_blank"
+         rel="noopener">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Claim your TruRec</span>
+      </a>
+
+      <button class="burger" id="mobileMenuBtn" aria-label="menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="mobile-panel" id="mobilePanel">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('events_page') }}">Events</a>
+        <a href="{{ url_for('fighters_page') }}">TruRec</a>
+        <a href="{{ url_for('merchandise') }}">Merchandise</a>
+        <a href="{{ url_for('sponsors_page') }}">Sponsors</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+
+        <a class="mobile-claim-link"
+           href="https://wa.me/601155480258?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+           target="_blank"
+           rel="noopener">
+          <div class="mobile-claim-headline">
+            <i class="fa-solid fa-bolt" style="color:#001a4d;"></i>
+            Claim your TruRec
+          </div>
+          <div class="mobile-claim-sub">
+            Get verified, get discovered, get paid.
+          </div>
+        </a>
+      </div>
     </div>
+  </header>
+
+  <!-- BREADCRUMB -->
+  <nav aria-label="Breadcrumb" class="breadcrumbs">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+        <meta itemprop="position" content="1"/>
+      </li>
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span itemprop="name">Contact</span>
+        <meta itemprop="position" content="2"/>
+      </li>
+    </ol>
   </nav>
-<nav aria-label="Breadcrumb" class="breadcrumbs">
-  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
-    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
-      <meta itemprop="position" content="1"/>
-    </li>
-    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <span itemprop="name">Contact</span>
-      <meta itemprop="position" content="2"/>
-    </li>
-  </ol>
-</nav>
 
-  <!-- Coming Soon Section -->
-  <div class="coming-soon-container">
-    <h1>Contact Us</h1>
-    <p>🚧 Coming Soon 🚧</p>
-  </div>
+  <!-- PAGE BODY -->
+  <main class="contact-page-wrap">
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column logo-column">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
-        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
-        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
+    <!-- LEFT: hero + contact cards -->
+    <section>
+      <!-- hero / headline card -->
+      <div class="contact-hero-card">
+        <div class="hero-eyebrow">
+          <div class="dot"></div>
+          <span>Talk to us directly</span>
+        </div>
+        <div class="hero-headline">
+          Contact TruBoxing / TruRec
+        </div>
+        <div class="hero-copy">
+          We’re active every day. Fighters, sponsors, gyms, promoters, media —
+          message us. WhatsApp gets the fastest reply.
+        </div>
+
+        <div class="hero-flex-row">
+          <div class="quick-pill"><i class="fa-solid fa-bolt"></i> Fight opportunities</div>
+          <div class="quick-pill"><i class="fa-solid fa-handshake-angle"></i> Sponsorship & brand collab</div>
+          <div class="quick-pill"><i class="fa-solid fa-user-shield"></i> TruRec profile help</div>
+        </div>
       </div>
 
-      <div class="footer-column">
-        <h3>Quick Links</h3>
+      <!-- direct contact cards -->
+      <div class="contact-grid">
+
+        <!-- TruRec / Sponsorship Line -->
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <div class="contact-icon-bubble">
+              <i class="fa-solid fa-id-card-clip"></i>
+            </div>
+            <div class="contact-label-group">
+              <div class="contact-card-title">TruRec / Sponsorship / Merch</div>
+              <div class="contact-card-desc">
+                Profile claims, brand deals, apparel, partnership pitch.
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-mainlines">
+            <div>+60 11 5548 0258</div>
+            <div>
+              <a href="https://wa.me/601155480258?text={{ 'Hello TruBoxing / TruRec, I would like to discuss TruRec profile / sponsorship / merchandise.'|urlencode }}"
+                 target="_blank"
+                 rel="noopener">
+                WhatsApp now →
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-cta-row">
+            <a class="contact-btn"
+               href="https://wa.me/601155480258?text={{ 'Hello TruBoxing / TruRec, I would like to discuss TruRec profile / sponsorship / merchandise.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <i class="fa-brands fa-whatsapp"></i>
+              Message
+            </a>
+          </div>
+        </div>
+
+        <!-- General Line -->
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <div class="contact-icon-bubble">
+              <i class="fa-solid fa-phone"></i>
+            </div>
+            <div class="contact-label-group">
+              <div class="contact-card-title">General enquiries</div>
+              <div class="contact-card-desc">
+                Event details, fight info, media, press.
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-mainlines">
+            <div>+60 10 925 4970</div>
+            <div>
+              <a href="https://wa.me/60109254970?text={{ 'Hello TruBoxing / TruRec, I have a question / inquiry.'|urlencode }}"
+                 target="_blank" rel="noopener">
+                WhatsApp now →
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-cta-row">
+            <a class="contact-btn"
+               href="https://wa.me/60109254970?text={{ 'Hello TruBoxing / TruRec, I have a question / inquiry.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <i class="fa-brands fa-whatsapp"></i>
+              Message
+            </a>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <div class="contact-icon-bubble" style="background: radial-gradient(circle at 30% 30%, #fff 0%, #ccc 70%); color:#000;">
+              <i class="fa-solid fa-envelope"></i>
+            </div>
+            <div class="contact-label-group">
+              <div class="contact-card-title">Email</div>
+              <div class="contact-card-desc">Long-form / official / proposals</div>
+            </div>
+          </div>
+
+          <div class="contact-mainlines">
+            <div>
+              <a href="mailto:truboxingmy@gmail.com?subject=TruBoxing%20Inquiry&body=Hi%20TruBoxing%20team,%0A%0AMy%20name%20is%20...%0A"
+                 target="_blank" rel="noopener">
+                truboxingmy@gmail.com
+              </a>
+            </div>
+            <div style="font-size:.75rem;color:#9fb2d8;font-weight:500;margin-top:.5rem;">
+              We check email daily.
+            </div>
+          </div>
+
+          <div class="contact-cta-row">
+            <a class="contact-btn secondary"
+               href="mailto:truboxingmy@gmail.com?subject=TruBoxing%20Inquiry&body=Hi%20TruBoxing%20team,%0A%0AMy%20name%20is%20...%0A"
+               target="_blank" rel="noopener">
+              <i class="fa-solid fa-paper-plane"></i>
+              Send email
+            </a>
+          </div>
+        </div>
+
+        <!-- Social -->
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <div class="contact-icon-bubble" style="background: radial-gradient(circle at 30% 30%, #ffdc80 0%, #c13584 60%); box-shadow:0 20px 50px rgba(0,0,0,.9),0 0 24px rgba(255,0,128,.4); color:#000;">
+              <i class="fa-brands fa-instagram"></i>
+            </div>
+            <div class="contact-label-group">
+              <div class="contact-card-title">Social media</div>
+              <div class="contact-card-desc">Clips, announcements, updates</div>
+            </div>
+          </div>
+
+          <div class="contact-mainlines">
+            <div>@truboxing.co</div>
+            <div style="font-size:.8rem;color:#9fb2d8;font-weight:500;">
+              Instagram / TikTok / YouTube
+            </div>
+          </div>
+
+          <div class="contact-cta-row">
+            <a class="contact-btn secondary"
+               href="https://www.instagram.com/truboxing.co"
+               target="_blank" rel="noopener">
+              <i class="fa-brands fa-instagram"></i>
+              Follow
+            </a>
+            <a class="contact-btn secondary"
+               href="https://www.tiktok.com/@truboxing.co"
+               target="_blank" rel="noopener">
+              <i class="fa-brands fa-tiktok"></i>
+              TikTok
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /contact-grid -->
+    </section>
+
+    <!-- RIGHT: guidance / FAQ -->
+    <aside class="info-side-card">
+      <div class="info-side-head">
+        <i class="fa-solid fa-circle-question"></i>
+        <span>Before you message</span>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">I'm a fighter. Can I get on a card?</div>
+        <div class="info-block-text">
+          Yes. Send us:
+          <br>• Full name
+          <br>• Weight class
+          <br>• Fight record (wins / losses / draws / KOs)
+          <br>• Gym / coach
+          <br><br>
+          We'll consider you for upcoming matchups.
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">I want my TruRec profile.</div>
+        <div class="info-block-text">
+          Message the <strong>TruRec / Sponsorship</strong> WhatsApp line and say:
+          <br>“I want to claim my TruRec profile.”
+          <br><br>
+          We'll verify your fights, add your photo, and make you sponsor-ready.
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">We're a brand / sponsor.</div>
+        <div class="info-block-text">
+          Tell us what you want:
+          <br>• Fighter sponsor?
+          <br>• Event title sponsor?
+          <br>• On-ring branding?
+          <br><br>
+          We'll come back with a clean deck + ratecard.
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">Media & coverage.</div>
+        <div class="info-block-text">
+          We allow filming / reels / behind-the-scenes, but we do control official fight footage
+          for broadcast and monetization.
+          <br><br>
+          For usage rights or collaboration, WhatsApp us under "General enquiries".
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- GLOBAL FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-topwrap">
+      <section class="pitch-card">
+        <div class="pitch-head">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" class="pitch-logo" alt="TruBoxing"/>
+          <div class="pitch-title-group">
+            <div class="pitch-kicker">TruBoxing • Malaysia</div>
+            <div class="pitch-headline">
+              Building Malaysia’s boxing future.
+            </div>
+          </div>
+        </div>
+
+        <p class="pitch-text">
+          We believe every boxer deserves a stage — from newcomers stepping
+          into the ring for the first time, to experienced fighters chasing greatness.
+          TruRec gives fighters identity, credibility, and opportunity.
+        </p>
+      </section>
+
+      <section class="claim-card">
+        <div class="claim-eyebrow">
+          <div class="dot"></div>
+          <span>Ready to get seen?</span>
+        </div>
+
+        <div class="claim-headline">
+          Claim your TruRec profile.
+        </div>
+
+        <div class="claim-copy">
+          Verified record. Sponsor-ready profile. Be first pick when promoters
+          build a card.
+        </div>
+
+        <div class="claim-action-row">
+          <a href="https://wa.me/601118808511?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+             class="cta-main"
+             target="_blank"
+             rel="noopener">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Claim profile</span>
+          </a>
+
+          <a href="{{ url_for('fighters_page') }}" class="cta-ghost">
+            <i class="fa-solid fa-eye"></i>
+            <span>Preview fighters</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer-midwrap">
+      <div class="footer-col">
+        <h5>Explore</h5>
         <ul>
-          <li><a href="/">HOME</a></li>
-          <li><a href="/events">EVENTS</a></li>
-          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-          <li><a href="/merchandise">MERCHANDISE</a></li>
-          <li><a href="/sponsors">SPONSORS</a></li>
-          <li><a href="/contact">CONTACT US</a></li>
+          <li><a href="/"><span class="icon"><i class="fa-solid fa-house"></i></span> Home</a></li>
+          <li><a href="/events"><span class="icon"><i class="fa-solid fa-bullhorn"></i></span> Events</a></li>
+          <li><a href="/fighters"><span class="icon"><i class="fa-solid fa-user-ninja"></i></span> Fighters</a></li>
+          <li><a href="/merch"><span class="icon"><i class="fa-solid fa-shirt"></i></span> Merchandise</a></li>
+          <li><a href="/sponsors"><span class="icon"><i class="fa-solid fa-handshake-angle"></i></span> Sponsors</a></li>
+          <li><a href="/contact"><span class="icon"><i class="fa-solid fa-envelope"></i></span> Contact</a></li>
         </ul>
       </div>
 
-      <div class="footer-column">
-        <h3>Contact us</h3>
-        <ul>
-          <li>📞 +60 111 8808 511</li>
-          <li>📞 +60 14 360 9582</li>
-          <li>✉️ truboxingmy@gmail.com</li>
+      <div class="footer-col">
+        <h5>Contact us</h5>
+        <ul class="contact-block">
+          <li>
+            <a class="contact-row"
+               href="https://wa.me/60109254970?text={{ 'Hello TruBoxing / TruRec, I have a question / inquiry.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">+60 10 925 4970</span>
+                <span>General inquiries / questions</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="contact-row"
+               href="https://wa.me/601155480258?text={{ 'Hello TruBoxing / TruRec, I would like to discuss TruRec profile / sponsorship / merchandise.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">+60 11 5548 0258</span>
+                <span>TruRec management / sponsorship / merch</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="contact-row"
+               href="https://mail.google.com/mail/?view=cm&fs=1&to=truboxingmy@gmail.com&su=TruBoxing%20Inquiry&body=Hi%20TruBoxing%20team,%0A%0AMy%20name%20is%20...%0A"
+               target="_blank"
+               rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">truboxingmy@gmail.com</span>
+                <span>Serious inquiries only</span>
+              </div>
+            </a>
+          </li>
         </ul>
       </div>
 
-      <div class="footer-column">
-        <h3>Social Media</h3>
-        <ul>
-          <li><a href="https://instagram.com/truboxing.co" target="_blank"><i class="fab fa-instagram"></i> Instagram</a></li>
-          <li><a href="https://facebook.com/truboxing.co" target="_blank"><i class="fab fa-facebook-f"></i> Facebook</a></li>
-          <li><a href="https://youtube.com/@truboxing" target="_blank"><i class="fab fa-youtube"></i> YouTube</a></li>
+      <div class="footer-col">
+        <h5>Social</h5>
+        <ul class="social-block">
+          <li>
+            <a class="social-row"
+               href="https://www.instagram.com/truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon ig-icon">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">Instagram</span>
+                <span>@truboxing</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.tiktok.com/@truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon tt-icon">
+                <i class="fa-brands fa-tiktok"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">TikTok</span>
+                <span>@truboxing.co</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.facebook.com/truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon fb-icon">
+                <i class="fa-brands fa-facebook-f"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">Facebook</span>
+                <span>TruBoxing</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.youtube.com/@truboxing"
+               target="_blank" rel="noopener">
+              <div class="contact-icon yt-icon">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+              <div class="contact-detail-footer">
+                <span class="contact-main">YouTube</span>
+                <span>TruBoxing Official</span>
+              </div>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
 
-    <p>&copy; 2025 TruRec. All rights reserved.</p>
+    <div class="footer-bottom">
+      © 2025 TruRec / TruBoxing. All rights reserved. No politics. Just boxing.
+    </div>
   </footer>
+
+  <!-- mobile nav logic -->
+  <script>
+  (function () {
+    const panel = document.getElementById("mobilePanel");
+    const btn = document.getElementById("mobileMenuBtn");
+
+    if (!panel || !btn) return;
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 900px)").matches;
+    }
+
+    function togglePanel() {
+      if (!isMobile()) return;
+      panel.classList.toggle("open");
+    }
+
+    btn.addEventListener("click", togglePanel);
+
+    function handleResize() {
+      if (!isMobile()) {
+        panel.classList.remove("open");
+      }
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+  })();
+  </script>
+
 </body>
 </html>

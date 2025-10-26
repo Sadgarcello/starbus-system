@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- SEO -->
@@ -18,291 +18,1095 @@
   <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- CSS/JS -->
+  <!-- Assets -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <!-- your existing global + page css -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/sponsers.css') }}">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+
+  <style>
+  /* ===== nav + footer styling only (does NOT touch page background) ===== */
+
+  :root {
+    --blue-900: #002766;
+    --blue-800: #003d99;
+    --blue-700: #0047b8;
+    --blue-600: #0053e0;
+    --blue-glow: rgba(0,123,255,0.4);
+
+    --panel-border: rgba(255,255,255,0.08);
+    --panel-solid: rgba(0,30,95,0.9);
+
+    --text-primary: #fff;
+    --text-dim: rgba(255,255,255,0.6);
+    --text-faint: rgba(255,255,255,0.4);
+
+    --radius-md: 0.5rem;
+    --radius-xl: 1rem;
+
+    --transition-fast: 0.16s ease;
+
+    --max-width: 1400px;
+    --header-h-desktop: 72px;
+    --header-h-mobile: 64px;
+  }
+
+  /* ---------- GLOBAL NAVBAR ---------- */
+  .site-header {
+    background: radial-gradient(
+      at 10% -20%,
+      var(--blue-600) 0%,
+      var(--blue-800) 40%,
+      var(--blue-900) 80%
+    );
+    color: var(--text-primary);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav-shell {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    height: var(--header-h-desktop);
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+  }
+
+  .brand-logo {
+    height: 46px;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.6));
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .brand-title {
+    color: var(--text-primary);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .brand-sub {
+    color: var(--text-dim);
+    font-size: .6rem;
+    font-weight: 500;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .nav-links-global {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  .nav-links-global a {
+    color: var(--text-primary);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 4px;
+  }
+
+  .nav-links-global a::after {
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:0;
+    width:0;
+    height:2px;
+    background:#fff;
+    transform:translateX(-50%);
+    transition:width var(--transition-fast);
+  }
+  .nav-links-global a:hover::after {
+    width:100%;
+  }
+
+  .claim-btn {
+    background:#fff;
+    color:#001a4d;
+    font-size:0.8rem;
+    font-weight:700;
+    padding:0.6rem 0.9rem;
+    border-radius:var(--radius-md);
+    border:1px solid rgba(255,255,255,0.4);
+    text-decoration:none;
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.8),
+      0 0 20px var(--blue-glow);
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    transition:all var(--transition-fast);
+    line-height:1;
+    position:relative;
+    z-index:100;
+  }
+  .claim-btn i { font-size:.8rem; }
+  .claim-btn:hover { filter:brightness(1.08); }
+
+  .burger {
+    display:none;
+    background:none;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:var(--radius-md);
+    padding:.4rem .5rem;
+    cursor:pointer;
+    box-shadow:0 10px 24px rgba(0,0,0,0.5);
+    background:rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+  }
+  .burger span {
+    display:block;
+    width:22px;
+    height:2px;
+    background:#fff;
+    margin:5px 0;
+    border-radius:1px;
+  }
+
+  .mobile-panel {
+    display:none;
+    flex-direction:column;
+    background:rgba(0,20,70,0.75);
+    border-top:1px solid var(--panel-border);
+    text-align:center;
+    box-shadow:0 40px 120px rgba(0,0,0,0.9) inset;
+    backdrop-filter: blur(10px);
+
+    position:absolute;
+    left:0;
+    right:0;
+    top:var(--header-h-mobile);
+    z-index:1500;
+  }
+  .mobile-panel a {
+    color:#fff;
+    text-decoration:none;
+    padding:1rem;
+    font-weight:600;
+    text-transform:uppercase;
+    border-top:1px solid rgba(255,255,255,0.08);
+    font-size:.9rem;
+    letter-spacing:.05em;
+  }
+  .mobile-panel.open { display:flex; }
+
+  .mobile-claim-link {
+    width:90%;
+    max-width:260px;
+    margin:1rem auto 1.5rem;
+    background:#fff;
+    color:#001a4d;
+    font-size:.8rem;
+    font-weight:700;
+    padding:.8rem 1rem;
+    border-radius:var(--radius-md);
+    line-height:1.3;
+    border:1px solid rgba(255,255,255,0.4);
+    box-shadow:
+      0 24px 48px rgba(0,0,0,0.8),
+      0 0 24px var(--blue-glow);
+    text-decoration:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.4rem;
+    text-align:center;
+  }
+  .mobile-claim-headline {
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    font-weight:700;
+    font-size:.8rem;
+    color:#001a4d;
+  }
+  .mobile-claim-sub {
+    font-size:.7rem;
+    color:#001a4dcf;
+  }
+
+  @media(max-width:900px){
+    .nav-links-global,
+    .claim-btn,
+    .brand-text {
+      display:none;
+    }
+
+    .burger{display:block;}
+
+    .nav-shell{
+      grid-template-columns:1fr auto 1fr;
+      height:var(--header-h-mobile);
+      position: relative;
+    }
+    .brand-logo{height:42px;}
+  }
+
+  /* ---------- FOOTER (global neon version) ---------- */
+  .site-footer {
+    position: relative;
+    background: radial-gradient(at 20% 20%, var(--blue-700) 0%, var(--blue-900) 60%);
+    color: var(--text-primary);
+    overflow: hidden;
+    margin-top:4rem;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .site-footer::before,
+  .site-footer::after {
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:.4;
+    pointer-events:none;
+  }
+  .site-footer::before {
+    width:320px; height:320px;
+    background:radial-gradient(circle,var(--blue-600) 0%,transparent 70%);
+    top:-80px; left:-80px;
+  }
+  .site-footer::after {
+    width:260px; height:260px;
+    background:radial-gradient(circle,#0094ff 0%,transparent 70%);
+    bottom:-60px; right:-60px;
+    opacity:.2;
+  }
+
+  .footer-topwrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 3rem 1rem 2rem;
+    display:grid;
+    gap:2rem;
+  }
+  @media(min-width:800px){
+    .footer-topwrap {
+      grid-template-columns: 2fr 1fr;
+      align-items:stretch;
+    }
+  }
+
+  .pitch-card {
+    background: var(--panel-solid);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-xl);
+    padding:1.5rem 1.25rem;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.8),
+      0 0 80px rgba(0,102,255,0.25);
+    position:relative;
+    color:#fff;
+  }
+  .pitch-head {
+    display:flex;
+    align-items:flex-start;
+    gap:1rem;
+    flex-wrap:wrap;
+  }
+  .pitch-logo {
+    width:64px;
+    height:auto;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,.8));
+  }
+  .pitch-title-group { flex:1; min-width:200px; }
+  .pitch-kicker {
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .pitch-headline {
+    margin-top:.25rem;
+    color:var(--text-primary);
+    font-size:1.05rem;
+    font-weight:700;
+    line-height:1.4;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .pitch-text {
+    margin-top:1rem;
+    color:var(--text-dim);
+    font-size:.9rem;
+    line-height:1.5;
+    max-width:55ch;
+  }
+
+  .claim-card {
+    border-radius: var(--radius-xl);
+    padding:1.25rem 1.25rem 1rem;
+    background: radial-gradient(at 20% 20%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0) 60%),
+                rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.2);
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.8),
+      0 0 80px rgba(0,102,255,0.4);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height: 190px;
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+    color:#fff;
+  }
+  .claim-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 80% 20%, rgba(0,140,255,0.35) 0%, transparent 70%);
+    mix-blend-mode:screen;
+    pointer-events:none;
+  }
+  .claim-eyebrow {
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+  }
+  .claim-eyebrow .dot {
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background: radial-gradient(circle,#00ffbd 0%,#0053e0 70%);
+    box-shadow:0 0 16px #00ffbd;
+  }
+  .claim-headline {
+    margin-top:.5rem;
+    color:#fff;
+    font-size:1rem;
+    font-weight:700;
+    line-height:1.4;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .claim-copy {
+    margin-top:.5rem;
+    font-size:0.8rem;
+    font-weight:500;
+    color:var(--text-dim);
+    line-height:1.4;
+    max-width:40ch;
+  }
+  .claim-action-row {
+    margin-top:1rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.75rem;
+  }
+  .cta-main {
+    background:#fff;
+    color:#001a4d;
+    font-size:.8rem;
+    font-weight:700;
+    padding:.6rem .8rem;
+    border-radius:var(--radius-md);
+    border:1px solid rgba(255,255,255,0.4);
+    text-decoration:none;
+    line-height:1.1;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    box-shadow:
+      0 22px 44px rgba(0,0,0,0.85),
+      0 0 24px rgba(0,255,200,0.5);
+    transition:all var(--transition-fast);
+  }
+  .cta-main:hover { filter:brightness(1.08); }
+  .cta-ghost {
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:var(--radius-md);
+    color:#fff;
+    font-size:.8rem;
+    font-weight:600;
+    text-decoration:none;
+    padding:.6rem .8rem;
+    line-height:1.1;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    transition:all var(--transition-fast);
+  }
+  .cta-ghost:hover { background:rgba(255,255,255,0.1); }
+
+  .footer-midwrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+    display:grid;
+    row-gap:2rem;
+    column-gap:2rem;
+  }
+  @media(min-width:700px){
+    .footer-midwrap {
+      grid-template-columns: repeat(3,1fr);
+    }
+  }
+
+  .footer-col h5 {
+    color:#fff;
+    font-size:.8rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:0 0 .75rem;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .footer-col ul {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:.5rem;
+  }
+  .footer-col a {
+    color:var(--text-primary);
+    font-size:.9rem;
+    font-weight:500;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .footer-col a .icon {
+    width:1.25rem;
+    height:1.25rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:0.4rem;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.15);
+    font-size:.7rem;
+    box-shadow:0 10px 20px rgba(0,0,0,0.6);
+  }
+
+  .contact-block li,
+  .social-block li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .contact-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.45rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    font-size: 0.8rem;
+    color: #fff;
+  }
+  .ig-icon { background: radial-gradient(circle at 30% 30%, #ffdc80 0%, #f77737 30%, #c13584 60%, #6c34ad 80%) border-box; border:1px solid rgba(255,255,255,0.3); }
+  .tt-icon { background:#000; color:#fff; border:1px solid rgba(255,255,255,0.3); }
+  .fb-icon { background:#1877f2; border:1px solid rgba(255,255,255,0.4); }
+  .yt-icon { background:#ff0000; border:1px solid rgba(255,255,255,0.4); }
+
+  .contact-detail {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    color: var(--text-primary);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .contact-detail span {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-top: 0.15rem;
+  }
+
+  @media(max-width:700px) {
+    .footer-midwrap { text-align: center; }
+    .footer-col { text-align: center; }
+    .footer-col h5 { text-align: center; }
+
+    .footer-col ul {
+      justify-content: center;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .footer-col ul li a {
+      justify-content: center;
+    }
+
+    .contact-block li,
+    .social-block li {
+      justify-content: center;
+      text-align: left;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .contact-detail {
+      align-items: flex-start;
+    }
+  }
+
+  .footer-bottom {
+    background:rgba(0,0,0,0.25);
+    border-top:1px solid rgba(255,255,255,0.1);
+    text-align:center;
+    padding:1rem;
+    font-size:0.75rem;
+    color:var(--text-faint);
+    letter-spacing:.03em;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .contact-row,
+  .social-row {
+    text-decoration: none !important;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+  .contact-row:hover .contact-icon,
+  .social-row:hover .contact-icon {
+    background: rgba(255,255,255,0.18);
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(0,123,255,0.4);
+  }
+  .contact-row:hover .contact-detail .contact-main,
+  .social-row:hover .contact-detail .contact-main {
+    color: #ffffff;
+  }
+  .contact-row:hover .contact-detail span,
+  .social-row:hover .contact-detail span {
+    color: var(--text-dim);
+  }
+  .contact-row a,
+  .contact-detail a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+  </style>
 </head>
 
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="navbar-container">
-      <a href="/"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" /></a>
-      <i class="fas fa-bars burger" id="burger"></i>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="/">Home</a></li>
-        <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
-        <li><a href="/merchandise">MERCHANDISE</a></li>
-        <li><a href="/sponsors" class="active">SPONSORS</a></li>
-        <li><a href="/contact">CONTACT US</a></li>
-      </ul>
-    </div>
-  </nav>
-<nav aria-label="Breadcrumb" class="breadcrumbs">
-  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
-    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
-      <meta itemprop="position" content="1"/>
-    </li>
-    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <span itemprop="name">Sponsors</span>
-      <meta itemprop="position" content="2"/>
-    </li>
-  </ol>
-</nav>
 
-  <!-- Page content -->
+  <!-- GLOBAL NAVBAR -->
+  <header class="site-header">
+    <div class="nav-shell">
+      <div class="brand-wrap">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="brand-logo" alt="TruBoxing"/>
+        <div class="brand-text">
+          <div class="brand-title">TruBoxing / TruRec</div>
+          <div class="brand-sub">No politics. Just boxing.</div>
+        </div>
+      </div>
+
+      <nav class="nav-links-global">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('events_page') }}">Events</a>
+        <a href="{{ url_for('fighters_page') }}">TruRec</a>
+        <a href="{{ url_for('merchandise') }}">Merchandise</a>
+        <a href="{{ url_for('sponsors_page') }}">Sponsors</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+      </nav>
+
+      <a class="claim-btn"
+         href="https://wa.me/601155480258?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+         target="_blank"
+         rel="noopener">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Claim your TruRec</span>
+      </a>
+
+      <button class="burger" id="mobileMenuBtn" aria-label="menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="mobile-panel" id="mobilePanel">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('events_page') }}">Events</a>
+        <a href="{{ url_for('fighters_page') }}">TruRec</a>
+        <a href="{{ url_for('merchandise') }}">Merchandise</a>
+        <a href="{{ url_for('sponsors_page') }}">Sponsors</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+
+        <a class="mobile-claim-link"
+           href="https://wa.me/601155480258?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+           target="_blank"
+           rel="noopener">
+          <div class="mobile-claim-headline">
+            <i class="fa-solid fa-bolt" style="color:#001a4d;"></i>
+            Claim your TruRec
+          </div>
+          <div class="mobile-claim-sub">
+            Get verified, get discovered, get paid.
+          </div>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breadcrumbs (keep your styling if any in sponsers.css / style.css) -->
+  <nav aria-label="Breadcrumb" class="breadcrumbs">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="{{ url_for('home', _external=True) }}"><span itemprop="name">Home</span></a>
+        <meta itemprop="position" content="1"/>
+      </li>
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span itemprop="name">Sponsors</span>
+        <meta itemprop="position" content="2"/>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- PAGE CONTENT (unchanged design) -->
   <main class="sp-page">
     <div class="sp-wrap">
+
       <h1 class="sp-title">Our Sponsors</h1>
 
-      <!-- Logo Grid (kept same visual) -->
+      <!-- Logo Grid -->
       <div class="sponsors-grid">
-        <!-- kept your current folder name 'sponsers' on purpose -->
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsors/trurec.png') }}" alt="TruRec"></div>
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsors/abangbesi.png') }}" alt="Besi"></div>
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsors/kaboom.png') }}" alt="Kaboom"></div>
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsors/ko.png') }}" alt="KO"></div>
         <div class="sponsor-card"><img src="{{ url_for('static', filename='images/sponsors/tsl.png') }}" alt="TSL"></div>
-        <!-- Add more as needed -->
       </div>
       
-<!-- Minimal Clean Sponsor Block (TruRec) -->
-<section id="trurec" class="sponsor-feature v1" style="--accent:#00e5ff; --text:#0b1220; --bg:#ffffff;">
-  <div class="sf2">
-    <div class="sf2-body">
-      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/trurec.png') }}" alt="TruRec logo">
-      <h2 class="sf2-title">TruRec — Official Record Partner</h2>
-      <p class="sf2-desc">
-        TruRec is the digital boxer record for Malaysia — verified results, fighter profiles,
-        and career stats. Trusted by promoters and coaches nationwide.
-      </p>
-      <div class="sf2-cta">
-        <a class="sf2-btn" href="https://truboxing.co/fighters" target="_blank" rel="noopener">Visit Website</a>
-      </div>
-      <ul class="sf2-meta">
-        <li>Since 2025</li>
-        <li>Category: Technology</li>
-        <li>Tier: Gold Partner</li>
-      </ul>
-    </div>
+      <!-- TruRec -->
+      <section id="trurec" class="sponsor-feature v1" style="--accent:#00e5ff; --text:#0b1220; --bg:#ffffff;">
+        <div class="sf2">
+          <div class="sf2-body">
+            <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/trurec.png') }}" alt="TruRec logo">
+            <h2 class="sf2-title">TruRec — Official Record Partner</h2>
+            <p class="sf2-desc">
+              TruRec is the digital boxer record for Malaysia — verified results, fighter profiles,
+              and career stats. Trusted by promoters and coaches nationwide.
+            </p>
+            <div class="sf2-cta">
+              <a class="sf2-btn" href="https://truboxing.co/fighters" target="_blank" rel="noopener">Visit Website</a>
+            </div>
+            <ul class="sf2-meta">
+              <li>Since 2025</li>
+              <li>Category: Technology</li>
+              <li>Tier: Gold Partner</li>
+            </ul>
+          </div>
 
-    <figure class="sf2-media">
-      <iframe
-        class="sf2-video"
-        src="https://www.youtube-nocookie.com/embed/7FqgcXWSVkk?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=7FqgcXWSVkk"
-        title="TruRec video"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        loading="lazy"
-        referrerpolicy="strict-origin-when-cross-origin"
-      ></iframe>
-    </figure>
-  </div>
-</section>
+          <figure class="sf2-media">
+            <iframe
+              class="sf2-video"
+              src="https://www.youtube-nocookie.com/embed/7FqgcXWSVkk?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=7FqgcXWSVkk"
+              title="TruRec video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+          </figure>
+        </div>
+      </section>
 
-<!-- Minimal Clean Sponsor Block (Abang Besi) -->
-<section id="abang-besi" class="sponsor-feature v1" style="--accent:#f97316; --text:#0b1220; --bg:#ffffff;">
-  <div class="sf2">
-    <div class="sf2-body">
-      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/abangbesi.png') }}" alt="Abang Besi logo">
-      <h2 class="sf2-title">Abang Besi</h2>
-      <p class="sf2-desc">
-       Abang Besi is the backbone behind our ring. From custom steel fabrication to on-site installation,
-        they handled the frame, anchors, trussing and safety checks so our fighters step into a ring that’s solid,
-         square, and fight-ready. Big love to Abang Besi for turning metal into moments. 🥊
-      </p>
-      <div class="sf2-cta">
-        <a class="sf2-btn" href="https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" rel="noopener">learn more</a>
-      </div>
-      <ul class="sf2-meta">
-        <li>Category: Infrastructure </li>
-        <li>Country: Malaysia</li>
-      </ul>
-    </div>
+      <!-- Abang Besi -->
+      <section id="abang-besi" class="sponsor-feature v1" style="--accent:#f97316; --text:#0b1220; --bg:#ffffff;">
+        <div class="sf2">
+          <div class="sf2-body">
+            <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/abangbesi.png') }}" alt="Abang Besi logo">
+            <h2 class="sf2-title">Abang Besi</h2>
+            <p class="sf2-desc">
+              Abang Besi is the backbone behind our ring. From custom steel fabrication to on-site installation,
+              they handled the frame, anchors, trussing and safety checks so our fighters step into a ring that’s solid,
+              square, and fight-ready. Big love to Abang Besi for turning metal into moments. 🥊
+            </p>
+            <div class="sf2-cta">
+              <a class="sf2-btn"
+                 href="https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                 target="_blank" rel="noopener">
+                Learn more
+              </a>
+            </div>
+            <ul class="sf2-meta">
+              <li>Category: Infrastructure </li>
+              <li>Country: Malaysia</li>
+            </ul>
+          </div>
 
-<!-- Abang Besi highlights (YouTube embed) -->
-<figure class="sf2-media">
-  <iframe
-    class="sf2-video"
-    src="https://www.youtube-nocookie.com/embed/JLCr-0d-RWI?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=JLCr-0d-RWI"
-    title="Abang Besi highlights"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-    loading="lazy"
-    referrerpolicy="strict-origin-when-cross-origin"
-  ></iframe>
-</figure>
+          <figure class="sf2-media">
+            <iframe
+              class="sf2-video"
+              src="https://www.youtube-nocookie.com/embed/JLCr-0d-RWI?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&loop=1&playlist=JLCr-0d-RWI"
+              title="Abang Besi highlights"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+          </figure>
+        </div>
+      </section>
 
-  </div>
-</section>
+      <!-- Kaboom.my -->
+      <section id="kaboom" class="sponsor-feature v1" style="--accent:#f59e0b; --text:#0b1220; --bg:#ffffff;">
+        <div class="sf2">
+          <div class="sf2-body">
+            <a href="https://kaboom.my" target="_blank" rel="noopener">
+              <img class="sf2-logo"
+                   src="{{ url_for('static', filename='images/sponsors/kaboom.png') }}"
+                   alt="Kaboom.my logo">
+            </a>
 
-<!-- Kaboom.my — Marketing Partner -->
-<section id="kaboom" class="sponsor-feature v1" style="--accent:#f59e0b; --text:#0b1220; --bg:#ffffff;">
-  <div class="sf2">
-    <div class="sf2-body">
-      <a href="https://kaboom.my" target="_blank" rel="noopener">
-        <img class="sf2-logo"
-             src="{{ url_for('static', filename='images/sponsors/kaboom.png') }}"
-             alt="Kaboom.my logo">
-      </a>
+            <h2 class="sf2-title">Kaboom.my — Marketing Partner</h2>
+            <p class="sf2-desc">
+              Full-service marketing support powering TruBoxing campaigns — brand strategy, social media,
+              on-site content, and sponsor activations that actually convert.
+            </p>
 
-      <h2 class="sf2-title">Kaboom.my — Marketing Partner</h2>
-      <p class="sf2-desc">
-        Full-service marketing support powering TruBoxing campaigns — brand strategy, social media,
-        on-site content, and sponsor activations that actually convert.
-      </p>
+            <div class="sf2-cta">
+              <a class="sf2-btn"
+                 href="https://kaboom.my"
+                 target="_blank" rel="noopener"
+                 aria-label="Visit Kaboom.my website">
+                Visit Website
+              </a>
+            </div>
 
-      <div class="sf2-cta">
-        <a class="sf2-btn"
-           href="https://kaboom.my"
-           target="_blank" rel="noopener"
-           aria-label="Visit Kaboom.my website">
-          Visit Website
-        </a>
-      </div>
+            <ul class="sf2-meta">
+              <li>Scope: Strategy & Social</li>
+              <li>Activation: Event Coverage</li>
+              <li>Tier: Partner</li>
+            </ul>
+          </div>
 
-      <ul class="sf2-meta">
-        <li>Scope: Strategy & Social</li>
-        <li>Activation: Event Coverage</li>
-        <li>Tier: Partner</li>
-      </ul>
-    </div>
+          <figure class="sf2-media">
+            <img
+              src="{{ url_for('static', filename='images/sponsors/kaboomfeed.png') }}"
+              alt="Kaboom.my campaign showcase"
+              loading="lazy">
+          </figure>
+        </div>
+      </section>
 
-    <!-- Media -->
-    <figure class="sf2-media">
-      <img
-        src="{{ url_for('static', filename='images/sponsors/kaboomfeed.png') }}"
-        alt="Kaboom.my campaign showcase"
-        loading="lazy">
-    </figure>
-  </div>
-</section>
+      <!-- Knockout Media -->
+      <section id="knockout-media" class="sponsor-feature v1" style="--accent:#6366f1; --text:#0b1220; --bg:#ffffff;">
+        <div class="sf2">
+          <div class="sf2-body">
+            <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/ko.png') }}" alt="Knockout Media logo">
+            <h2 class="sf2-title">Knockout Media — Live Stream & Videography</h2>
+            <p class="sf2-desc">
+              The crew behind our smooth live streams and cinematic fight recaps — multi-cam production,
+              replays, and highlight edits that bring the crowd online.
+            </p>
+            <div class="sf2-cta">
+              <a class="sf2-btn" href="https://youtube.com/@truboxing" target="_blank" rel="noopener">Watch Highlights</a>
+            </div>
+            <ul class="sf2-meta">
+              <li>Service: Live Production</li>
+              <li>Deliverables: Streams & Recaps</li>
+              <li>Tier: Media Partner</li>
+            </ul>
+          </div>
 
-<!-- Knockout Media — Live Stream & Videography -->
-<section id="knockout-media" class="sponsor-feature v1" style="--accent:#6366f1; --text:#0b1220; --bg:#ffffff;">
-  <div class="sf2">
-    <div class="sf2-body">
-      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/ko.png') }}" alt="Knockout Media logo">
-      <h2 class="sf2-title">Knockout Media — Live Stream & Videography</h2>
-      <p class="sf2-desc">
-        The crew behind our smooth live streams and cinematic fight recaps — multi-cam production,
-        replays, and highlight edits that bring the crowd online.
-      </p>
-      <div class="sf2-cta">
-        <a class="sf2-btn" href="https://youtube.com/@truboxing" target="_blank" rel="noopener">Watch Highlights</a>
-      </div>
-      <ul class="sf2-meta">
-        <li>Service: Live Production</li>
-        <li>Deliverables: Streams & Recaps</li>
-        <li>Tier: Media Partner</li>
-      </ul>
-    </div>
+          <figure class="sf2-media">
+            <img
+              src="{{ url_for('static', filename='images/sponsors/komedia.jpg') }}"
+              alt="Knockout Media production highlight"
+              loading="lazy">
+          </figure>
+        </div>
+      </section>
 
-    <!-- Image instead of video -->
-    <figure class="sf2-media">
-      <img
-        src="{{ url_for('static', filename='images/sponsors/komedia.jpg') }}"
-        alt="Knockout Media production highlight"
-        loading="lazy">
-    </figure>
-  </div>
-</section>
+      <!-- Team Sound & Light -->
+      <section id="team-sound-light" class="sponsor-feature v1" style="--accent:#22c55e; --text:#0b1220; --bg:#ffffff;">
+        {% set wa_text = "hi i came from truboxing website sponsers page im interested in working with team sound and light" %}
+        <div class="sf2">
+          <div class="sf2-body">
+            <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/tsl.png') }}" alt="Team Sound & Light logo">
+            <h2 class="sf2-title">Team Sound & Light — Event Production</h2>
+            <p class="sf2-desc">
+              They power the arena atmosphere — PA systems, lighting rigs, walk-out cues, and crisp ring audio
+              so every punch lands with impact.
+            </p>
+            <div class="sf2-cta">
+              <a class="sf2-btn"
+                 href="https://wa.me/60163700483?text={{ wa_text|urlencode }}"
+                 target="_blank" rel="noopener"
+                 aria-label="WhatsApp Team Sound & Light">
+                Book for Event
+              </a>
 
-<!-- Team Sound & Light — Event Production -->
-<section id="team-sound-light" class="sponsor-feature v1" style="--accent:#22c55e; --text:#0b1220; --bg:#ffffff;">
-  {% set wa_text = "hi i came from truboxing website sponsers page im interested in working with team sound and light" %}
-  <div class="sf2">
-    <div class="sf2-body">
-      <img class="sf2-logo" src="{{ url_for('static', filename='images/sponsors/tsl.png') }}" alt="Team Sound & Light logo">
-      <h2 class="sf2-title">Team Sound & Light — Event Production</h2>
-      <p class="sf2-desc">
-        They power the arena atmosphere — PA systems, lighting rigs, walk-out cues, and crisp ring audio
-        so every punch lands with impact.
-      </p>
-      <div class="sf2-cta">
-        <!-- WhatsApp with prefilled message -->
-        <a class="sf2-btn"
-           href="https://wa.me/60163700483?text={{ wa_text|urlencode }}"
-           target="_blank" rel="noopener"
-           aria-label="WhatsApp Team Sound & Light">
-          Book for Event
-        </a>
+              <a class="sf2-btn ghost"
+                 href="https://teamsoundandlight.com/"
+                 target="_blank" rel="noopener">
+                Learn More
+              </a>
+            </div>
+            <ul class="sf2-meta">
+              <li>Systems: PA & Lighting</li>
+              <li>Specialty: Live Events</li>
+              <li>Tier: Production Partner</li>
+            </ul>
+          </div>
 
-        <!-- Replace the URL below with their actual website if different -->
-        <a class="sf2-btn ghost"
-           href="https://teamsoundandlight.com/"
-           target="_blank" rel="noopener">
-          Learn More
-        </a>
-      </div>
-      <ul class="sf2-meta">
-        <li>Systems: PA & Lighting</li>
-        <li>Specialty: Live Events</li>
-        <li>Tier: Production Partner</li>
-      </ul>
-    </div>
+          <figure class="sf2-media">
+            <img
+              src="{{ url_for('static', filename='images/sponsors/tsl.jpeg') }}"
+              alt="Team Sound & Light stage setup"
+              loading="lazy">
+          </figure>
+        </div>
+      </section>
 
-    <!-- Media -->
-    <figure class="sf2-media">
-      <img
-        src="{{ url_for('static', filename='images/sponsors/tsl.jpeg') }}"
-        alt="Team Sound & Light stage setup"
-        loading="lazy">
-    </figure>
-  </div>
-</section>
-
-
- 
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column logo-column">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
-        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
-        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers to champions.</p>
-      </div>
+  <!-- GLOBAL FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-topwrap">
+      <section class="pitch-card">
+        <div class="pitch-head">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" class="pitch-logo" alt="TruBoxing"/>
+          <div class="pitch-title-group">
+            <div class="pitch-kicker">TruBoxing • Malaysia</div>
+            <div class="pitch-headline">
+              Building Malaysia’s boxing future.
+            </div>
+          </div>
+        </div>
 
-      <div class="footer-column">
-        <h3>Quick Links</h3>
+        <p class="pitch-text">
+          We believe every boxer deserves a stage — from newcomers stepping
+          into the ring for the first time, to experienced fighters chasing greatness.
+          TruRec gives fighters identity, credibility, and opportunity.
+        </p>
+      </section>
+
+      <section class="claim-card">
+        <div class="claim-eyebrow">
+          <div class="dot"></div>
+          <span>Ready to get seen?</span>
+        </div>
+
+        <div class="claim-headline">
+          Claim your TruRec profile.
+        </div>
+
+        <div class="claim-copy">
+          Verified record. Sponsor-ready profile. Be first pick when promoters
+          build a card.
+        </div>
+
+        <div class="claim-action-row">
+          <a href="https://wa.me/601118808511?text=Hello%20TruBoxing%2FTruRec%2C%20I%20would%20like%20to%20open%20a%20TruRec%20profile."
+             class="cta-main"
+             target="_blank"
+             rel="noopener">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Claim profile</span>
+          </a>
+
+          <a href="{{ url_for('fighters_page') }}" class="cta-ghost">
+            <i class="fa-solid fa-eye"></i>
+            <span>Preview fighters</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer-midwrap">
+      <div class="footer-col">
+        <h5>Explore</h5>
         <ul>
-          <li><a href="/">HOME</a></li>
-          <li><a href="/events">EVENTS</a></li>
-          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
-          <li><a href="/merchandise">MERCHANDISE</a></li>
-          <li><a href="/sponsors">SPONSORS</a></li>
-          <li><a href="/contact">CONTACT US</a></li>
+          <li><a href="/"><span class="icon"><i class="fa-solid fa-house"></i></span> Home</a></li>
+          <li><a href="/events"><span class="icon"><i class="fa-solid fa-bullhorn"></i></span> Events</a></li>
+          <li><a href="/fighters"><span class="icon"><i class="fa-solid fa-user-ninja"></i></span> Fighters</a></li>
+          <li><a href="/merch"><span class="icon"><i class="fa-solid fa-shirt"></i></span> Merchandise</a></li>
+          <li><a href="/sponsors"><span class="icon"><i class="fa-solid fa-handshake-angle"></i></span> Sponsors</a></li>
+          <li><a href="/contact"><span class="icon"><i class="fa-solid fa-envelope"></i></span> Contact</a></li>
         </ul>
       </div>
 
-      <div class="footer-column">
-        <h3>Contact us</h3>
-        <ul>
-          <li>📞 +60 111 8808 511</li>
-          <li>📞 +60 14 360 9582</li>
-          <li>✉️ truboxingmy@gmail.com</li>
+      <div class="footer-col">
+        <h5>Contact us</h5>
+        <ul class="contact-block">
+          <li>
+            <a class="contact-row"
+               href="https://wa.me/60109254970?text={{ 'Hello TruBoxing / TruRec, I have a question / inquiry.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">+60 10 925 4970</span>
+                <span>General inquiries / questions</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="contact-row"
+               href="https://wa.me/601155480258?text={{ 'Hello TruBoxing / TruRec, I would like to discuss TruRec profile / sponsorship / merchandise.'|urlencode }}"
+               target="_blank" rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">+60 11 5548 0258</span>
+                <span>TruRec management / sponsorship / merch</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="contact-row"
+               href="https://mail.google.com/mail/?view=cm&fs=1&to=truboxingmy@gmail.com&su=TruBoxing%20Inquiry&body=Hi%20TruBoxing%20team,%0A%0AMy%20name%20is%20...%0A"
+               target="_blank"
+               rel="noopener">
+              <div class="contact-icon">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">truboxingmy@gmail.com</span>
+                <span>Serious inquiries only</span>
+              </div>
+            </a>
+          </li>
         </ul>
       </div>
 
-      <div class="footer-column">
-        <h3>Social Media</h3>
-        <ul>
-          <li><a href="https://instagram.com/truboxing.co" target="_blank"><i class="fab fa-instagram"></i> Instagram</a></li>
-          <li><a href="https://facebook.com/truboxing.co" target="_blank"><i class="fab fa-facebook-f"></i> Facebook</a></li>
-          <li><a href="https://youtube.com/@truboxing" target="_blank"><i class="fab fa-youtube"></i> YouTube</a></li>
+      <div class="footer-col">
+        <h5>Social</h5>
+        <ul class="social-block">
+          <li>
+            <a class="social-row"
+               href="https://www.instagram.com/truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon ig-icon">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">Instagram</span>
+                <span>@truboxing</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.tiktok.com/@truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon tt-icon">
+                <i class="fa-brands fa-tiktok"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">TikTok</span>
+                <span>@truboxing.co</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.facebook.com/truboxing.co"
+               target="_blank" rel="noopener">
+              <div class="contact-icon fb-icon">
+                <i class="fa-brands fa-facebook-f"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">Facebook</span>
+                <span>TruBoxing</span>
+              </div>
+            </a>
+          </li>
+
+          <li>
+            <a class="social-row"
+               href="https://www.youtube.com/@truboxing"
+               target="_blank" rel="noopener">
+              <div class="contact-icon yt-icon">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+              <div class="contact-detail">
+                <span class="contact-main">YouTube</span>
+                <span>TruBoxing Official</span>
+              </div>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
 
-    <p>&copy; 2025 TruRec. All rights reserved.</p>
+    <div class="footer-bottom">
+      © 2025 TruRec / TruBoxing. All rights reserved. No politics. Just boxing.
+    </div>
   </footer>
+
+  <script>
+  // Burger/mobile nav logic (same across pages)
+  (function () {
+    const panel = document.getElementById("mobilePanel");
+    const btn = document.getElementById("mobileMenuBtn");
+
+    if (!panel || !btn) return;
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 900px)").matches;
+    }
+
+    function togglePanel() {
+      if (!isMobile()) return;
+      panel.classList.toggle("open");
+    }
+
+    btn.addEventListener("click", togglePanel);
+
+    function handleResize() {
+      if (!isMobile()) {
+        panel.classList.remove("open");
+      }
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+  })();
+  </script>
+
 </body>
 </html>

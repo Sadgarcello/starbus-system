@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, redirect, url_for, Response
 import sqlite3
 import os
@@ -101,43 +100,143 @@ def list_fighter_ids():
 # ----------------------- Home page featured --------------------------
 FEATURED_IDS = ["shamel", "bazooka", "danny", "buki"]
 
+# Full Malaysia states + federal territories → flag filename
 STATE_FLAG_MAP = {
+    # West Malaysia
+    "johor": "johor.png",
+    "kedah": "kedah.png",
+    "kelantan": "kelantan.png",
+    "malacca": "melaka.png",
+    "melaka": "melaka.png",             # alt spelling
+    "negeri sembilan": "negeri-sembilan.png",
+    "pahang": "pahang.png",
+    "penang": "pulau-pinang.png",
+    "pulau pinang": "pulau-pinang.png",
+    "perak": "perak.png",
+    "perlis": "perlis.png",
     "selangor": "selangor.png",
-    "sarawak": "sarawak.png",
-    "kuala-lumpur": "kuala-lumpur.png",
+    "terengganu": "terengganu.png",
+
+    # East Malaysia
     "sabah": "sabah.png",
-    # add more as needed…
+    "sarawak": "sarawak.png",
+
+    # Federal Territories
+    "kuala lumpur": "kuala-lumpur.png",
+    "putrajaya": "putrajaya.png",
+    "labuan": "labuan.png",
 }
 
 
-def normalize_state_from_country(country: str) -> tuple[str, str]:
-    """Extract a state label from 'Malaysia (Selangor)' style strings and map to a flag file."""
+def normalize_state_from_country(country: str, explicit_state: str = "") -> tuple[str, str]:
+    """
+    Return (state_label, flag_file).
+
+    Priority:
+    1. if DB already has a state_label column (explicit_state), trust that
+    2. else try to parse "Malaysia (Selangor)" style country field
+    3. else fall back to whole country if it's not just "Malaysia"
+    """
+    # Step 1: if caller already gave us a state_label from DB, use it
+    if explicit_state:
+        label = explicit_state.strip()
+        key = label.lower()
+        flag_file = STATE_FLAG_MAP.get(key, "")
+        return (label, flag_file)
+
+    # Step 2: try to extract (...) substring
     if not country:
         return ("", "")
-
+    raw = country.strip()
     state = ""
-    if "(" in country and ")" in country:
-        state = country.split("(", 1)[1].split(")", 1)[0].strip()
+    if "(" in raw and ")" in raw:
+        state = raw.split("(", 1)[1].split(")", 1)[0].strip()
 
-    if not state and country.lower() not in ("malaysia",):
-        # If it's not Malaysia, show the country itself as 'state' label (fallback).
-        state = country.strip()
+    # Step 3: fallback if not Malaysia
+    if not state and raw.lower() not in ("malaysia",):
+        state = raw
 
-    state_label = state
-    key = state.lower().replace(" ", "-") if state else ""
+    label = state.strip()
+    key = label.lower() if label else ""
     flag_file = STATE_FLAG_MAP.get(key, "")
-    return (state_label, flag_file)
+    return (label, flag_file)
 # --------------------------------------------------------------------
 
 
 # ----------------------------- Sponsors ------------------------------
 SPONSORS = [
-    {"name": "Abang Besi", "logo_path": "images/sponsors/abangbesi.png", "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
-    {"name": "ko",         "logo_path": "images/sponsors/ko.png",        "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="},
-    {"name": "Kaboom.my",  "logo_path": "images/sponsors/kaboom.png",    "url": "https://kaboom.my"},
-    {"name": "trurec",     "logo_path": "images/sponsors/trurec.png",    "url": "https://truboxing.co/fighters"},
-    {"name": "TSL",        "logo_path": "images/sponsors/tsl.png",       "url": "https://teamsoundandlight.com/"},
+    {
+        "name": "Abang Besi",
+        "logo_path": "images/sponsors/abangbesi.png",
+        "url": "https://www.instagram.com/abangbesigallery?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+    },
+    {
+        "name": "ko",
+        "logo_path": "images/sponsors/ko.png",
+        "url": "https://www.instagram.com/knockoutmediasg?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+    },
+    {
+        "name": "Kaboom.my",
+        "logo_path": "images/sponsors/kaboom.png",
+        "url": "https://kaboom.my",
+    },
+    {
+        "name": "trurec",
+        "logo_path": "images/sponsors/trurec.png",
+        "url": "https://truboxing.co/fighters",
+    },
+    {
+        "name": "TSL",
+        "logo_path": "images/sponsors/tsl.png",
+        "url": "https://teamsoundandlight.com/",
+    },
 ]
+# --------------------------------------------------------------------
+
+
+# ------------------------- NEW SAFE HELPERS --------------------------
+def get_spotlight_from_db(limit: int = 3) -> list[dict]:
+    """Read-only helper to pick spotlight fighters."""
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT f.*,
+               (SELECT MAX(h.date)
+                  FROM fight_history h
+                 WHERE LOWER(h.fighter_id)=LOWER(f.id)) AS last_date
+          FROM fighters f
+         ORDER BY f.wins DESC,
+                  f.kos DESC,
+                  COALESCE(last_date,'0000-00-00') DESC
+         LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_fighters_filtered(search: str = "", weight: str = "") -> list[dict]:
+    """Read-only server-side filter for fighters list."""
+    search = (search or "").strip().lower()
+    weight = (weight or "").strip().lower()
+
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM fighters")
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+
+    def ok(f):
+        name_ok = (search in (f.get("name") or "").lower()) if search else True
+        wt_ok = (weight == (f.get("weight_class") or "").lower()) if weight else True
+        return name_ok and wt_ok
+
+    return [f for f in rows if ok(f)]
 # --------------------------------------------------------------------
 
 
@@ -150,7 +249,7 @@ def home():
 
     placeholders = ",".join("?" * len(FEATURED_IDS))
     q = f"""
-      SELECT id, name, nickname, weight_class, image_profile, country
+      SELECT id, name, nickname, weight_class, image_profile, country, state_label
       FROM fighters
       WHERE id IN ({placeholders})
       ORDER BY CASE id
@@ -167,14 +266,20 @@ def home():
     for f in rows:
         img = f.get("image_profile") or "placeholders/fighter_placeholder.png"
         preview_path = "images/fighters/" + img
-        state_label, flag_file = normalize_state_from_country(f.get("country") or "")
+
+        # pass both 'country' and 'state_label' into normalizer
+        st_label, flag_file = normalize_state_from_country(
+            f.get("country") or "",
+            f.get("state_label") or "",
+        )
+
         featured.append(
             {
                 "id": f.get("id", ""),
                 "display_name": (f.get("name") or "").upper(),
                 "weight_class": f.get("weight_class", ""),
                 "preview_path": preview_path,
-                "state_label": state_label,
+                "state_label": st_label,
                 "flag_file": flag_file,
             }
         )
@@ -184,22 +289,34 @@ def home():
 
 @app.route("/fighters")
 def fighters_page():
-    search_query = request.args.get("search", "").strip().lower()
-    weight_filter = request.args.get("weight", "").strip().lower()
+    """Fighters directory with new design (safe)."""
+    search_query  = request.args.get("search", "")
+    weight_filter = request.args.get("weight", "")
+
     try:
-        data = get_fighters_from_db()
+        fighters = get_fighters_filtered(search_query, weight_filter)
+        spotlight_fighters = get_spotlight_from_db(limit=3)
     except Exception as e:
-        print("⚠ DB Error, using backup list:", e)
-        data = fighters_fallback
+        print("⚠ DB Error, using fallback list:", e)
+        fighters = fighters_fallback
+        spotlight_fighters = fighters_fallback[:3]
 
-    filtered = []
-    for f in data:
-        name_ok = search_query in (f.get("name", "") or "").lower()
-        weight_ok = weight_filter in (f.get("weight_class", "") or "").lower() if weight_filter else True
-        if name_ok and weight_ok:
-            filtered.append(f)
+    # decorate each fighter dict with state_label + flag_file for template
+    for f in fighters + spotlight_fighters:
+        st_label, flag_file = normalize_state_from_country(
+            f.get("country") or "",
+            f.get("state_label") or "",
+        )
+        f["state_label"] = st_label
+        f["flag_file"] = flag_file
 
-    return render_template("fighters.html", fighters=filtered)
+    return render_template(
+        "fighters.html",
+        fighters=fighters,
+        spotlight_fighters=spotlight_fighters,
+        search_value=search_query,
+        weight_value=weight_filter,
+    )
 
 
 @app.route("/fighter/<fighter_id>")
@@ -219,6 +336,14 @@ def fighter_profile(fighter_id):
 
     if not fighter:
         return "Fighter not found", 404
+
+    # also decorate fighter profile with state + flag for template
+    st_label, flag_file = normalize_state_from_country(
+        fighter.get("country") or "",
+        fighter.get("state_label") or "",
+    )
+    fighter["state_label"] = st_label
+    fighter["flag_file"] = flag_file
 
     return render_template("fighter_profile.html", fighter=fighter)
 
@@ -297,7 +422,6 @@ def sitemap():
         url_for("merchandise", _external=True),
         url_for("contact", _external=True),
     ]
-    # Include rankings only when enabled
     if os.getenv("FEATURE_RANKINGS", "1") == "1":
         core_pages.append(url_for("rankings", _external=True))
 
@@ -320,7 +444,6 @@ def sitemap():
         xml_parts.append("<priority>0.7</priority>")
         xml_parts.append("</url>")
     xml_parts.append("</urlset>")
-
     return Response("\n".join(xml_parts), mimetype="application/xml")
 # ---------------------------------------------------------------------
 
@@ -331,7 +454,7 @@ def healthz():
 
 
 # --------------------------- Rankings page ---------------------------
-FEATURE_RANKINGS = os.getenv("FEATURE_RANKINGS", "1") == "1"  # enable by default
+FEATURE_RANKINGS = os.getenv("FEATURE_RANKINGS", "1") == "1"
 
 @app.route("/rankings")
 def rankings():
@@ -342,7 +465,6 @@ def rankings():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     try:
-        # Leaderboard with profile photo
         rows = cur.execute("""
 WITH stats AS (
   SELECT
@@ -382,8 +504,6 @@ ORDER BY total_points DESC, wins DESC, kos DESC
 LIMIT 10
 """).fetchall()
 
-
-        # Latest bout date for "Updated:" subline
         last_raw = cur.execute("SELECT MAX(date) FROM fight_history").fetchone()[0]
         last_updated = ""
         if last_raw:
@@ -394,11 +514,7 @@ LIMIT 10
                 last_updated = str(last_raw)
     except sqlite3.OperationalError as e:
         conn.close()
-        return (
-            "Ranking views not found. Please run the SQL that creates "
-            "v_fighter_stats, v_activity_365, v_points, and v_leaderboard.<br><br>"
-            f"SQLite error: {e}", 500
-        )
+        return (f"Ranking view error: {e}", 500)
     conn.close()
 
     return render_template("rankings.html", fighters=rows, last_updated=last_updated)

@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+{% extends "base.html" %}
 
+{% block head %}
   <!-- SEO: title + description -->
   <title>{{ fighter.name }} – Boxer Profile | TruBoxing</title>
   <meta name="description" content="{{ fighter.name }} ({{ fighter.weight_class }}) – record, fights, gym, and highlights on TruBoxing Malaysia."/>
@@ -35,37 +32,15 @@
   }
   </script>
 
-  <!-- Your assets -->
+  <!-- Page-specific CSS + JS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/fighter_profile.css') }}">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
-
-</head>
-<body>
-
-<!-- Navbar -->
-<nav class="navbar">
-  <div class="navbar-container">
-<a href="/">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
-    </a>
-    <!-- Burger Icon (For mobile) -->
-  <i class="fas fa-bars burger" id="burger"></i>
+{% endblock %}
 
 
+{% block content %}
 
-    <!-- Navigation Links -->
-    <ul class="nav-links" id="navLinks">
-      <li><a href="/">HOME</a></li>
-      <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
-      <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
-      <li><a href="/merchandise">MERCHANDISE</a></li>
-      <li><a href="/sponsors">SPONSORS</a></li>
-      <li><a href="/contact">CONTACT US</a></li>
-    </ul>
-  </div>
-</nav>
+<!-- BREADCRUMBS -->
 <nav aria-label="Breadcrumb" class="breadcrumbs">
   <ol itemscope itemtype="https://schema.org/BreadcrumbList">
     <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
@@ -83,53 +58,116 @@
   </ol>
 </nav>
 
-<!-- HERO SECTION with background -->
+
+<!-- HERO / PROFILE HEADER -->
 <div class="fighter-hero" style="background-image: url('{{ url_for('static', filename='images/bg-ring.png') }}');">
   <div class="profile-container">
+
+    <!-- LEFT: portrait -->
     <div class="profile-left">
-      <img src="{{ url_for('static', filename='images/fighters/' + fighter.image_profile) }}" alt="{{ fighter.name }}" />
+      <img
+        src="{{ url_for('static', filename='images/fighters/' ~ (fighter.image_profile or 'placeholders/fighter_placeholder.png')) }}"
+        alt="{{ fighter.name }}"
+      />
     </div>
 
+    <!-- RIGHT: info -->
     <div class="profile-right">
-      <h1>{{ fighter.name }}{% if fighter.nickname %} “{{ fighter.nickname }}”{% endif %}</h1>
-      <h3>{{ fighter.weight_class }}</h3>
+      <h1>
+        {{ fighter.name }}
+        {% if fighter.nickname %}
+          “{{ fighter.nickname }}”
+        {% endif %}
+      </h1>
 
+      {% if fighter.weight_class %}
+      <h3>{{ fighter.weight_class }}</h3>
+      {% endif %}
+
+      <!-- BASIC RECORD -->
       <div class="stats">
-        <div><strong>{{ fighter.wins }}</strong> <span>WINS</span></div>
-        <div><strong>{{ fighter.losses }}</strong> <span>LOSSES</span></div>
-        <div><strong>{{ fighter.draws }}</strong> <span>DRAWS</span></div>
-        <div><strong>{{ fighter.kos }}</strong> <span>KOs</span></div>
+        <div><strong>{{ fighter.wins or 0 }}</strong> <span>WINS</span></div>
+        <div><strong>{{ fighter.losses or 0 }}</strong> <span>LOSSES</span></div>
+        <div><strong>{{ fighter.draws or 0 }}</strong> <span>DRAWS</span></div>
+        <div><strong>{{ fighter.kos or 0 }}</strong> <span>KOs</span></div>
       </div>
 
       <hr>
 
+      <!-- ATTRIBUTES -->
       <ul class="details">
+        {% if fighter.age %}
         <li><strong>AGE:</strong> {{ fighter.age }}</li>
+        {% endif %}
+
+        {% if fighter.height %}
         <li><strong>HEIGHT:</strong> {{ fighter.height }}</li>
+        {% endif %}
+
+        {% if fighter.stance %}
         <li><strong>STANCE:</strong> {{ fighter.stance }}</li>
+        {% endif %}
+
+        {% if fighter.country %}
         <li>
           <strong>COUNTRY:</strong> {{ fighter.country }}
           <img
-          src="{{ url_for('static', filename='images/flags/' ~ (fighter.country
-                | replace('\r','') | replace('\n','') | trim | lower | replace(' ', '_')) ~ '.png') }}"
-          alt="{{ fighter.country }} flag"
-          class="flag-icon"
-          onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/flags/default.png') }}';"
-        />
-
+            src="{{ url_for('static', filename='images/flags/' ~ (fighter.country
+                  | replace('\r','')
+                  | replace('\n','')
+                  | trim
+                  | lower
+                  | replace(' ', '_')
+                ) ~ '.png') }}"
+            alt="{{ fighter.country }} flag"
+            class="flag-icon"
+            onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/flags/default.png') }}';"
+          />
         </li>
+        {% endif %}
       </ul>
-    </div>
-  </div>
+
+      <!-- SPONSOR CTA (WhatsApp prefilled w/ fighter name) -->
+      <div class="sponsor-cta">
+        {% set sponsor_msg = (
+          "Hey TruBoxing 👋🏽, I'm interested in sponsoring "
+          ~ fighter.name
+          ~ " 🥊. Can you share available sponsorship packages, benefits, and visibility options for this fighter?"
+        ) %}
+        <a
+          class="sponsor-btn-profile"
+          href="https://wa.me/601155480258?text={{ sponsor_msg|urlencode }}"
+          target="_blank"
+          rel="noopener"
+        >
+          Sponsor / Partner this Fighter
+        </a>
+      </div>
+
+    </div><!-- /profile-right -->
+  </div><!-- /profile-container -->
+</div><!-- /fighter-hero -->
+
+
+<!-- DESCRIPTION -->
+<div class="fighter-description-block">
+  <h2>
+    <em>{{ fighter.name }}</em>
+    {% if fighter.nickname %} — “{{ fighter.nickname }}”{% endif %}
+  </h2>
+
+  {% if fighter.description %}
+    <p>{{ fighter.description }}</p>
+  {% else %}
+    <p>This fighter is registered on TruBoxing. More information, media, and highlights will be available soon.</p>
+  {% endif %}
 </div>
 
-<!-- DESCRIPTION SECTION -->
-<div class="fighter-description-block">
-  <h2><em>{{ fighter.name }}</em>{% if fighter.nickname %} — “{{ fighter.nickname }}”{% endif %}</h2>
-  <p>{{ fighter.description }}</p>
-</div>
+
+<!-- FIGHT HISTORY -->
 <div class="fight-history">
   <h2>FIGHT HISTORY</h2>
+
   <div class="table-scroll-wrapper">
     <table>
       <thead>
@@ -141,22 +179,33 @@
           <th>Notes</th>
         </tr>
       </thead>
-        <tbody id="fight-history-body">
-    {% for bout in fighter.fight_history[:5] %}
-    <tr>
-      <td><span class="result {{ bout.result | lower }}">{{ bout.result }}</span></td>
-      <td>{{ bout.opponent }}</td>
-      <td>{{ bout.date }}</td>
-      <td>{{ bout.method }}</td>
-      <td>{{ bout.org }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
 
-      </table>
+      <tbody id="fight-history-body">
+        {% if fighter.fight_history and fighter.fight_history|length > 0 %}
+          {% for bout in fighter.fight_history[:5] %}
+          <tr>
+            <td>
+              <span class="result {{ bout.result | lower }}">
+                {{ bout.result }}
+              </span>
+            </td>
+            <td>{{ bout.opponent }}</td>
+            <td>{{ bout.date }}</td>
+            <td>{{ bout.method }}</td>
+            <td>{{ bout.org }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center;opacity:.7;">No recorded bouts yet.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+
+    </table>
   </div>
 
-  {% if fighter.fight_history|length > 5 %}
+  {% if fighter.fight_history and fighter.fight_history|length > 5 %}
   <div class="show-more-container">
     <button id="show-more-btn">Show More</button>
   </div>
@@ -164,53 +213,64 @@
 </div>
 
 
-<section class="px-4 md:px-12 lg:px-32 py-10">
-  <h2 class="text-white text-3xl font-extrabold mb-6"></h2>
+<!-- GALLERY -->
+{% if fighter.gallery and fighter.gallery|length > 0 %}
+<section class="fighter-gallery-section">
+  <h2 class="gallery-heading">{{ fighter.name }} Gallery</h2>
   <div class="gallery-masonry">
     {% for image in fighter.gallery %}
       <div class="image-wrapper">
-        <img src="{{ url_for('static', filename='images/' ~ image) }}" alt="Gallery Image">
+        <img
+          src="{{ url_for('static', filename='images/' ~ image) }}"
+          alt="Gallery image of {{ fighter.name }}"
+          loading="lazy"
+          decoding="async"
+        >
       </div>
     {% endfor %}
   </div>
 </section>
+{% endif %}
 
+
+<!-- PAGE-SPECIFIC JS -->
 <script>
+(function(){
   const showMoreBtn = document.getElementById('show-more-btn');
   const tbody = document.getElementById('fight-history-body');
   let expanded = false;
 
-  {% if fighter.fight_history|length > 5 %}
-  const fullHistory = {{ fighter.fight_history | tojson }};
-  const extraHistory = fullHistory.slice(5);
-  {% endif %}
+  {% if fighter.fight_history and fighter.fight_history|length > 5 %}
+    const fullHistory = {{ fighter.fight_history | tojson }};
+    const extraHistory = fullHistory.slice(5);
 
-  if (showMoreBtn) {
-    showMoreBtn.addEventListener('click', () => {
-      if (!expanded) {
-        extraHistory.forEach(bout => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><span class="result ${bout.result.toLowerCase()}">${bout.result}</span></td>
-            <td>${bout.opponent}</td>
-            <td>${bout.date}</td>
-            <td>${bout.method}</td>
-            <td>${bout.org}</td>
-          `;
-          tbody.appendChild(row);
-        });
-        showMoreBtn.textContent = 'Show Less';
-        expanded = true;
-      } else {
-        while (tbody.rows.length > 5) {
-          tbody.deleteRow(5);
+    if (showMoreBtn) {
+      showMoreBtn.addEventListener('click', () => {
+        if (!expanded) {
+          extraHistory.forEach(bout => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><span class="result ${bout.result.toLowerCase()}">${bout.result}</span></td>
+              <td>${bout.opponent}</td>
+              <td>${bout.date}</td>
+              <td>${bout.method}</td>
+              <td>${bout.org}</td>
+            `;
+            tbody.appendChild(row);
+          });
+          showMoreBtn.textContent = 'Show Less';
+          expanded = true;
+        } else {
+          while (tbody.rows.length > 5) {
+            tbody.deleteRow(5);
+          }
+          showMoreBtn.textContent = 'Show More';
+          expanded = false;
         }
-        showMoreBtn.textContent = 'Show More';
-        expanded = false;
-      }
-    });
-  }
+      });
+    }
+  {% endif %}
+})();
 </script>
 
-</body>
-</html>
+{% endblock %}

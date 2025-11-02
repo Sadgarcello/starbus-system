@@ -191,7 +191,17 @@ body {
   padding: 60px 0;
   color: white;
 }
+.flag{
+  width: 22px;        /* was 16 */
+  height: 14px;       /* was 11 */
+  border-radius: 2px;
+  border: 1px solid #223a6b;
+  object-fit: cover;
+  vertical-align: -2px; /* aligns better with text */
+}
 
+/* optional: slightly larger in spotlight */
+.slide .flag{ width: 26px; height: 16px; }
 .footer {
   background-color: #0052cc;
   color: white;

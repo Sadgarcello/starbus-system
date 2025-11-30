@@ -122,7 +122,7 @@ STATE_FLAG_MAP = {
     "sarawak": "sarawak.png",
 
     # Federal Territories
-    "kuala lumpur": "kuala-lumpur.png",
+    "kuala lumpur": "kuala-lumpur.svg",
     "putrajaya": "putrajaya.png",
     "labuan": "labuan.png",
 }

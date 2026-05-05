@@ -1,0 +1,721 @@
+/* ===== Worker + Admin — dark theme =============================
+   Loads AFTER tokens.css.  RTL-friendly, mobile-first, single-column.
+   Worker uses a sticky bottom action bar when seats are picked.
+   ============================================================== */
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---- Page shell ---- */
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 14px 14px 110px;
+}
+
+/* ---- Top bar ---- */
+.topbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 8px;
+  backdrop-filter: blur(10px);
+  z-index: 20;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+a.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+a.brand-link:hover {
+  opacity: 0.96;
+}
+.brand-mark {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.brand h1 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+}
+.brand .sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.topRight {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.pill.brand {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+a.pill {
+  display: inline-block;
+}
+
+/* ---- Cards / layout ---- */
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card .hd {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.card .hd h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.card .bd {
+  padding: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .row.two {
+    grid-template-columns: 1fr 1fr;
+  }
+  .row.three {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* ---- Forms ---- */
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+input,
+select,
+button,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--ink);
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+input::placeholder {
+  color: var(--muted);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(15, 123, 63, 0.25);
+}
+
+/* Native <select> — fix invisible / low-contrast option text (esp. Windows + dark UI) */
+body.theme-dark {
+  color-scheme: dark;
+}
+.theme-dark select {
+  color: #f3f4f6;
+  background-color: #252525;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.theme-dark select option,
+.theme-dark select optgroup {
+  background-color: #1f1f1f;
+  color: #f3f4f6;
+}
+.theme-dark select:disabled {
+  opacity: 0.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  border: 0;
+  transition: background 0.12s, transform 0.05s;
+}
+button:hover {
+  background: var(--brand-hover);
+}
+button:active {
+  transform: scale(0.99);
+}
+button.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+a.secondary.nav-pill {
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+a.secondary.nav-pill:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+button.danger {
+  background: var(--danger);
+  color: #fff;
+}
+button.danger:hover {
+  background: #b91c1c;
+}
+button.warn-btn {
+  background: var(--status-reserved);
+  color: var(--status-reserved-ink);
+}
+button.warn-btn:hover {
+  background: #d97706;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+.ok {
+  color: var(--ok);
+}
+.warn {
+  color: var(--warn);
+}
+.dangerText {
+  color: var(--danger);
+}
+
+/* ---- KPI tiles ---- */
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+@media (min-width: 480px) {
+  .kpi {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.kpi .box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.kpi .box .n {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.kpi .box .t {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ---- Tables ---- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: start;
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+td.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ---- Status pills inside table ---- */
+.statePill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  text-transform: lowercase;
+}
+.statePill.reserved {
+  background: var(--status-reserved);
+  color: var(--status-reserved-ink);
+}
+.statePill.full {
+  background: var(--status-booked);
+  color: var(--status-booked-ink);
+}
+.statePill.empty {
+  background: var(--status-empty);
+  color: var(--status-empty-ink);
+}
+
+.payPill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.payPill.paid {
+  background: var(--ok-soft);
+  color: var(--ok);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+.payPill.unpaid {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.payPill.half {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ---- Ticket counter (worker) ---- */
+.ticketCounter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+.ticketCounter .label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.ticketCounter .stepBtn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.ticketCounter .stepBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.ticketCounter .num {
+  font-size: 22px;
+  font-weight: 800;
+  min-width: 32px;
+  text-align: center;
+  color: var(--ink);
+}
+.ticketCounter .hint {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Seat legend ---- */
+.seatLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+}
+.seatLegend .key {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.seatLegend .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.seatLegend .dot.empty {
+  background: var(--status-empty);
+}
+.seatLegend .dot.reserved {
+  background: var(--status-reserved);
+}
+.seatLegend .dot.booked {
+  background: var(--status-booked);
+}
+.seatLegend .dot.picked {
+  background: var(--status-selected);
+}
+#pickedLabel {
+  margin-inline-start: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---- Bus interior ---- */
+.busInterior {
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.2));
+  padding: 12px 12px 16px;
+  max-width: 520px;
+  margin: 0 auto;
+  /* Keep interior LTR so seat #1 stays front-left even on RTL pages */
+  direction: ltr;
+}
+.busFrontBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px 12px;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  direction: ltr;
+}
+
+/* Driver row (door + aisle + steering wheel) */
+.busDriverRow {
+  display: grid;
+  grid-template-columns: 1fr 26px 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
+}
+.busDoorSlot,
+.busWheelSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+.busDoorSlot {
+  width: 50px;
+  margin-inline: auto;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.busWheelSlot {
+  width: 50px;
+  margin-inline: auto;
+  color: var(--ok);
+}
+.wheelIcon {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.busRow {
+  display: grid;
+  grid-template-columns: 1fr 26px 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.busPair {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.busAisle {
+  width: 100%;
+  height: 1px;
+}
+
+.seatTile {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  background: var(--status-empty);
+  color: var(--status-empty-ink);
+  transition: transform 0.05s, background 0.12s, box-shadow 0.12s;
+}
+.seatTile:active {
+  transform: scale(0.94);
+}
+.seatTile.empty {
+  background: var(--status-empty);
+  color: var(--status-empty-ink);
+}
+.seatTile.reserved {
+  background: var(--status-reserved);
+  color: var(--status-reserved-ink);
+  cursor: pointer;
+}
+.seatTile.full {
+  background: var(--status-booked);
+  color: var(--status-booked-ink);
+  cursor: default;
+}
+.seatTile.picked {
+  background: var(--status-selected);
+  color: var(--status-selected-ink);
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.30);
+}
+.seatTile.spacer {
+  visibility: hidden;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+}
+
+/* ---- Sticky bottom action bar (worker) ---- */
+.workerActions {
+  position: sticky;
+  bottom: 8px;
+  z-index: 30;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(20, 20, 20, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+}
+.workerActions .pickedSummary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.workerActions .pickedSummary .seatList {
+  color: var(--brand);
+  margin-inline-start: 6px;
+}
+.workerActions .actBtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.workerActions .actBtns button {
+  padding: 14px 12px;
+  font-size: 14px;
+}
+
+/* Partial (reserved) booking — passenger contact */
+.reserveContactBlock {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+.reserveContactTitle {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.reserveContactHint {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* ---- Booking form (worker, collapsible) ---- */
+.bookFormWrap {
+  margin-top: 16px;
+}
+.bookFormWrap.collapsed > .bookFormBody {
+  display: none;
+}
+.bookFormHeader {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+}
+.bookFormHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.bookFormBody {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  padding: 11px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  max-width: 90vw;
+  text-align: center;
+  z-index: 60;
+}
+.toast.ok {
+  background: #15803d;
+  border-color: #15803d;
+  color: #fff;
+}
+.toast.warn {
+  background: #92400e;
+  border-color: #92400e;
+  color: #fff;
+}
+.toast.dangerText,
+.toast.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+/* ---- Footer ---- */
+.footer {
+  margin-top: 22px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 8px 4px;
+}
+
+/* ---- Mobile tweaks ---- */
+@media (max-width: 380px) {
+  .seatTile {
+    width: 38px;
+    height: 38px;
+    font-size: 12px;
+  }
+  .brand h1 {
+    font-size: 16px;
+  }
+  .workerActions .actBtns {
+    grid-template-columns: 1fr;
+  }
+}

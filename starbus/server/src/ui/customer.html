@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="theme-color" content="#0F7B3F" />
+    <meta name="color-scheme" content="light" />
+    <title>ستار باص — احجز رحلتك</title>
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
+    <link rel="preload" as="image" href="/ui/images/hero-road.jpg" />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260504-4" />
+  </head>
+  <body class="theme-light">
+    <header class="hero-band">
+      <div class="hero-band-inner">
+        <div class="brand-text">
+          <h1 class="logo">ستار باص</h1>
+          <div class="tag">احجز مقعدك بسهولة… بدون ما تمشي الموقف</div>
+        </div>
+        <a class="wa-pill" id="topWa" href="#" target="_blank" rel="noopener">
+          <span class="waicon" aria-hidden="true"></span>
+          <span>تواصل واتساب</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="page">
+      <!-- ======= Step 1: Routes ======= -->
+      <section class="step active" id="stepRoutes">
+        <div class="section-head">
+          <h1>اختار وجهتك</h1>
+          <p>رحلات اليوم من أم درمان</p>
+        </div>
+        <div id="routesList" class="routes">
+          <div class="skeleton route-skel"></div>
+          <div class="skeleton route-skel"></div>
+          <div class="skeleton route-skel"></div>
+        </div>
+        <div id="routesEmpty" class="empty" hidden>
+          ما في رحلات اليوم. تواصل معانا عبر واتساب لو محتاج معلومات.
+        </div>
+        <div id="routesError" class="empty error" hidden>
+          ما قدرنا نحمل الرحلات الآن. حاول تاني بعد شوية.
+        </div>
+
+        <!-- ===== Trust + about (Step 1 only) ===== -->
+        <div class="trust-stats">
+          <div class="stat">
+            <div class="stat-num">+1,000</div>
+            <div class="stat-lbl">زبون راضي</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">2024</div>
+            <div class="stat-lbl">سنة البداية</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">كل يوم</div>
+            <div class="stat-lbl">رحلات يومية</div>
+          </div>
+        </div>
+
+        <section class="info-card">
+          <h2>من نحن</h2>
+          <p>
+            ستار باص خدمة سودانية بدأت في 2024، نسهّل ليك حجز رحلتك من بيتك أو من شغلك،
+            بدون ما تمشي الموقف ولا تتعامل مع سماسرة. اختار الوجهة، اختار المقعد،
+            وادفع زي ما يريحك — كاش للسائق أو أونلاين.
+          </p>
+        </section>
+
+        <section class="features">
+          <h2>ليه ستار باص؟</h2>
+          <ul class="featureList">
+            <li>
+              <span class="featureIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7v8l10-12h-7z" fill="currentColor" stroke="none"/></svg>
+              </span>
+              <div>
+                <strong>حجز في أقل من دقيقة</strong>
+                <span>اختار وجهتك، اختار مقعدك، تأكد عبر واتساب — خلاص.</span>
+              </div>
+            </li>
+            <li>
+              <span class="featureIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+              </span>
+              <div>
+                <strong>حجزك آمن وموثوق</strong>
+                <span>كل حجز يتأكد عبر واتساب قبل الرحلة، ومقعدك محفوظ ليك.</span>
+              </div>
+            </li>
+            <li>
+              <span class="featureIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/></svg>
+              </span>
+              <div>
+                <strong>ادفع زي ما تحب</strong>
+                <span>كاش للسائق وقت الركوب، أو أونلاين قبل الرحلة. اختار الأريح ليك.</span>
+              </div>
+            </li>
+            <li>
+              <span class="featureIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 19c.5-3 3-5 6.5-5s6 2 6.5 5"/><path d="M14.5 19c.3-2 1.5-3.5 4-3.5s3.7 1.5 4 3.5"/></svg>
+              </span>
+              <div>
+                <strong>بدون سماسرة</strong>
+                <span>أسعار واضحة، تواصل مباشر معانا، خدمة من الناس للناس.</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <div class="cta-band">
+          <div class="cta-text">
+            <strong>عندك سؤال؟</strong>
+            <span>كلمنا على واتساب ونرد عليك بسرعة.</span>
+          </div>
+          <a class="wa-pill" id="ctaWa" href="#" target="_blank" rel="noopener">
+            <span class="waicon" aria-hidden="true"></span>
+            <span>واتساب</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- ======= Step 2: Seat picker ======= -->
+      <section class="step" id="stepSeats" hidden>
+        <button class="back" data-back="stepRoutes">→ رجوع</button>
+        <div class="section-head">
+          <h1>اختار مقاعدك</h1>
+          <p id="seatBusMeta">—</p>
+        </div>
+
+        <div class="counterCard">
+          <div class="counterTitle">كم تذكرة عايز؟</div>
+          <div class="counter">
+            <button type="button" class="cBtn" id="cMinus" aria-label="ناقص">−</button>
+            <div class="cNum" id="cNum">1</div>
+            <button type="button" class="cBtn" id="cPlus" aria-label="زيادة">+</button>
+          </div>
+          <div class="muted small" id="counterHint">حتى 8 مقاعد في الحجز الواحد</div>
+        </div>
+
+        <div class="legend">
+          <span class="key"><span class="dot empty"></span>متاح</span>
+          <span class="key"><span class="dot reserved"></span>محجوز مؤقت</span>
+          <span class="key"><span class="dot full"></span>محجوز</span>
+          <span class="live" id="seatRefreshNote">يتحدث تلقائياً</span>
+        </div>
+
+        <div class="busShell" id="busShell">
+          <div class="busFront">
+            <span>الأمام</span>
+            <span class="muted small">السائق يمين • الباب يسار</span>
+          </div>
+          <div class="busDriverRow" aria-hidden="true">
+            <div class="busDoorSlot">باب</div>
+            <div class="busAisle"></div>
+            <div class="busWheelSlot" title="مكان السائق">
+              <svg class="wheelIcon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="16" cy="16" r="13"></circle>
+                <circle cx="16" cy="16" r="3" fill="currentColor"></circle>
+                <path d="M16 13V4"></path>
+                <path d="M13.5 17.5L6 22"></path>
+                <path d="M18.5 17.5L26 22"></path>
+              </svg>
+            </div>
+          </div>
+          <div id="seatGrid"></div>
+        </div>
+
+        <div class="pickedBar" id="pickedBar" hidden>
+          <div class="pickedInfo">
+            <span class="muted small" id="pickedProgress">تم اختيار 0 من 1</span>
+            <span class="pickedNum" id="pickedNum">—</span>
+          </div>
+          <button class="primary" id="continueBtn" disabled>متابعة</button>
+        </div>
+      </section>
+
+      <!-- ======= Step 3: Customer details ======= -->
+      <section class="step" id="stepForm" hidden>
+        <button class="back" data-back="stepSeats">→ رجوع</button>
+        <div class="section-head">
+          <h1>بياناتك</h1>
+          <p>هنرسل ليك تأكيد الحجز عبر واتساب</p>
+        </div>
+
+        <form id="bookForm" class="card">
+          <div class="summary" id="formSummary">—</div>
+
+          <label for="cname">الاسم بالكامل</label>
+          <input id="cname" name="name" type="text" required minlength="2" maxlength="120" autocomplete="name" placeholder="مثال: محمد علي" />
+
+          <label for="cphone">رقم الهاتف (واتساب)</label>
+          <input id="cphone" name="phone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="+249 9X XXX XXXX" />
+
+          <button type="submit" class="primary big" id="confirmBtn">تأكيد الحجز</button>
+          <p class="reassure">المقعد بيتحجز ليك مؤقت. ندفع للسائق أو نأكد عبر واتساب.</p>
+          <div class="formError" id="formError" hidden></div>
+        </form>
+      </section>
+
+      <!-- ======= Step 4: Done ======= -->
+      <section class="step" id="stepDone" hidden>
+        <div class="doneCard">
+          <div class="check">✓</div>
+          <h1>تم الحجز بنجاح</h1>
+          <p class="muted">رحلتك جاهزة. إحفظ رقم الحجز.</p>
+
+          <div class="receipt" id="receipt"></div>
+
+          <a id="waConfirmBtn" class="primary big wa" href="#" target="_blank" rel="noopener">
+            <span class="waicon" aria-hidden="true"></span>
+            تواصل لتأكيد الدفع
+          </a>
+          <button id="anotherBtn" class="link">احجز رحلة تانية</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>ستار باص • رحلات يومية من أم درمان</div>
+      <div class="muted small">
+        <a href="/worker">دخول الموظفين</a>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="/ui/customer.js?v=20260504-4" defer></script>
+  </body>
+</html>

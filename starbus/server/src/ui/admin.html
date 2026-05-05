@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="theme-color" content="#EEF2FF" />
+    <meta name="color-scheme" content="light" />
+    <title>ستار باص — لوحة الأدمن</title>
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260506" />
+    <link rel="stylesheet" href="/ui/admin.css?v=20260507" />
+  </head>
+  <body class="theme-light admin-dashboard">
+    <div class="admin-app">
+      <aside class="admin-sidebar">
+        <a href="/admin" class="sb-brand sb-brand-accent" aria-label="ستار باص لوحة التحكم">
+          <span class="sb-icon-wrap" aria-hidden="true"><span class="sb-icon">🚌</span></span>
+          <div>
+            <strong>ستار باص</strong>
+            <small>عمليات ومبيعات</small>
+          </div>
+        </a>
+        <p class="sb-section-label">القائمة</p>
+        <nav class="sb-nav">
+          <a href="/admin" class="sb-nav-item active"><span aria-hidden="true">▣</span> التحليلات</a>
+          <a href="/worker" class="sb-nav-item"><span aria-hidden="true">▤</span> شباك التذاكر</a>
+        </nav>
+        <div class="sb-spacer"></div>
+        <div class="sb-foot-card">
+          <div class="sb-foot-title">تشغيل</div>
+          <p class="sb-hint-inline">كل وجهة خروج يومية = خط باص مستقل انطلاقه من أم&nbsp;درمان.</p>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="admin-top-bar">
+          <div class="admin-top-bar-inner">
+            <div class="admin-search-faux" aria-hidden="true">
+              <span class="search-ico">⌕</span>
+              <span class="search-ph">بحث عن رقم حجز، مقعد أو وجهة…</span>
+            </div>
+            <div class="admin-top-actions">
+              <button id="adminRefreshBtn" type="button">تحديث البيانات</button>
+              <a class="secondary nav-pill" href="#loginForm" id="loginNavBtn">تسجيل دخول</a>
+              <button class="secondary" type="button" id="logoutBtn" hidden>تسجيل خروج</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="admin-content admin-content-fluid">
+          <div id="adminLock" class="admin-alert" role="alert" hidden>
+            <strong>لازم صلاحية أدمن</strong>
+            <p class="admin-alert-copy">
+              سجل دخول بحساب <span class="pill">أدمن</span> أو <span class="pill">سوبر أدمن</span> لمشاهدة التحليلات وإدارة الحجوزات.
+            </p>
+          </div>
+
+          <div id="adminRoot" class="admin-auth-banner">
+            <section class="admin-card flat login-card-shell" aria-labelledby="loginHeading">
+              <div class="admin-card-hd slim">
+                <h2 id="loginHeading">دخول لوحة الأدمن</h2>
+                <span class="muted sm">صلاحيات أدمن أو سوبر&nbsp;أدمن</span>
+              </div>
+              <div class="admin-card-bd">
+                <form id="loginForm" autocomplete="on" class="login-inline">
+                  <div class="login-fields">
+                    <div>
+                      <label for="email">البريد</label>
+                      <input id="email" type="email" required autocomplete="email" placeholder="you@company.com" />
+                    </div>
+                    <div>
+                      <label for="password">كلمة المرور</label>
+                      <input id="password" type="password" required autocomplete="current-password" />
+                    </div>
+                  </div>
+                  <button id="loginBtn" type="submit" class="login-submit">دخول</button>
+                </form>
+              </div>
+            </section>
+          </div>
+
+          <div id="adminAnalyticsDeck" class="analytics-deck" hidden>
+            <section class="admin-hero-slab">
+              <div class="hero-copy">
+                <p class="eyebrow">تقرير يوم محدّد</p>
+                <h1 class="hero-title" id="adminReportDate">—</h1>
+                <p class="hero-sub">أرقام الشبكة (كل الخطوط) + اتجاه آخر أسبوعين للحجوزات المسجّلة بالتاريخ.</p>
+              </div>
+              <div class="hero-stat-grid">
+                <article class="hero-stat-card">
+                  <span class="hsc-label">إجمالي حجوزات اليوم</span>
+                  <span class="hsc-value mono" id="ovDayBookings">—</span>
+                </article>
+                <article class="hero-stat-card tint-gold">
+                  <span class="hsc-label">مدفوع بالكامل</span>
+                  <span class="hsc-value mono" id="ovDayPaid">—</span>
+                </article>
+                <article class="hero-stat-card tint-teal">
+                  <span class="hsc-label">حصّة الحجوزات الأونلاين</span>
+                  <span class="hsc-value mono" id="ovDayOnline">—</span>
+                </article>
+                <article class="hero-stat-card tint-slate">
+                  <span class="hsc-label">إشغال مقاعد الأسطول (اليوم المختار)</span>
+                  <span class="hsc-value mono" id="ovFleetOccupancy">—</span>
+                </article>
+              </div>
+            </section>
+
+            <section class="admin-card loft">
+              <div class="admin-card-hd slim">
+                <div>
+                  <h2>حالة الأسطول — رحلات مجدولة من أم&nbsp;درمان</h2>
+                  <span class="muted sm">الباص رقم ومقاييس الإشغال لكل وجهة (حسب تاريخ تشغيل الباص وليس وقت إنشاء الحجز).</span>
+                </div>
+                <span class="loft-badge mono"><span id="fleetCountHead">—</span> خط</span>
+              </div>
+              <div class="admin-card-bd">
+                <div class="fleet-rails-scroll" id="fleetRails"><p class="muted">حمّل التحديث…</p></div>
+              </div>
+            </section>
+
+            <div class="two-col-analytics">
+              <section class="admin-card loft">
+                <div class="admin-card-hd slim">
+                  <h2>زخم الحجوزات المسجّلة</h2>
+                  <span class="muted sm">كل عمود = عدد سجلات بتاريخ الإنشاء (آخر&nbsp;١٤&nbsp;يومًا)</span>
+                </div>
+                <div class="admin-card-bd">
+                  <div class="trend-chart" role="figure">
+                    <div class="trend-bars-inner" id="trendBars"></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="admin-card loft">
+                <div class="admin-card-hd slim">
+                  <h2>توزيع الوجهات</h2>
+                  <span class="muted sm">بالنسبة لحجوزات يوم التقرير فقط.</span>
+                </div>
+                <div class="admin-card-bd">
+                  <div class="route-mix" id="routeMix"></div>
+                </div>
+              </section>
+            </div>
+
+            <section class="admin-card loft">
+              <div class="admin-card-hd slim">
+                <h2>مزيج الدفع والقناة وحالة الكرسي</h2>
+              </div>
+              <div class="admin-card-bd meters-grid">
+                <div class="meter-block">
+                  <div class="meter-title">حالة الدفع</div>
+                  <div class="stacked-bar" id="meterPay" role="img"></div>
+                  <div class="meter-legend" id="meterPayLeg"></div>
+                </div>
+                <div class="meter-block">
+                  <div class="meter-title">دورة الكرسي</div>
+                  <div class="stacked-bar" id="meterLife" role="img"></div>
+                  <div class="meter-legend" id="meterLifeLeg"></div>
+                </div>
+                <div class="meter-block">
+                  <div class="meter-title">مصدر الحجز</div>
+                  <div class="stacked-bar" id="meterChan" role="img"></div>
+                  <div class="meter-legend" id="meterChanLeg"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="admin-card loft drill-card">
+            <div class="admin-card-hd slim">
+              <div>
+                <h2>التفاصيل والعمليات</h2>
+                <p class="scope-line muted sm" id="adminScopeBadge">—</p>
+              </div>
+            </div>
+            <div class="admin-card-bd">
+              <div class="admin-toolbar-row ops-toolbar">
+                <div>
+                  <label for="adminRouteSelect">باص اليوم للفلتر</label>
+                  <select id="adminRouteSelect" disabled><option value="">—</option></select>
+                </div>
+                <div>
+                  <label for="day">تقويم تشغيل / تقرير</label>
+                  <input id="day" type="date" />
+                  <div class="muted sm" style="margin-top: 8px">
+                    المرجع: <span class="day-pill-inline mono" id="dayLabel">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="kpi-explainer muted sm">المؤشرات التالية مرتبطة بفلتر الباص؛ لو ما في خطوط ذلك اليوم تظهر مجموع كل الأسطول.</p>
+
+              <div class="admin-metrics drill-kpi">
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">📋</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiBookings">—</span>
+                    <span class="t">سجلات (نطاق الفلتر)</span>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">⏳</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiReserved">—</span>
+                    <span class="t">محجوز مؤقت</span>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">🔒</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiFull">—</span>
+                    <span class="t">محجوز</span>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">✓</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiPaid">—</span>
+                    <span class="t">مدفوع</span>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">½</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiHalf">—</span>
+                    <span class="t">نصف</span>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-icon" aria-hidden="true">○</div>
+                  <div class="metric-body">
+                    <span class="n mono" id="kpiUnpaid">—</span>
+                    <span class="t">غير مدفوع</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-card loft admin-table-section">
+            <div class="admin-card-hd slim">
+              <h2>سجلّ الحجوزات</h2>
+              <span class="hint">حذف/إلغاء للسوبر أدمن فقط</span>
+            </div>
+            <div class="admin-card-bd table-card-body">
+              <div class="table-scroll">
+                <table class="admin-table zebra">
+                  <thead>
+                    <tr>
+                      <th>رقم</th>
+                      <th>مقعد</th>
+                      <th>الحالة</th>
+                      <th>الإسم</th>
+                      <th>الرحلة</th>
+                      <th>الدفع</th>
+                      <th>الوقت</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <footer class="admin-foot">
+            لوحة تحكم داخلية — <span class="mono">/admin</span>
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="/ui/app.js?v=20260506" defer></script>
+  </body>
+</html>

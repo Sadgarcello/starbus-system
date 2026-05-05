@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="theme-color" content="#0B0B0B" />
+    <meta name="color-scheme" content="dark" />
+    <title>ستار باص — الموظف</title>
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
+    <link rel="stylesheet" href="/ui/style.css?v=20260505" />
+  </head>
+  <body class="theme-dark">
+    <div class="wrap">
+      <div class="topbar">
+        <a href="/worker" class="brand-link" aria-label="ستار باص الرئيسية">
+          <span class="brand-mark" aria-hidden="true">🚌</span>
+          <div class="brand">
+            <h1>ستار باص</h1>
+            <div class="sub">شباك التذاكر</div>
+          </div>
+        </a>
+        <div class="topRight">
+          <a class="pill" href="/admin">لوحة التحكم</a>
+          <button class="secondary nav-pill" type="button" id="logoutBtn" hidden>تسجيل خروج</button>
+          <a class="secondary nav-pill" href="#workerLoginCard" id="loginNavBtn">تسجيل دخول</a>
+        </div>
+      </div>
+
+      <!-- Login (only visible when logged out) -->
+      <div class="grid" id="workerRoot">
+        <div class="card" id="workerLoginCard">
+          <div class="hd">
+            <h2>دخول الموظف</h2>
+            <div class="muted">للموظف أو السوبر أدمن</div>
+          </div>
+          <div class="bd">
+            <form id="loginForm" autocomplete="on">
+              <div class="row two">
+                <div>
+                  <label>البريد</label>
+                  <input id="email" type="email" required autocomplete="email" />
+                </div>
+                <div>
+                  <label>الباسوورد</label>
+                  <input id="password" type="password" required autocomplete="current-password" />
+                </div>
+              </div>
+              <div style="margin-top:12px;">
+                <button id="loginBtn" type="submit">دخول</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Today's route + KPIs (visible when logged in) -->
+        <div class="card" id="workerRouteCard" hidden>
+          <div class="hd">
+            <h2>رحلة اليوم (من أم درمان)</h2>
+            <button class="secondary" id="refreshBtn" style="width:auto; padding:8px 14px;">تحديث</button>
+          </div>
+          <div class="bd">
+            <label>الوجهة</label>
+            <select id="routeSelect" disabled>
+              <option value="">جاري التحميل…</option>
+            </select>
+            <div class="muted" id="busMeta" style="margin-top:10px;">—</div>
+            <div class="kpi">
+              <div class="box"><div class="n" id="cntEmpty">—</div><div class="t">فارغ</div></div>
+              <div class="box"><div class="n" id="cntReserved">—</div><div class="t">محجوز مؤقت</div></div>
+              <div class="box"><div class="n" id="cntFull">—</div><div class="t">محجوز</div></div>
+              <div class="box"><div class="n" id="busStatus">—</div><div class="t">حالة الرحلة</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lock card (wrong role / not logged in) -->
+      <div id="workerLock" class="card" style="margin-top:14px;">
+        <div class="hd"><h2>لازم تسجل دخول</h2></div>
+        <div class="bd">
+          <div class="muted" id="workerLockBody">
+            سجل دخول بحساب <span class="pill">موظف</span> أو <span class="pill">سوبر أدمن</span> عشان تشتغل على المقاعد والحجوزات.
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat map card -->
+      <div class="card" id="workerMapCard" style="margin-top:14px;" hidden>
+        <div class="hd">
+          <h2>خريطة المقاعد</h2>
+          <div class="muted">دس على المقعد لاختياره</div>
+        </div>
+        <div class="bd">
+          <div class="ticketCounter" id="ticketCounter">
+            <span class="label">عدد التذاكر:</span>
+            <button type="button" class="stepBtn secondary" id="cntMinus" aria-label="ناقص">−</button>
+            <span class="num" id="cntNum">1</span>
+            <button type="button" class="stepBtn secondary" id="cntPlus" aria-label="زيادة">+</button>
+            <span class="hint" id="cntHint">للمجموعات حتى 20 تذكرة</span>
+          </div>
+
+          <div class="seatLegend">
+            <span class="key"><span class="dot empty"></span>فارغ</span>
+            <span class="key"><span class="dot reserved"></span>محجوز مؤقت</span>
+            <span class="key"><span class="dot booked"></span>محجوز</span>
+            <span class="key"><span class="dot picked"></span>مختار</span>
+            <span class="pill" id="pickedLabel">اخترت 0 من 1</span>
+          </div>
+
+          <div class="busInterior" id="busInterior">
+            <div class="busFrontBar">
+              <span>الأمام</span>
+              <span style="font-size:11px;">السائق يمين • الباب يسار</span>
+            </div>
+            <div class="busDriverRow" aria-hidden="true">
+              <div class="busDoorSlot">باب</div>
+              <div class="busAisle"></div>
+              <div class="busWheelSlot" title="مكان السائق">
+                <svg class="wheelIcon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="16" cy="16" r="13"></circle>
+                  <circle cx="16" cy="16" r="3" fill="currentColor"></circle>
+                  <path d="M16 13V4"></path>
+                  <path d="M13.5 17.5L6 22"></path>
+                  <path d="M18.5 17.5L26 22"></path>
+                </svg>
+              </div>
+            </div>
+            <div id="busRows"></div>
+          </div>
+
+          <div id="reserveContactBlock" class="reserveContactBlock" hidden>
+            <h3 class="reserveContactTitle">بيانات الحجز المؤقت</h3>
+            <p class="reserveContactHint muted small">
+              الاسم مطلوب، ولازم هاتف أو بريد واحد على الأقل (كل التذاكر بنفس الاسم للمجموعات).
+            </p>
+            <div class="row">
+              <div>
+                <label for="rname">اسم الراكب</label>
+                <input id="rname" type="text" autocomplete="name" placeholder="الاسم بالكامل" />
+              </div>
+            </div>
+            <div class="row two">
+              <div>
+                <label for="rphone">الهاتف</label>
+                <input id="rphone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+249…" />
+              </div>
+              <div>
+                <label for="remail">البريد الإلكتروني</label>
+                <input id="remail" type="email" autocomplete="email" placeholder="لو ما في هاتف" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticky bottom action bar -->
+          <div id="workerActions" class="workerActions" hidden>
+            <div class="pickedSummary">
+              <span id="pickedSummaryText">اختار مقعد للبدء</span>
+            </div>
+            <div class="actBtns">
+              <button type="button" class="warn-btn" id="btnReserve">حجز مؤقت</button>
+              <button type="button" id="btnFocusFull">حجز كامل</button>
+            </div>
+          </div>
+
+          <!-- Booking form (group full booking) -->
+          <div class="bookFormWrap collapsed" id="bookFormWrap">
+            <div class="bookFormHeader" id="bookFormHeader">
+              <h3>تأكيد الحجز الكامل</h3>
+              <span class="muted" id="formSeatHint">مقعد —</span>
+            </div>
+            <form id="bookForm" class="bookFormBody">
+              <div class="row three">
+                <div>
+                  <label>الدفع</label>
+                  <select id="pay">
+                    <option value="paid">مدفوع</option>
+                    <option value="half">نصف</option>
+                    <option value="unpaid">غير مدفوع</option>
+                  </select>
+                </div>
+                <div>
+                  <label>الهاتف (اختياري)</label>
+                  <input id="pphone" type="tel" />
+                </div>
+                <div>
+                  <label>البريد (اختياري)</label>
+                  <input id="pemail" type="email" />
+                </div>
+              </div>
+              <div style="height:12px;"></div>
+              <div class="row two">
+                <div>
+                  <label>من</label>
+                  <input id="fromLoc" required placeholder="أم درمان" />
+                </div>
+                <div>
+                  <label>إلى</label>
+                  <input id="toLoc" required />
+                </div>
+              </div>
+              <div style="height:12px;"></div>
+              <div class="row">
+                <div>
+                  <label>اسم الراكب</label>
+                  <input id="pname" required placeholder="الاسم بالكامل" />
+                </div>
+              </div>
+              <div style="margin-top:14px;">
+                <button id="bookBtn" type="submit">حفظ الحجز الكامل</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent bookings -->
+      <div class="card" id="workerRecentCard" style="margin-top:14px;" hidden>
+        <div class="hd">
+          <h2>آخر العمليات</h2>
+          <div class="muted">آخر 40</div>
+        </div>
+        <div class="bd" style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم</th>
+                <th>مقعد</th>
+                <th>الحالة</th>
+                <th>الإسم</th>
+                <th>الرحلة</th>
+                <th>الدفع</th>
+                <th>الوقت</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>كل الرحلات من أم درمان • باص واحد لكل وجهة لليوم</div>
+        <div style="font-family: var(--font-mono);">/worker</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="/ui/app.js?v=20260505" defer></script>
+  </body>
+</html>

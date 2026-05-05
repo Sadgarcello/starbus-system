@@ -11,8 +11,7 @@ services:
     runtime: node
     rootDir: starbus/server
     plan: free
-    buildCommand: npm ci
-    startCommand: npm start
+    buildCommand: npm install    startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION

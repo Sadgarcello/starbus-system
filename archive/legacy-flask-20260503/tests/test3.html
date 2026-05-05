@@ -1,0 +1,353 @@
+<section class="truboxing-ecosystem">
+
+<style>
+
+/* SECTION */
+
+.truboxing-ecosystem{
+padding:160px 8%;
+background:#050505;
+color:white;
+font-family:system-ui;
+text-align:center;
+position:relative;
+overflow:hidden;
+}
+
+/* BACKGROUND IMAGE */
+
+.eco-bg{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background-size:cover;
+background-position:center;
+opacity:0;
+transition:opacity .6s ease;
+z-index:0;
+filter:brightness(.35) blur(3px);
+}
+
+/* ARENA GLOW */
+
+.truboxing-ecosystem::before{
+content:"";
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:700px;
+height:700px;
+background:radial-gradient(circle,
+rgba(61,165,255,.15),
+transparent 60%);
+z-index:1;
+}
+
+/* TITLE */
+
+.eco-title{
+font-size:54px;
+font-weight:900;
+margin-bottom:100px;
+position:relative;
+z-index:3;
+}
+
+/* RING CONTAINER */
+
+.eco-ring{
+position:relative;
+width:520px;
+height:520px;
+margin:auto;
+z-index:3;
+}
+
+/* CENTER CORE */
+
+.eco-center{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:240px;
+height:240px;
+border:2px solid #3da5ff;
+border-radius:50%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+box-shadow:
+0 0 20px #3da5ff,
+0 0 40px rgba(61,165,255,.6);
+animation:ringPulse 5s ease-in-out infinite;
+}
+
+.eco-center h3{
+font-size:28px;
+font-weight:900;
+margin-bottom:6px;
+}
+
+.eco-center p{
+font-size:13px;
+opacity:.8;
+}
+
+/* RING PULSE */
+
+@keyframes ringPulse{
+0%{ box-shadow:0 0 15px #3da5ff; }
+50%{ box-shadow:0 0 40px #3da5ff; }
+100%{ box-shadow:0 0 15px #3da5ff; }
+}
+
+/* ORBIT PARTICLE */
+
+.orbit{
+position:absolute;
+top:50%;
+left:50%;
+width:320px;
+height:320px;
+margin-left:-160px;
+margin-top:-160px;
+border-radius:50%;
+animation:orbitSpin 10s linear infinite;
+}
+
+.orbit::after{
+content:"";
+position:absolute;
+top:-5px;
+left:50%;
+width:8px;
+height:8px;
+background:#3da5ff;
+border-radius:50%;
+box-shadow:0 0 10px #3da5ff,0 0 20px #3da5ff;
+}
+
+@keyframes orbitSpin{
+from{ transform:rotate(0deg); }
+to{ transform:rotate(360deg); }
+}
+
+/* ECOSYSTEM ITEMS */
+
+.eco-item{
+position:absolute;
+display:flex;
+align-items:center;
+justify-content:center;
+width:180px;
+height:80px;
+font-size:20px;
+font-weight:600;
+opacity:.85;
+cursor:pointer;
+transition:.35s;
+user-select:none;
+}
+
+.eco-item span{
+pointer-events:none;
+}
+
+/* HOVER STYLE */
+
+.eco-item:hover{
+color:#3da5ff;
+background:rgba(61,165,255,.06);
+border-radius:10px;
+}
+
+/* POSITIONS */
+
+.fighters{
+top:-10px;
+left:50%;
+transform:translateX(-50%);
+}
+
+.fans{
+right:-30px;
+top:50%;
+transform:translateY(-50%);
+transform-origin:left center;
+}
+
+.brands{
+left:-30px;
+top:50%;
+transform:translateY(-50%);
+transform-origin:right center;
+}
+
+.events{
+bottom:-10px;
+left:50%;
+transform:translateX(-50%);
+}
+
+/* DIRECTIONAL EXPANSION */
+
+.fighters:hover{
+transform:translate(-50%,-25px) scale(1.08);
+}
+
+.fans:hover{
+transform:translate(35px,-50%) scale(1.08);
+}
+
+.brands:hover{
+transform:translate(-35px,-50%) scale(1.08);
+}
+
+.events:hover{
+transform:translate(-50%,25px) scale(1.08);
+}
+
+/* DESCRIPTION */
+
+.eco-description{
+margin-top:80px;
+max-width:700px;
+margin-left:auto;
+margin-right:auto;
+opacity:.85;
+line-height:1.7;
+font-size:16px;
+min-height:60px;
+position:relative;
+z-index:3;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+.eco-ring{
+width:320px;
+height:320px;
+}
+
+.eco-center{
+width:160px;
+height:160px;
+}
+
+.eco-item{
+width:130px;
+height:60px;
+font-size:16px;
+}
+
+}
+
+</style>
+
+
+<h2 class="eco-title">WHAT IS TRUBOXING</h2>
+
+<div class="eco-bg" id="ecoBg"></div>
+
+
+<div class="eco-ring">
+
+<div class="eco-center">
+<h3>TRUBOXING</h3>
+<p>Where Fighters Rise</p>
+</div>
+
+<div class="orbit"></div>
+
+
+<!-- ITEMS -->
+
+<div class="eco-item fighters"
+onmouseenter="setContent('fighters')"
+onmouseleave="clearContent()">
+<span>Fighters</span>
+</div>
+
+<div class="eco-item fans"
+onmouseenter="setContent('fans')"
+onmouseleave="clearContent()">
+<span>Fans</span>
+</div>
+
+<div class="eco-item brands"
+onmouseenter="setContent('brands')"
+onmouseleave="clearContent()">
+<span>Brands</span>
+</div>
+
+<div class="eco-item events"
+onmouseenter="setContent('events')"
+onmouseleave="clearContent()">
+<span>Events</span>
+</div>
+
+</div>
+
+
+<p class="eco-description" id="ecoText">
+TruBoxing connects fighters, fans, brands, and events into one growing boxing ecosystem.
+</p>
+
+
+<script>
+
+function setContent(type){
+
+const text = {
+
+fighters:
+"Fighters step into the TruBoxing arena to test their skills, gain exposure, and build their reputation in the Malaysian boxing scene.",
+
+fans:
+"Fans discover rising fighters, follow intense matchups, and experience the raw energy of live combat sports.",
+
+brands:
+"Brands partner with TruBoxing to connect with the fight community through sponsorships and promotion.",
+
+events:
+"TruBoxing organizes competitive fight nights and sparring events showcasing the next generation of fighters."
+
+}
+
+const images = {
+
+fighters:"fighters.jpg",
+fans:"fans.jpg",
+brands:"brands.jpg",
+events:"events.jpg"
+
+}
+
+document.getElementById("ecoText").innerText = text[type]
+
+const bg = document.getElementById("ecoBg")
+bg.style.backgroundImage = `url(${images[type]})`
+bg.style.opacity = 1
+
+}
+
+function clearContent(){
+
+document.getElementById("ecoText").innerText =
+"TruBoxing connects fighters, fans, brands, and events into one growing boxing ecosystem."
+
+const bg = document.getElementById("ecoBg")
+bg.style.opacity = 0
+
+}
+
+</script>
+
+</section>

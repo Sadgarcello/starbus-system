@@ -1,0 +1,168 @@
+<section class="champions-section">
+  <div class="champions-wrapper">
+    <h2 class="champions-title">TruBoxing Champions</h2>
+
+    <div class="champions-grid">
+
+      <!-- CARD -->
+      <div class="champion-card">
+        
+        <!-- DIVISION BAR -->
+        <div class="division-bar">HEAVYWEIGHT BOXING</div>
+
+        <!-- IMAGE SYSTEM -->
+        <div class="champion-images">
+          <div class="img img-main" style="background-image: url('../static/images/fighters/profiles/bazooka.png')"></div>
+          <div class="img img-alt" style="background-image: url('../static/images/imranprev.png')"></div>
+        </div>
+
+        <!-- INFO -->
+        <div class="champion-info">
+          <h3>IMRAN “THE BAZOOKA” HANAFI</h3>
+          <div class="meta">
+            <span>COUNTRY</span>
+            <p>MALAYSIA</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DUPLICATE FOR OTHERS -->
+
+    </div>
+  </div>
+
+<style>
+/* ===== SECTION ===== */
+.champions-section {
+  background: #0b0b0b;
+  padding: 4rem 2rem;
+  color: #fff;
+}
+
+.champions-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.champions-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 3rem;
+}
+
+/* ===== GRID ===== */
+.champions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+/* ===== CARD ===== */
+.champion-card {
+  background: #111;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.champion-card:hover {
+  transform: translateY(-6px);
+}
+
+/* ===== DIVISION BAR ===== */
+.division-bar {
+  background: #f5c400;
+  color: #000;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.6rem;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+/* ===== IMAGE ===== */
+.champion-images {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+}
+
+.img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.6s ease;
+}
+
+/* Champion image */
+.img-main {
+  z-index: 2;
+}
+
+/* Real-life image */
+.img-alt {
+  z-index: 1;
+  transform: translateY(100%);
+}
+
+/* 🔥 INTERACTION */
+.champion-card:hover .img-main {
+  transform: translateY(-100%);
+}
+
+.champion-card:hover .img-alt {
+  transform: translateY(0%);
+}
+
+/* ===== INFO ===== */
+.champion-info {
+  padding: 1rem;
+  background: #fff;
+  color: #000;
+}
+
+.champion-info h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  border-top: 1px solid #ddd;
+  padding-top: 0.5rem;
+}
+
+.meta span {
+  color: #888;
+  font-weight: 600;
+}
+
+.meta p {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .champion-images {
+    height: 260px;
+  }
+
+  .champion-card:active .img-main {
+    transform: translateY(-100%);
+  }
+
+  .champion-card:active .img-alt {
+    transform: translateY(0%);
+  }
+}
+</style>
+</section>

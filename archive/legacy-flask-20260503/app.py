@@ -243,48 +243,9 @@ def get_fighters_filtered(search: str = "", weight: str = "") -> list[dict]:
 # ------------------------------ Routes -------------------------------
 @app.route("/")
 def home():
-    """Home page: Featured Boxers + Sponsors."""
-    conn = get_conn()
-    conn.row_factory = sqlite3.Row
-
-    placeholders = ",".join("?" * len(FEATURED_IDS))
-    q = f"""
-      SELECT id, name, nickname, weight_class, image_profile, country, state_label
-      FROM fighters
-      WHERE id IN ({placeholders})
-      ORDER BY CASE id
-        WHEN 'shamel' THEN 1
-        WHEN 'bazooka' THEN 2
-        WHEN 'danny'   THEN 3
-        WHEN 'buki'    THEN 4
-        ELSE 99 END
-    """
-    rows = [dict(r) for r in conn.execute(q, FEATURED_IDS).fetchall()]
-    conn.close()
-
-    featured = []
-    for f in rows:
-        img = f.get("image_profile") or "placeholders/fighter_placeholder.png"
-        preview_path = "images/fighters/" + img
-
-        # pass both 'country' and 'state_label' into normalizer
-        st_label, flag_file = normalize_state_from_country(
-            f.get("country") or "",
-            f.get("state_label") or "",
-        )
-
-        featured.append(
-            {
-                "id": f.get("id", ""),
-                "display_name": (f.get("name") or "").upper(),
-                "weight_class": f.get("weight_class", ""),
-                "preview_path": preview_path,
-                "state_label": st_label,
-                "flag_file": flag_file,
-            }
-        )
-
-    return render_template("index.html", featured=featured, sponsors=SPONSORS)
+    """Serve test.html for ngrok preview."""
+    with open(os.path.join(os.path.dirname(__file__), "tests", "test.html"), "r", encoding="utf-8") as f:
+        return f.read()
 
 
 @app.route("/fighters")

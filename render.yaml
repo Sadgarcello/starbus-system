@@ -1,9 +1,8 @@
 # Render Blueprint — Starbus (monorepo: app lives in starbus/server).
 # https://render.com/docs/blueprint-spec
 #
-# After first deploy: attach a MySQL-compatible database (same PaaS or external),
-# set DB_* and WHATSAPP_NUMBER in the service Environment tab, then run SQL from
-# starbus/database/ (see starbus/DEPLOY.md).
+# After first deploy: set DB_* and WHATSAPP_NUMBER in the dashboard, then run
+# starbus/database/schema.sql and seed.sql on your MySQL instance.
 
 services:
   - type: web
@@ -11,13 +10,14 @@ services:
     runtime: node
     rootDir: starbus/server
     plan: free
-    buildCommand: npm install    startCommand: npm start
+    buildCommand: npm ci
+    startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "20.18.1"
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: "7d"
       - key: JWT_SECRET
         generateValue: true
       - key: DB_HOST

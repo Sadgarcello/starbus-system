@@ -470,9 +470,16 @@ a {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px 14px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-size: 13px;
   align-items: center;
+}
+.seatConcurrentNote {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+.seatConcurrentNote .nowrap {
+  white-space: nowrap;
 }
 .key {
   display: inline-flex;

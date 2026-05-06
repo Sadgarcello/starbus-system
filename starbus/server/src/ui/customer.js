@@ -84,7 +84,7 @@
     pickedSeats: [],        // selected seat numbers (in tap order)
     refreshTimer: null,
     whatsapp: "",
-    booking: null,          // confirmed bulk booking payload
+    booking: null,          // local summary for receipt / WhatsApp (no DB rows yet)
   };
 
   // ===== Step 1: Routes =====
@@ -204,7 +204,7 @@
       const before = state.pickedSeats.length;
       state.pickedSeats = state.pickedSeats.filter((n) => (map.seats[String(n)] || "empty") === "empty");
       if (state.pickedSeats.length < before) {
-        toast("warn", "بعض المقاعد اتحجزت للتو، اختار غيرها");
+        toast("warn", "مقعد أو أكثر من اختيارك أصبح محجوزاً؛ اختر مقاعد بديلة");
       }
       // Cap ticket count to remaining availability
       const max = maxTicketsAllowed();
@@ -313,7 +313,7 @@
     setTimeout(() => $("#cname")?.focus(), 200);
   }
 
-  async function submitForm(e) {
+  function submitForm(e) {
     e.preventDefault();
     const errBox = $("#formError");
     errBox.hidden = true;
@@ -322,31 +322,26 @@
     if (name.length < 2) { errBox.textContent = "الإسم لازم حرفين على الأقل"; errBox.hidden = false; return; }
     if (!/^[\d+()\-\s]{7,}$/.test(phone)) { errBox.textContent = "رقم الهاتف غير صحيح"; errBox.hidden = false; return; }
 
-    const btn = $("#confirmBtn");
-    btn.disabled = true;
-    btn.textContent = "جاري الحجز…";
-    try {
-      const out = await api("/api/public/bookings/reserve-bulk", {
-        method: "POST",
-        body: {
-          bus_id: Number(state.selected.id),
-          seat_numbers: state.pickedSeats.slice().sort((a, b) => a - b).map(Number),
-          passenger_name: name,
-          passenger_phone: phone,
-        },
-        timeoutMs: 18000,
-      });
-      state.booking = { ...out, name, phone };
-      showDone();
-    } catch (err) {
-      const msg = err?.message || "حصل خطأ، حاول تاني";
-      errBox.textContent = msg;
-      errBox.hidden = false;
-      if (err?.status === 409) toast("warn", "بعض المقاعد اتحجزت للتو، رجع واختار غيرها");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "تأكيد الحجز";
-    }
+    const sel = state.selected;
+    if (!sel) { errBox.textContent = "اختار رحلة أولاً"; errBox.hidden = false; return; }
+
+    const seats = state.pickedSeats.slice().sort((a, b) => a - b);
+    const total_price = (Number(sel.price) || 0) * seats.length;
+
+    state.booking = {
+      bus_id: sel.id,
+      booking_ids: [],
+      seat_numbers: seats,
+      origin: sel.origin,
+      destination: sel.destination,
+      departure_time: sel.departure_time,
+      date: sel.date,
+      price: sel.price,
+      total_price,
+      name,
+      phone,
+    };
+    showDone();
   }
 
   // ===== Step 4: Done =====
@@ -354,18 +349,22 @@
     const b = state.booking;
     if (!b) return;
     const seats = (b.seat_numbers || []).map((n) => "#" + n).join("، ");
-    const refs = (b.booking_ids || []).map((id) => "#" + id).join("، ");
+    const ids = b.booking_ids || [];
+    const refs = ids.length
+      ? ids.map((id) => "#" + id).join("، ")
+      : "— (بانتظار تأكيد الموظف)";
     const total = b.total_price != null ? Number(b.total_price) : (Number(b.price) || 0) * (b.seat_numbers?.length || 1);
 
     const lines = [
       ["أرقام الحجز", "<span class='ref'>" + escapeHtml(refs) + "</span>"],
+      ["رقم الرحلة (للموظف)", "<span class='ref'>" + escapeHtml(String(b.bus_id ?? "—")) + "</span>"],
       ["الراكب", escapeHtml(b.name)],
       ["الهاتف", escapeHtml(b.phone)],
       ["الرحلة", escapeHtml(b.origin) + " ← " + escapeHtml(b.destination)],
       ["الموعد", escapeHtml(fmtTime(b.departure_time))],
       ["المقاعد", escapeHtml(seats) + " (" + (b.seat_numbers?.length || 1) + " تذكرة)"],
-      ["المجموع", escapeHtml(fmtPrice(total))],
-      ["الحالة", "محجوز مؤقت — يأكد عبر واتساب"],
+      ["المجموع المتوقع", escapeHtml(fmtPrice(total))],
+      ["الحالة", "طلب من الموقع — أكمل على واتساب"],
     ];
     const recHtml = lines.map(([lbl, val]) =>
       '<div class="row"><span class="lbl">' + lbl + '</span><span class="val">' + val + "</span></div>"
@@ -379,19 +378,21 @@
 
   function buildConfirmText(b) {
     const seats = (b.seat_numbers || []).map((n) => "#" + n).join("، ");
-    const refs = (b.booking_ids || []).map((id) => "#" + id).join("، ");
     const count = b.seat_numbers?.length || 1;
     const total = b.total_price != null ? Number(b.total_price) : (Number(b.price) || 0) * count;
     return [
       "السلام عليكم ستار باص 🌟",
-      `حجزت ${count} ${count === 1 ? "تذكرة" : "تذاكر"} من الموقع وعايز أأكد:`,
+      `طلب حجز ${count} ${count === 1 ? "تذكرة" : "تذاكر"} من الموقع (يحتاج تأكيد الموظف):`,
       "",
-      "أرقام الحجز: " + refs,
+      "رقم الرحلة في النظام: " + String(b.bus_id ?? "—"),
       "الإسم: " + b.name,
+      "الهاتف (واتساب): " + b.phone,
       "الرحلة: " + b.origin + " ← " + b.destination,
       "الموعد: " + fmtTime(b.departure_time),
-      "المقاعد: " + seats,
-      "المجموع: " + fmtPrice(total),
+      "المقاعد المطلوبة: " + seats,
+      "المجموع المتوقع: " + fmtPrice(total),
+      "",
+      "ما في رقم حجز بعد — يرجى التأكيد في النظام لو سمحتم.",
       "",
       "شكراً 🙏",
     ].join("\n");

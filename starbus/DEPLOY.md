@@ -17,11 +17,11 @@ Use any managed MySQL 8 (or MariaDB-compatible) instance: same PaaS MySQL add-on
 
 1. **[`database/schema.sql`](database/schema.sql)** — base tables (run on an empty database).
 2. If you already had an **old** Starbus DB without lifecycle / nullable passengers, run **[`database/migration_add_lifecycle.sql`](database/migration_add_lifecycle.sql)** once (safe to skip on fresh schema).
-3. **[`database/seed.sql`](database/seed.sql)** — routes, staff users, **`online@starbus.sd`** (required for public customer booking), and **today’s** buses from Omdurman.
+3. **[`database/seed.sql`](database/seed.sql)** — routes, staff users, optional **`online@starbus.sd`** (legacy online channel user), and **today’s** buses from Omdurman.
 
 `seed.sql` deletes **today’s** bookings and buses for `CURDATE()` before inserting fresh buses — re-run when you need a clean day.
 
-**Public booking** uses `worker_id =` the user with email **`online@starbus.sd`** (see [`server/src/routes/public.js`](server/src/routes/public.js)). If this row is missing, customer reserve returns 500.
+**Customer flow:** the public site **does not** create database rows. Customers pick seats and send a **WhatsApp** message; staff confirm bookings in **`/worker`**. Only workers create `reserved` / confirmed rows via the authenticated API.
 
 ## Render (recommended for this repo)
 
@@ -46,7 +46,7 @@ Use any managed MySQL 8 (or MariaDB-compatible) instance: same PaaS MySQL add-on
 | `CORS_ORIGINS` | No | Empty = allow any origin (ok for single-origin UI). |
 | `TRUST_PROXY` | No | Default: trust 1 proxy hop (`X-Forwarded-For`) so `/api/public` limits use the real client IP. Set `0` to disable (rare). |
 | `PUBLIC_GLOBAL_*` | No | Default ~120 `/api/public` requests per IP per minute; stops naive flooding. See `.env.example`. |
-| `RESERVE_RATE_*` | No | Stricter limit on successful public reserves only; see `.env.example`. |
+| `RESERVE_RATE_*` | No | **Unused** — public `/bookings/reserve*` returns 403; kept in `.env.example` for reference only. |
 
 Copy [`server/.env.example`](server/.env.example) to `server/.env` locally (never commit `.env`).
 

@@ -75,6 +75,7 @@ export function createApp() {
         details: err.issues?.map((i) => ({ path: i.path, message: i.message })),
       });
     }
+    console.error("[api] 500", err?.code || "", err?.message || err);
     return res.status(500).json({ error: "Server error" });
   });
 

@@ -15,7 +15,13 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to start server:", err?.message || err);
+  const msg = err?.message || String(err);
+  console.error("Failed to start server:", msg);
+  if (msg.includes("ECONNREFUSED") && msg.includes("3306")) {
+    console.error(
+      "Hint: DB is not on localhost in production. Set DB_HOST to your cloud MySQL hostname in Render → Environment."
+    );
+  }
   process.exit(1);
 });
 

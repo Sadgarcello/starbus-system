@@ -148,6 +148,11 @@
           <span class="key"><span class="dot full"></span>محجوز</span>
           <span class="live" id="seatRefreshNote">يتحدث تلقائياً</span>
         </div>
+        <p class="muted small seatConcurrentNote">
+          قد يكون غيرك يختار نفس المقعد الآن. عند تحديث الخريطة، إذا أصبح المقعد محجوزاً
+          <span class="nowrap">(برتقالي أو أحمر)</span>
+          فقد سبقك من حجزه في النظام — اختر مقعداً آخر.
+        </p>
 
         <div class="busShell" id="busShell">
           <div class="busFront">
@@ -184,7 +189,7 @@
         <button class="back" data-back="stepSeats">→ رجوع</button>
         <div class="section-head">
           <h1>بياناتك</h1>
-          <p>هنرسل ليك تأكيد الحجز عبر واتساب</p>
+          <p>بنرتّب رسالة واتساب فيها تفاصيل الرحلة؛ الموظف يأكد الحجز في النظام.</p>
         </div>
 
         <form id="bookForm" class="card">
@@ -196,8 +201,8 @@
           <label for="cphone">رقم الهاتف (واتساب)</label>
           <input id="cphone" name="phone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="+249 9X XXX XXXX" />
 
-          <button type="submit" class="primary big" id="confirmBtn">تأكيد الحجز</button>
-          <p class="reassure">المقعد بيتحجز ليك مؤقت. ندفع للسائق أو نأكد عبر واتساب.</p>
+          <button type="submit" class="primary big" id="confirmBtn">تجهيز رسالة واتساب</button>
+          <p class="reassure">المقاعد حسب النظام مباشرة؛ لو اتأكدت من غيرك قبلك يظهر المقعد محجوزاً — رجع للخطوة السابقة واختار مقعداً آخر. التأكيد النهائي من الموظف.</p>
           <div class="formError" id="formError" hidden></div>
         </form>
       </section>
@@ -206,14 +211,14 @@
       <section class="step" id="stepDone" hidden>
         <div class="doneCard">
           <div class="check">✓</div>
-          <h1>تم الحجز بنجاح</h1>
-          <p class="muted">رحلتك جاهزة. إحفظ رقم الحجز.</p>
+          <h1>جهّزنا لك رسالة واتساب</h1>
+          <p class="muted">أكمل المحادثة على واتساب؛ الموظف يثبت المقاعد في النظام ويعطيك رقم الحجز.</p>
 
           <div class="receipt" id="receipt"></div>
 
           <a id="waConfirmBtn" class="primary big wa" href="#" target="_blank" rel="noopener">
             <span class="waicon" aria-hidden="true"></span>
-            تواصل لتأكيد الدفع
+            فتح واتساب لإرسال الطلب
           </a>
           <button id="anotherBtn" class="link">احجز رحلة تانية</button>
         </div>
@@ -229,6 +234,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/customer.js?v=20260504-4" defer></script>
+    <script src="/ui/customer.js?v=20260506-6" defer></script>
   </body>
 </html>

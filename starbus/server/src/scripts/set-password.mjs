@@ -2,14 +2,33 @@
  * One-off: set a user's password using bcrypt + parameterized UPDATE.
  * Avoids Railway SQL UI mangling bcrypt hashes ($ characters).
  *
- * Usage (from starbus/server, with .env or env vars set):
+ * Usage (from starbus/server):
  *   npm run set-password -- admin@test.com "123"
  *
- * For cloud MySQL from your laptop, set DB_SSL=1 in .env if the provider requires TLS.
+ * Loads .env, then if .env.railway exists, loads it with override (so local .env can
+ * stay on 127.0.0.1 while cloud DB_* live in .env.railway). See .env.railway.example.
  */
-import "dotenv/config";
+import { existsSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const serverRoot = join(__dirname, "..", "..");
+dotenv.config({ path: join(serverRoot, ".env") });
+const railwayPath = join(serverRoot, ".env.railway");
+if (existsSync(railwayPath)) {
+  dotenv.config({ path: railwayPath, override: true });
+} else {
+  const h = (process.env.DB_HOST ?? "").trim();
+  if (h === "127.0.0.1" || h === "localhost" || !h) {
+    console.warn(
+      "set-password: DB is localhost from .env. To update Railway users without editing .env, create .env.railway — see .env.railway.example."
+    );
+  }
+}
 
 function buildPoolConfig() {
   const dbHostRaw = (process.env.DB_HOST ?? "").trim();
@@ -74,6 +93,15 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err?.message || err);
+  const msg = err?.message || String(err);
+  console.error(msg);
+  if (msg.includes("ECONNREFUSED")) {
+    const h = (process.env.DB_HOST ?? "").trim();
+    if (h === "127.0.0.1" || h === "localhost" || !h) {
+      console.error(
+        "Hint: Nothing is listening on local MySQL. For Railway: copy .env.railway.example → .env.railway and paste Connect host/port/user/password/database."
+      );
+    }
+  }
   process.exit(1);
 });

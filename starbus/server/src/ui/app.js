@@ -671,10 +671,13 @@ async function initAdminPage() {
   setAuthUI();
   const user = getUser();
   if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
+    if (adminRoot) adminRoot.hidden = false;
     if ($("#adminLock")) $("#adminLock").hidden = false;
     return;
   }
 
+  if (adminRoot) adminRoot.hidden = true;
+  if ($("#adminLock")) $("#adminLock").hidden = true;
   if ($("#adminAnalyticsDeck")) $("#adminAnalyticsDeck").hidden = false;
 
   const isSuper = user.role === "superadmin";
@@ -970,6 +973,10 @@ async function initAdminPage() {
       if (err.status === 401) {
         setToken("");
         setUser(null);
+        setAuthUI();
+        if (adminRoot) adminRoot.hidden = false;
+        if ($("#adminLock")) $("#adminLock").hidden = false;
+        if ($("#adminAnalyticsDeck")) $("#adminAnalyticsDeck").hidden = true;
         showToast("danger", "انتهت الجلسة. سجل دخول من جديد.");
       } else {
         showToast("warn", err.message || "فشل التحديث");

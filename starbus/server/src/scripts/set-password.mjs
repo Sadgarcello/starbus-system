@@ -21,6 +21,14 @@ dotenv.config({ path: join(serverRoot, ".env") });
 const railwayPath = join(serverRoot, ".env.railway");
 if (existsSync(railwayPath)) {
   dotenv.config({ path: railwayPath, override: true });
+  const h = (process.env.DB_HOST ?? "").trim();
+  const p = (process.env.DB_PORT ?? "").trim();
+  if (!h || !p) {
+    console.error(
+      "DB_HOST and DB_PORT in .env.railway must be set (copy from Railway MySQL → Connect). Empty host falls back to localhost."
+    );
+    process.exit(1);
+  }
 } else {
   const h = (process.env.DB_HOST ?? "").trim();
   if (h === "127.0.0.1" || h === "localhost" || !h) {

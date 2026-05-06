@@ -197,7 +197,8 @@ router.get("/daily", async (req, res, next) => {
 
     const day = date || new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
 
-    const where = ["DATE(bk.created_at) = :day"];
+    /** Service day (bus.date) matches the admin "تشغيل / تقرير" calendar — not created_at. */
+    const where = ["b.date = :day"];
     const params = { day, limit, offset };
     if (bus_id) {
       where.push("bk.bus_id = :bus_id");
@@ -213,17 +214,19 @@ router.get("/daily", async (req, res, next) => {
          SUM(CASE WHEN bk.payment_status = 'unpaid' THEN 1 ELSE 0 END) AS unpaid_count,
          SUM(CASE WHEN bk.payment_status = 'half' THEN 1 ELSE 0 END) AS half_count
        FROM bookings bk
+       JOIN buses b ON b.id = bk.bus_id
        WHERE ${where.join(" AND ")}`,
       params
     );
 
-    const summary = summaryRows?.[0] || {
-      bookings_count: 0,
-      reserved_count: 0,
-      full_count: 0,
-      paid_count: 0,
-      unpaid_count: 0,
-      half_count: 0,
+    const sRaw = summaryRows?.[0] || {};
+    const summary = {
+      bookings_count: num(sRaw.bookings_count),
+      reserved_count: num(sRaw.reserved_count),
+      full_count: num(sRaw.full_count),
+      paid_count: num(sRaw.paid_count),
+      unpaid_count: num(sRaw.unpaid_count),
+      half_count: num(sRaw.half_count),
     };
 
     const [rows] = await pool.execute(

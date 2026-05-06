@@ -135,6 +135,10 @@ body.admin-dashboard .admin-app {
   margin-inline: auto;
 }
 
+.admin-top-bar-inner.admin-top-bar-simple {
+  justify-content: flex-end;
+}
+
 .admin-search-faux {
   flex: 1;
   min-width: 220px;

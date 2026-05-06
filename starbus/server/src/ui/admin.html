@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260506" />
-    <link rel="stylesheet" href="/ui/admin.css?v=20260507" />
+    <link rel="stylesheet" href="/ui/admin.css?v=20260509" />
   </head>
   <body class="theme-light admin-dashboard">
     <div class="admin-app">
@@ -35,14 +35,9 @@
 
       <div class="admin-main">
         <header class="admin-top-bar">
-          <div class="admin-top-bar-inner">
-            <div class="admin-search-faux" aria-hidden="true">
-              <span class="search-ico">⌕</span>
-              <span class="search-ph">بحث عن رقم حجز، مقعد أو وجهة…</span>
-            </div>
+          <div class="admin-top-bar-inner admin-top-bar-simple">
             <div class="admin-top-actions">
               <button id="adminRefreshBtn" type="button">تحديث البيانات</button>
-              <a class="secondary nav-pill" href="#loginForm" id="loginNavBtn">تسجيل دخول</a>
               <button class="secondary" type="button" id="logoutBtn" hidden>تسجيل خروج</button>
             </div>
           </div>
@@ -166,7 +161,6 @@
                 </div>
               </div>
             </section>
-          </div>
 
           <section class="admin-card loft drill-card">
             <div class="admin-card-hd slim">
@@ -190,7 +184,7 @@
                 </div>
               </div>
 
-              <p class="kpi-explainer muted sm">المؤشرات التالية مرتبطة بفلتر الباص؛ لو ما في خطوط ذلك اليوم تظهر مجموع كل الأسطول.</p>
+              <p class="kpi-explainer muted sm">المؤشرات حسب <strong>يوم تشغيل الرحلة</strong> (تاريخ الباص في النظام) والفلتر اختياري لباص واحد.</p>
 
               <div class="admin-metrics drill-kpi">
                 <div class="metric-card">
@@ -264,6 +258,7 @@
               </div>
             </div>
           </section>
+          </div>
 
           <footer class="admin-foot">
             لوحة تحكم داخلية — <span class="mono">/admin</span>
@@ -274,6 +269,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/app.js?v=20260508" defer></script>
+    <script src="/ui/app.js?v=20260509" defer></script>
   </body>
 </html>

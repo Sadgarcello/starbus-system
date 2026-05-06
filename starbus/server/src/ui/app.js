@@ -911,37 +911,44 @@ async function initAdminPage() {
       await populateAdminRoutes();
       await refreshOverview(day);
 
-      const qsBus = adminBusId ? `&bus_id=${adminBusId}` : "";
+      const qsBus =
+        Number.isFinite(adminBusId) && adminBusId > 0 ? `&bus_id=${adminBusId}` : "";
       const out = await api(`/api/reports/daily?date=${encodeURIComponent(day)}${qsBus}&limit=200`, {
         timeoutMs: 14000,
       });
       $("#dayLabel").textContent = out.date;
       const scopeEl = $("#adminScopeBadge");
       if (scopeEl) {
-        scopeEl.textContent = adminBusId
-          ? "الأرقام التحت لفلتر: الباص المختار والجدول"
-          : "الأرقام التحت: كل خطوط نفس اليوم (ما في باص محدد)";
+        scopeEl.textContent =
+          Number.isFinite(adminBusId) && adminBusId > 0
+            ? "مؤشرات وبيانات هذا الباص في يوم التشغيل المختار."
+            : "مؤشرات وبيانات كل الباصات المجدولة في يوم التشغيل المختار.";
       }
       const s = out.summary || {};
-      $("#kpiBookings").textContent = String(s.bookings_count ?? 0);
-      if ($("#kpiReserved")) $("#kpiReserved").textContent = String(s.reserved_count ?? 0);
-      if ($("#kpiFull")) $("#kpiFull").textContent = String(s.full_count ?? 0);
-      $("#kpiPaid").textContent = String(s.paid_count ?? 0);
-      if ($("#kpiHalf")) $("#kpiHalf").textContent = String(s.half_count ?? 0);
-      $("#kpiUnpaid").textContent = String(s.unpaid_count ?? 0);
+      const setKpi = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(v ?? 0);
+      };
+      setKpi("kpiBookings", s.bookings_count);
+      setKpi("kpiReserved", s.reserved_count);
+      setKpi("kpiFull", s.full_count);
+      setKpi("kpiPaid", s.paid_count);
+      setKpi("kpiHalf", s.half_count);
+      setKpi("kpiUnpaid", s.unpaid_count);
 
       const tbody = $("#adminBody");
-      tbody.innerHTML = "";
-      for (const r of out.bookings || []) {
-        const tr = document.createElement("tr");
-        const routeLabel = routeLabelFromBooking(r);
-        const dateTime = `${fmtDate(r.created_at)} ${fmtTime(r.created_at)}`;
-        const life = r.lifecycle || "full";
-        const name = r.passenger_name ? escapeHtml(r.passenger_name) : "—";
-        const cancelTd = isSuper
-          ? `<td><button type="button" class="danger cancel-booking" data-id="${r.id}" style="padding:6px 12px;width:auto;font-size:12px;">إلغاء</button></td>`
-          : `<td class="muted">—</td>`;
-        tr.innerHTML = `
+      if (tbody) {
+        tbody.innerHTML = "";
+        for (const r of out.bookings || []) {
+          const tr = document.createElement("tr");
+          const routeLabel = routeLabelFromBooking(r);
+          const dateTime = `${fmtDate(r.created_at)} ${fmtTime(r.created_at)}`;
+          const life = r.lifecycle || "full";
+          const name = r.passenger_name ? escapeHtml(r.passenger_name) : "—";
+          const cancelTd = isSuper
+            ? `<td><button type="button" class="danger cancel-booking" data-id="${r.id}" style="padding:6px 12px;width:auto;font-size:12px;">إلغاء</button></td>`
+            : `<td class="muted">—</td>`;
+          tr.innerHTML = `
           <td class="mono">#${r.id}</td>
           <td class="mono">${r.seat_number}</td>
           <td>${statePillHtml(life)}</td>
@@ -951,24 +958,25 @@ async function initAdminPage() {
           <td class="mono">${escapeHtml(dateTime)}</td>
           ${cancelTd}
         `;
-        tbody.appendChild(tr);
-      }
+          tbody.appendChild(tr);
+        }
 
-      tbody.querySelectorAll(".cancel-booking").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = btn.getAttribute("data-id");
-          if (!id || !confirm("إلغاء الحجز وتحرير المقعد؟")) return;
-          btn.disabled = true;
-          try {
-            await api(`/api/bookings/${id}`, { method: "DELETE", timeoutMs: 15000 });
-            await refresh();
-          } catch (err) {
-            showToast("danger", err.message || "فشل الإلغاء");
-          } finally {
-            btn.disabled = false;
-          }
+        tbody.querySelectorAll(".cancel-booking").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-id");
+            if (!id || !confirm("إلغاء الحجز وتحرير المقعد؟")) return;
+            btn.disabled = true;
+            try {
+              await api(`/api/bookings/${id}`, { method: "DELETE", timeoutMs: 15000 });
+              await refresh();
+            } catch (err) {
+              showToast("danger", err.message || "فشل الإلغاء");
+            } finally {
+              btn.disabled = false;
+            }
+          });
         });
-      });
+      }
     } catch (err) {
       if (err.status === 401) {
         setToken("");

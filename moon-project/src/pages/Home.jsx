@@ -40,24 +40,24 @@ export default function Home() {
         <>
           <MoonScene memories={memories} />
 
-          <div className="pointer-events-none fixed inset-x-0 top-0 z-[15] px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] md:px-12 md:pr-12">
-            <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="max-w-md pr-2">
-                <p className="font-display text-balance text-xl font-normal tracking-tight text-white/92 sm:text-2xl md:text-4xl md:leading-snug">
+          <div className="pointer-events-none fixed inset-x-0 top-0 z-[15] px-[max(0.875rem,env(safe-area-inset-left))] pr-[max(0.875rem,env(safe-area-inset-right))] pt-[max(0.75rem,env(safe-area-inset-top))] md:px-12 md:pr-12">
+            <header className="flex max-[480px]:flex-row max-[480px]:items-start max-[480px]:justify-between max-[480px]:gap-3 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="min-w-0 max-w-[min(100%,20rem)] shrink pr-14 sm:max-w-md sm:pr-2 md:max-w-lg">
+                <p className="font-display text-balance text-[1.125rem] font-normal leading-snug tracking-tight text-white/92 min-[390px]:text-xl sm:text-2xl md:text-4xl md:leading-snug">
                   Every light here is something I still remember.
                 </p>
-                <p className="mt-3 font-body text-xs uppercase tracking-[0.35em] text-zinc-500 md:text-[11px]">
+                <p className="mt-2 font-body text-[10px] uppercase tracking-[0.32em] text-zinc-500 min-[390px]:text-xs md:mt-3 md:text-[11px]">
                   Tap the stars.
                 </p>
               </div>
 
-              <div className="pointer-events-auto flex flex-shrink-0 items-center gap-4 sm:justify-end">
+              <div className="pointer-events-auto fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.65rem,env(safe-area-inset-top))] z-[18] flex flex-shrink-0 items-center gap-4 sm:relative sm:right-auto sm:top-auto sm:justify-end">
                 <button
                   type="button"
                   aria-pressed={muted}
                   aria-label={muted ? 'Unmute ambient audio' : 'Mute ambient audio'}
                   onClick={() => setMuted((v) => !v)}
-                  className="min-h-[44px] rounded-full border border-white/[0.09] bg-white/[0.03] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.26em] text-zinc-400 transition active:bg-white/[0.08] hover:border-white/15 hover:text-zinc-100"
+                  className="min-h-[40px] min-w-[110px] rounded-full border border-white/[0.09] bg-black/40 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-zinc-300 backdrop-blur-sm transition active:bg-white/[0.08] hover:border-white/15 hover:text-zinc-100 sm:relative sm:right-auto sm:top-auto sm:min-h-[44px] sm:min-w-0 sm:bg-white/[0.03] sm:px-4 sm:py-2.5 sm:text-[10px] sm:tracking-[0.26em]"
                 >
                   {muted ? 'Sound off' : 'Sound on'}
                 </button>

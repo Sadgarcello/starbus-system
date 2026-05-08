@@ -1,9 +1,11 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Stars, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { getMoonIllumination } from '../data/memories'
+import { getViewportCameraTune } from '../lib/viewportCameraTune'
+import { layoutScaleForViewportWidth } from '../lib/viewportStars'
 import StarField from './StarField'
 import { useExperience } from '../context/ExperienceContext'
 
@@ -47,31 +49,59 @@ function MoonBody({ illumination, eclipse, onMoonClick }) {
 
 function ParallaxGroup({ children }) {
   const g = useRef(null)
+  const size = useThree((s) => s.size)
+  const [coarsePointer, setCoarsePointer] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(pointer: coarse)').matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const mq = window.matchMedia('(pointer: coarse)')
+    const sync = () => setCoarsePointer(mq.matches)
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
+  }, [])
+
   useFrame(({ mouse }) => {
     if (!g.current) return
-    const rx = THREE.MathUtils.lerp(g.current.rotation.x, mouse.y * 0.07, 0.04)
-    const ry = THREE.MathUtils.lerp(g.current.rotation.y, mouse.x * 0.06, 0.04)
+    const asp = size.height > 4 ? size.width / size.height : 1
+    const narrow = size.width < 640 || asp < 0.5
+    const damp = coarsePointer ? 0.22 : narrow ? 0.45 : 1
+    const ryMul = coarsePointer ? 0.026 : narrow ? 0.042 : 0.06
+    const rxMul = coarsePointer ? 0.032 : narrow ? 0.048 : 0.07
+
+    const rx = THREE.MathUtils.lerp(g.current.rotation.x, mouse.y * rxMul * damp, 0.04)
+    const ry = THREE.MathUtils.lerp(g.current.rotation.y, mouse.x * ryMul * damp, 0.04)
     g.current.rotation.x = rx
     g.current.rotation.y = ry
   })
   return <group ref={g}>{children}</group>
 }
 
-function CameraRig({ focusPosition, atHome }) {
+function CameraRig({ focusPosition, atHome, tune }) {
   const { camera } = useThree()
+
+  useLayoutEffect(() => {
+    // Three.js PerspectiveCamera mutates projection in place via fov + updateProjectionMatrix.
+    /* eslint-disable react-hooks/immutability -- R3F default camera follows Three semantics */
+    camera.fov = tune.homeFov
+    camera.updateProjectionMatrix()
+    /* eslint-enable react-hooks/immutability */
+  }, [camera, tune.homeFov])
 
   useEffect(() => {
     if (atHome) {
       gsap.to(camera.position, {
         x: 0,
         y: 0,
-        z: 14,
+        z: tune.homeZ,
         duration: 1.55,
         ease: 'power3.inOut',
         overwrite: true,
       })
     }
-  }, [atHome, camera])
+  }, [atHome, camera, tune.homeZ])
 
   useEffect(() => {
     if (!atHome && focusPosition) {
@@ -80,13 +110,17 @@ function CameraRig({ focusPosition, atHome }) {
       gsap.to(camera.position, {
         x: target.x * 1.08,
         y: target.y * 1.04,
-        z: THREE.MathUtils.clamp(target.z * 0.85 + 3.2, 6.5, 11.8),
+        z: THREE.MathUtils.clamp(
+          target.z * 0.85 + 3.2,
+          tune.focusZMin,
+          tune.focusZMax,
+        ),
         duration: 1.45,
         ease: 'power3.inOut',
         overwrite: true,
       })
     }
-  }, [atHome, focusPosition, camera])
+  }, [atHome, focusPosition, camera, tune.focusZMin, tune.focusZMax])
 
   return null
 }
@@ -95,12 +129,32 @@ function SceneInterior({ memories, starCount }) {
   const { finaleMode, onMoonClick, activeMemory, cameraHome, openMemory } =
     useExperience()
 
+  const size = useThree((s) => s.size)
+
+  const tune = useMemo(
+    () => getViewportCameraTune(size.width, size.height),
+    [size.width, size.height],
+  )
+
+  const layoutScale = useMemo(
+    () => layoutScaleForViewportWidth(size.width),
+    [size.width],
+  )
+
   const [illum, setIllum] = useState(() => getMoonIllumination())
   useEffect(() => {
     const id = window.setInterval(() => setIllum(getMoonIllumination()), 60_000)
     return () => clearInterval(id)
   }, [])
-  const focus = activeMemory && !cameraHome ? activeMemory.position : null
+  const focusRaw =
+    activeMemory && !cameraHome ? activeMemory.position : null
+  const focusScaled = focusRaw
+    ? [
+        focusRaw[0] * layoutScale,
+        focusRaw[1] * layoutScale,
+        focusRaw[2],
+      ]
+    : null
   const atHome = cameraHome || !activeMemory
 
   return (
@@ -108,7 +162,7 @@ function SceneInterior({ memories, starCount }) {
       <color attach="background" args={['#050816']} />
       <fog attach="fog" args={[finaleMode ? '#030510' : '#050816', 12, finaleMode ? 48 : 58]} />
 
-      <CameraRig focusPosition={focus} atHome={atHome} />
+      <CameraRig focusPosition={focusScaled} atHome={atHome} tune={tune} />
 
       <ambientLight intensity={finaleMode ? 0.06 : 0.09} />
       <directionalLight
@@ -138,7 +192,11 @@ function SceneInterior({ memories, starCount }) {
           eclipse={finaleMode}
           onMoonClick={onMoonClick}
         />
-        <StarField memories={memories} onStarSelect={openMemory} />
+        <StarField
+          memories={memories}
+          viewportWidth={size.width}
+          onStarSelect={openMemory}
+        />
       </ParallaxGroup>
     </>
   )

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { publicAsset } from '../lib/publicAsset'
 import { Howl } from 'howler'
 import { useExperience } from '../context/ExperienceContext'
 
@@ -8,7 +9,7 @@ export default function AudioController() {
 
   useEffect(() => {
     const h = new Howl({
-      src: ['/audio/ambient.mp3'],
+      src: [publicAsset('/audio/ambient.mp3')],
       loop: true,
       volume: 0.12,
       html5: true,

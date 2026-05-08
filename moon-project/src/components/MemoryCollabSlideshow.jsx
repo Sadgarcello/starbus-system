@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Howl } from 'howler'
 import { useExperience } from '../context/ExperienceContext'
 import { startProceduralPiano } from '../lib/proceduralPiano'
+import { publicAsset } from '../lib/publicAsset'
 import SlideshowYoutubeAudio from './SlideshowYoutubeAudio'
 
 export default function MemoryCollabSlideshow({
@@ -50,7 +51,7 @@ export default function MemoryCollabSlideshow({
     }
 
     howl = new Howl({
-      src: [pianoSrc],
+      src: [publicAsset(pianoSrc)],
       loop: true,
       volume: 0.12,
       html5: true,

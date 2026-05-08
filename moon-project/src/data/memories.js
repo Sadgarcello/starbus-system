@@ -1,3 +1,5 @@
+import { publicAsset } from '../lib/publicAsset'
+
 /**
  * Lunar illumination 0–1 (approximate).
  */
@@ -11,7 +13,7 @@ export function getMoonIllumination(date = new Date()) {
 
 export const STARS_TO_UNLOCK_FINAL = 5
 
-export const memories = [
+const memoriesRaw = [
   {
     id: 'm1',
     type: 'gold',
@@ -127,6 +129,14 @@ export const memories = [
     hiddenUntilUnlocked: true,
   },
 ]
+
+export const memories = memoriesRaw.map((m) => ({
+  ...m,
+  image: m.image != null ? publicAsset(m.image) : null,
+  audio: m.audio != null ? publicAsset(m.audio) : null,
+  pianoAudio: m.pianoAudio != null ? publicAsset(m.pianoAudio) : null,
+  slideImages: m.slideImages?.map((url) => publicAsset(url)),
+}))
 
 export const constellationEdges = [
   ['m1', 'm5'],

@@ -40,3 +40,7 @@ Published URL shape:
 ### Other folders
 
 Legacy Flask assets may live under `archive/`; they are optional and large, so many snapshots are kept out of git by choice.
+
+### Ambient audio (optional)
+
+`AudioController` loads `/audio/ambient.mp3` after you enter the experience. That file was not bundled in git in some setups — add **`moon-project/public/audio/ambient.mp3`** locally (and push) if you want the background loop everywhere; otherwise the app still runs without it.

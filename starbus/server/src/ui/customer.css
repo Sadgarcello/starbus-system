@@ -19,7 +19,7 @@ body.theme-light {
   color: #fff;
   display: flex;
   align-items: flex-end;
-  padding: 18px 16px 22px;
+  padding: 18px clamp(10px, 1.75vw, 22px) 22px;
   overflow: hidden;
 }
 .hero-band::before {
@@ -32,7 +32,7 @@ body.theme-light {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: min(1120px, calc(100vw - 48px));
+  max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
   display: flex;
   align-items: flex-end;
@@ -79,9 +79,9 @@ body.theme-light {
 
 /* ----- Page layout ----- */
 .page {
-  max-width: min(1120px, calc(100vw - 48px));
+  max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
-  padding: 16px clamp(14px, 3vw, 32px) clamp(48px, 10vh, 100px);
+  padding: 16px clamp(10px, 1.75vw, 22px) clamp(48px, 10vh, 100px);
 }
 .step {
   animation: fadeUp 0.22s var(--ease);
@@ -439,7 +439,7 @@ body.theme-light {
     justify-content: center;
     row-gap: 16px;
     width: auto;
-    max-width: min(1120px, calc(100vw - 48px));
+    max-width: min(1680px, calc(100vw - 28px));
     margin-inline: auto;
   }
   .partner-belt-logos--clone {
@@ -991,12 +991,12 @@ a.primary.wa:hover {
     height: 220px;
   }
   .footer {
-    padding: 18px clamp(14px, 3vw, 32px) 28px;
+    padding: 18px clamp(10px, 1.75vw, 22px) 28px;
   }
   #stepSeats,
   #stepForm,
   #stepDone {
-    max-width: 720px;
+    max-width: min(800px, 100%);
     margin-inline: auto;
     width: 100%;
   }

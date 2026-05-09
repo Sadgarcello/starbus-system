@@ -7,6 +7,10 @@ a {
   color: inherit;
 }
 
+body.theme-light {
+  overflow-x: clip;
+}
+
 /* ----- Hero band with Sudan road photo ----- */
 .hero-band {
   position: relative;
@@ -28,7 +32,7 @@ a {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 720px;
+  max-width: min(1120px, calc(100vw - 48px));
   margin: 0 auto;
   display: flex;
   align-items: flex-end;
@@ -75,9 +79,9 @@ a {
 
 /* ----- Page layout ----- */
 .page {
-  max-width: 720px;
+  max-width: min(1120px, calc(100vw - 48px));
   margin: 0 auto;
-  padding: 16px 14px 100px;
+  padding: 16px clamp(14px, 3vw, 32px) clamp(48px, 10vh, 100px);
 }
 .step {
   animation: fadeUp 0.22s var(--ease);
@@ -371,6 +375,83 @@ a {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.7;
+}
+
+/* ===== Partner logo belt (OEM / coach builders) ===== */
+.partner-belt {
+  margin: 6px 0 20px;
+}
+.partner-belt-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.5;
+  padding-inline: 4px;
+}
+.partner-belt-mask {
+  overflow: hidden;
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  padding-block: 14px;
+  border-block: 1px solid var(--line);
+  background: linear-gradient(180deg, #f6f7f8 0%, #ffffff 55%, #fafafa 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+}
+.partner-belt-track {
+  display: flex;
+  width: max-content;
+  animation: partnerBeltMarquee 48s linear infinite;
+}
+.partner-belt-logos {
+  display: flex;
+  align-items: center;
+  gap: clamp(40px, 7vw, 88px);
+  padding-inline: clamp(40px, 7vw, 88px);
+  flex-shrink: 0;
+}
+.partner-belt-logos img {
+  height: clamp(32px, 4vw, 48px);
+  width: auto;
+  max-width: min(200px, 28vw);
+  object-fit: contain;
+  filter: grayscale(1) opacity(0.78);
+  transition: filter 0.2s ease;
+}
+.partner-belt-logos img:hover {
+  filter: grayscale(0.25) opacity(0.95);
+}
+@keyframes partnerBeltMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .partner-belt-track {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 16px;
+    width: auto;
+    max-width: min(1120px, calc(100vw - 48px));
+    margin-inline: auto;
+  }
+  .partner-belt-logos--clone {
+    display: none !important;
+  }
+  .partner-belt-mask {
+    margin-inline: 0;
+    width: 100%;
+    max-width: 100%;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 .cta-band {
@@ -891,6 +972,34 @@ a.primary.wa:hover {
 }
 .toast.ok {
   background: #15803d;
+}
+
+/* ----- Laptop / desktop ----- */
+@media (min-width: 900px) {
+  .section-head h1 {
+    font-size: 28px;
+  }
+  .routes {
+    gap: 14px;
+  }
+  .featureList {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 28px;
+    align-items: start;
+  }
+  .hero-band {
+    height: 220px;
+  }
+  .footer {
+    padding: 18px clamp(14px, 3vw, 32px) 28px;
+  }
+  #stepSeats,
+  #stepForm,
+  #stepDone {
+    max-width: 720px;
+    margin-inline: auto;
+    width: 100%;
+  }
 }
 
 /* ----- Mobile tweaks ----- */

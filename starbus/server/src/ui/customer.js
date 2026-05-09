@@ -439,7 +439,24 @@
     $("#cPlus")?.addEventListener("click", () => setTicketCount(state.ticketCount + 1));
   }
 
+  function initHeroGallery() {
+    const wrap = document.querySelector(".hero-gallery");
+    if (!wrap) return;
+    const imgs = wrap.querySelectorAll("img");
+    if (imgs.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let i = 0;
+    const periodMs = 7000;
+    setInterval(() => {
+      const next = (i + 1) % imgs.length;
+      imgs[i].classList.remove("hero-gallery-active");
+      imgs[next].classList.add("hero-gallery-active");
+      i = next;
+    }, periodMs);
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
+    initHeroGallery();
     bindBacks();
     bindCounter();
     $("#continueBtn")?.addEventListener("click", gotoForm);

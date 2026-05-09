@@ -8,12 +8,16 @@
     <title>ستار باص — احجز رحلتك</title>
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
-    <link rel="preload" as="image" href="/ui/images/hero-road.jpg" />
+    <link rel="preload" as="image" href="/ui/images/gallery/bus-1.png" />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260509-fluid-wide" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260509-hero-gallery" />
   </head>
   <body class="theme-light">
     <header class="hero-band">
+      <div class="hero-gallery" aria-hidden="true">
+        <img class="hero-gallery-active" src="/ui/images/gallery/bus-1.png" alt="" decoding="async" fetchpriority="high" />
+        <!-- Add more <img src="/ui/images/gallery/bus-2.png" … /> siblings for cross-fade rotation -->
+      </div>
       <div class="hero-band-inner">
         <div class="brand-text">
           <h1 class="logo">ستار باص</h1>
@@ -256,6 +260,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/customer.js?v=20260506-6" defer></script>
+    <script src="/ui/customer.js?v=20260509-hero-gallery" defer></script>
   </body>
 </html>

@@ -229,14 +229,14 @@ html {
   bottom: 0;
   transform: translateX(-50%);
   width: auto;
-  max-width: min(100%, 620px);
+  max-width: min(100%, 640px);
   height: auto;
   max-height: 100%;
   object-fit: contain;
   object-position: bottom center;
   opacity: 0;
   transition: opacity 1.35s ease-in-out;
-  filter: drop-shadow(0 20px 36px rgba(15, 30, 25, 0.08));
+  border-radius: var(--radius);
 }
 .hero-qwilr .hero-gallery img:only-child,
 .hero-qwilr .hero-gallery img.hero-gallery-active {

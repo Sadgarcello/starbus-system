@@ -10,34 +10,66 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="preload" as="image" href="/ui/images/gallery/bus-1.png?v=20260510-bus-swap" />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260510-hero-split" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260511-qwilr" />
   </head>
   <body class="theme-light">
-    <header class="hero-modern">
-      <div class="hero-modern-bg" aria-hidden="true"></div>
-      <div class="hero-modern-inner">
-        <div class="hero-modern-copy">
-          <p class="hero-kicker">رحلات يومية من أم درمان</p>
-          <h1 class="hero-title">ستار باص</h1>
-          <p class="hero-lead">احجز مقعدك بسهولة… بدون ما تمشي الموقف</p>
-          <a class="wa-pill wa-pill-lg" id="topWa" href="#" target="_blank" rel="noopener">
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="site-brand" href="/" aria-label="ستار باص الرئيسية">
+          <span class="site-brand-mark" aria-hidden="true">🚌</span>
+          <span class="site-brand-text">ستار باص</span>
+        </a>
+        <nav class="site-nav" aria-label="التنقل">
+          <a class="site-nav-link" href="#booking">الحجز</a>
+          <a class="site-nav-link" href="#about">من نحن</a>
+          <a class="site-nav-link" href="#features">المميزات</a>
+        </nav>
+        <div class="site-header-actions">
+          <a class="site-header-link subtle" href="/worker">الموظفين</a>
+          <a class="btn btn-outline btn-sm" id="navWa" href="#" target="_blank" rel="noopener">
             <span class="waicon" aria-hidden="true"></span>
-            <span>تواصل واتساب</span>
+            واتساب
           </a>
-        </div>
-        <div class="hero-modern-visual">
-          <div class="hero-gallery" aria-hidden="true">
-            <img class="hero-gallery-active" src="/ui/images/gallery/bus-1.png?v=20260510-bus-swap" alt="" decoding="async" fetchpriority="high" />
-            <!-- Add more <img src="/ui/images/gallery/bus-2.png" … /> siblings for cross-fade rotation -->
-          </div>
+          <a href="#booking" class="btn btn-primary btn-sm">احجز الآن<span class="btn-icon" aria-hidden="true">‹</span></a>
         </div>
       </div>
     </header>
 
+    <section class="hero-qwilr" aria-labelledby="hero-heading">
+      <div class="hero-qwilr-inner">
+        <div class="hero-qwilr-copy">
+          <p class="hero-qwilr-eyebrow">رحلات يومية من أم درمان</p>
+          <h1 class="hero-qwilr-title" id="hero-heading">تذاكر بـ<span class="hero-qwilr-accent"> ثقة وبساطة.</span></h1>
+          <p class="hero-qwilr-lead">
+            احجز مقعدك أونلاين، تابع حجزك على واتساب، ادفع بطريقتك — بدون تعب الموقف ولا السماسرة.
+          </p>
+          <div class="hero-qwilr-ctas">
+            <a href="#booking" class="btn btn-primary btn-lg">
+              ابدأ الحجز الآن<span class="btn-icon" aria-hidden="true">‹</span>
+            </a>
+            <a class="btn btn-outline btn-lg" id="topWa" href="#" target="_blank" rel="noopener">
+              <span class="waicon" aria-hidden="true"></span>
+              تحدّث معنا
+            </a>
+          </div>
+        </div>
+        <div class="hero-qwilr-visual">
+          <div class="hero-qwilr-blob" aria-hidden="true"></div>
+          <div class="hero-gallery" aria-hidden="true">
+            <img class="hero-gallery-active" src="/ui/images/gallery/bus-1.png?v=20260510-bus-swap" alt="" decoding="async" fetchpriority="high" />
+            <!-- More /ui/images/gallery/bus-*.png for cross-fade -->
+          </div>
+        </div>
+      </div>
+      <p class="hero-qwilr-proof">
+        آلاف الزبائن اختاروا ستار باص <span aria-hidden="true">♥</span>
+      </p>
+    </section>
+
     <main class="page">
       <!-- ======= Step 1: Routes ======= -->
       <section class="step active" id="stepRoutes">
-        <div class="section-head">
+        <div class="section-head anchor-target" id="booking">
           <h1>اختار وجهتك</h1>
           <p>رحلات اليوم من أم درمان</p>
         </div>
@@ -69,7 +101,7 @@
           </div>
         </div>
 
-        <section class="info-card">
+        <section class="info-card anchor-target" id="about">
           <h2>من نحن</h2>
           <p>
             ستار باص خدمة سودانية بدأت في 2024، نسهّل ليك حجز رحلتك من بيتك أو من شغلك،
@@ -78,7 +110,7 @@
           </p>
         </section>
 
-        <section class="features">
+        <section class="features anchor-target" id="features">
           <h2>ليه ستار باص؟</h2>
           <ul class="featureList">
             <li>
@@ -264,6 +296,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/customer.js?v=20260510-hero-split" defer></script>
+    <script src="/ui/customer.js?v=20260511-qwilr" defer></script>
   </body>
 </html>

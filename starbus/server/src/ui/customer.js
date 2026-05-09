@@ -411,10 +411,15 @@
       const cfg = await api("/api/public/config", { timeoutMs: 6000 });
       state.whatsapp = String(cfg.whatsapp || "").replace(/[^\d]/g, "");
     } catch { /* non-fatal */ }
+    const waMsg = "السلام عليكم ستار باص، عندي استفسار 🙏";
+    const askMsg = "السلام عليكم ستار باص، عندي سؤال 🙏";
+    const link = waLink(waMsg);
     const top = $("#topWa");
-    if (top) top.href = waLink("السلام عليكم ستار باص، عندي استفسار 🙏");
+    if (top) top.href = link;
+    const navWa = $("#navWa");
+    if (navWa) navWa.href = link;
     const cta = $("#ctaWa");
-    if (cta) cta.href = waLink("السلام عليكم ستار باص، عندي سؤال 🙏");
+    if (cta) cta.href = waLink(askMsg);
   }
 
   function bindBacks() {

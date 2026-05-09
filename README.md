@@ -1,46 +1,36 @@
-# tru-rec-website
+# Starbus system
 
-## Moon Project (React + Three.js experience)
+Primary work happens in **`starbus/`** — the Starbus booking / operations app.
 
-Friends can open it in **Chrome or Safari on a phone** — layout uses safe areas, dynamic viewport heights, and touch-friendly tap targets.
+## Starbus server (development)
 
-### Run locally
+From the repo root:
 
-```bash
-cd moon-project
+```powershell
+cd starbus/server
 npm install
 npm run dev
 ```
 
-Then open the URL Vite prints (usually `http://localhost:5173`).
+Configure environment variables using `.env.railway.example` in `starbus/server/` as a template (copy to `.env` locally).
 
-Production build checks:
+Database schema and notes: **`starbus/database/`**.
 
-```bash
-cd moon-project
+## Archived projects
+
+These are kept for reference; they are not the active focus.
+
+| Path | Contents |
+|------|----------|
+| `archive/moon-project-complete-20260509/` | Finished React / Three.js moon experience (was deployed via GitHub Pages; workflow removed May 2026). |
+| `archive/legacy-flask-20260503/` | Legacy Tru Boxing Flask site |
+
+To run the archived moon UI locally:
+
+```powershell
+cd archive/moon-project-complete-20260509
 npm ci
-npm run build
-npm run preview
+npm run dev
 ```
 
-### Live site on GitHub Pages
-
-This repo ships the **moon-project** folder to GitHub Actions → Pages.
-
-1. On GitHub: **Settings → Pages → Build and deployment**.
-2. Set **Source** to **GitHub Actions** (not “Deploy from a branch”).
-3. Push to **`main`**; the workflow **[Deploy Moon Project to GitHub Pages](.github/workflows/deploy-moon-pages.yml)** builds and publishes.
-
-Published URL shape:
-
-`https://<your-username>.github.io/starbus-system/`
-
-(Uses the repo name as the URL path.)
-
-### Other folders
-
-Legacy Flask assets may live under `archive/`; they are optional and large, so many snapshots are kept out of git by choice.
-
-### Ambient audio (optional)
-
-`AudioController` loads `/audio/ambient.mp3` after you enter the experience. That file was not bundled in git in some setups — add **`moon-project/public/audio/ambient.mp3`** locally (and push) if you want the background loop everywhere; otherwise the app still runs without it.
+GitHub Pages for the moon project is no longer built from this repository; use a local preview or redeploy manually if you ever need it again.

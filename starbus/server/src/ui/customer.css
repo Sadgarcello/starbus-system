@@ -11,70 +11,158 @@ body.theme-light {
   overflow-x: clip;
 }
 
-/* ----- Hero band — fading image gallery ----- */
-.hero-band {
+/* ----- Hero — split layout (light marketing style) ----- */
+.hero-modern {
   position: relative;
-  height: 200px;
-  background-color: #070a0c;
-  color: #fff;
-  display: flex;
-  align-items: flex-end;
-  padding: 18px clamp(10px, 1.75vw, 22px) 22px;
   overflow: hidden;
+  background: linear-gradient(168deg, #ecf8f0 0%, #e8f1fb 42%, #f4f7f9 100%);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
 }
-.hero-gallery {
+.hero-modern-bg {
   position: absolute;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
 }
-.hero-gallery img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 42%;
-  opacity: 0;
-  transition: opacity 1.35s ease-in-out;
-}
-.hero-gallery img:only-child,
-.hero-gallery img.hero-gallery-active {
-  opacity: 1;
-  z-index: 1;
-}
-.hero-band::before {
+.hero-modern-bg::before {
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.5) 55%, rgba(0, 0, 0, 0.82) 100%);
-  pointer-events: none;
+  width: min(145%, 2000px);
+  height: 85%;
+  top: -32%;
+  inset-inline-start: -28%;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 123, 63, 0.14);
+  transform: rotate(-7deg);
+  opacity: 0.9;
 }
-.hero-band .hero-band-inner {
+.hero-modern-bg::after {
+  content: "";
+  position: absolute;
+  width: min(92%, 1200px);
+  height: 62%;
+  bottom: -26%;
+  inset-inline-end: -22%;
+  border-radius: 50%;
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  transform: rotate(11deg);
+  opacity: 0.85;
+}
+.hero-modern-inner {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
+  padding: clamp(24px, 4.5vw, 52px) clamp(10px, 1.75vw, 22px) clamp(4px, 1.5vw, 12px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vw, 20px);
+}
+.hero-modern-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.hero-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand);
+  margin: 0 0 8px;
+  letter-spacing: 0.03em;
+}
+.hero-title {
+  font-weight: 800;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+  color: var(--ink);
+  line-height: 1.12;
+}
+.hero-lead {
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+  line-height: 1.65;
+  max-width: 40ch;
+  margin-inline: auto;
+}
+.hero-modern-visual {
+  position: relative;
+  flex: 1;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  min-height: clamp(168px, 28vw, 220px);
 }
-.hero-band .brand-text .logo {
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: -0.5px;
-  margin: 0;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+.hero-modern .hero-gallery {
+  position: relative;
+  width: 100%;
+  height: clamp(168px, 32vw, 400px);
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  pointer-events: none;
 }
-.hero-band .brand-text .tag {
-  font-size: 14px;
-  margin-top: 4px;
-  opacity: 0.95;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  font-weight: 500;
+.hero-modern .hero-gallery img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: min(100%, 720px);
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  opacity: 0;
+  transition: opacity 1.35s ease-in-out;
+  filter: drop-shadow(0 16px 28px rgba(15, 40, 30, 0.12));
+}
+.hero-modern .hero-gallery img:only-child,
+.hero-modern .hero-gallery img.hero-gallery-active {
+  opacity: 1;
+  z-index: 1;
+}
+
+@media (min-width: 720px) {
+  .hero-modern-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: end;
+    gap: clamp(12px, 3vw, 48px);
+    min-height: clamp(320px, 42vh, 500px);
+    text-align: start;
+  }
+  .hero-modern-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: start;
+    text-align: start;
+    align-self: center;
+    padding-bottom: clamp(8px, 2vw, 24px);
+  }
+  .hero-lead {
+    margin-inline: 0;
+    max-width: 38ch;
+  }
+  .hero-modern-visual {
+    min-height: 0;
+    align-items: flex-end;
+  }
+  .hero-modern .hero-gallery {
+    height: clamp(240px, 36vh, 440px);
+    max-width: 100%;
+  }
+}
+
+.wa-pill-lg {
+  padding: 12px 22px;
+  font-size: 15px;
 }
 
 .wa-pill {
@@ -1010,8 +1098,8 @@ a.primary.wa:hover {
     gap: 18px 28px;
     align-items: start;
   }
-  .hero-band {
-    height: 220px;
+  .hero-modern-inner {
+    min-height: clamp(340px, 44vh, 520px);
   }
   .footer {
     padding: 18px clamp(10px, 1.75vw, 22px) 28px;
@@ -1038,11 +1126,8 @@ a.primary.wa:hover {
   .routeRoute {
     font-size: 16px;
   }
-  .hero-band {
-    height: 170px;
-  }
-  .hero-band .brand-text .logo {
-    font-size: 22px;
+  .hero-modern .hero-gallery {
+    height: clamp(200px, 30vw, 360px);
   }
   .trust-stats {
     gap: 8px;

@@ -213,17 +213,47 @@ html {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  isolation: isolate;
+}
+/* Soft floor — hides rough PNG edges against white page */
+.hero-qwilr-visual::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -8%;
+  width: min(118%, 720px);
+  height: clamp(140px, 28vw, 220px);
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 92% 100% at 50% 92%,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 251, 249, 0.72) 42%,
+    rgba(237, 244, 240, 0.18) 78%,
+    transparent 96%
+  );
 }
 .hero-qwilr-blob {
   position: absolute;
-  width: min(92vw, 520px);
-  height: min(92vw, 520px);
+  width: min(132vw, 720px);
+  height: min(132vw, 720px);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 150, 150, 0.55) 0%, rgba(255, 118, 130, 0.38) 45%, rgba(255, 200, 180, 0.22) 100%);
+  /* Brand-tint wash only — blurred so it never reads as a hard pink disc */
+  background: radial-gradient(
+    circle at 42% 36%,
+    rgba(15, 123, 63, 0.19) 0%,
+    rgba(52, 160, 120, 0.09) 42%,
+    rgba(232, 244, 238, 0.04) 58%,
+    transparent 76%
+  );
+  filter: blur(52px);
+  -webkit-filter: blur(52px);
   inset-inline-start: auto;
-  inset-inline-end: -8%;
-  bottom: -12%;
+  inset-inline-end: -14%;
+  bottom: -26%;
   z-index: 0;
+  opacity: 0.9;
 }
 .hero-qwilr .hero-gallery {
   position: relative;
@@ -232,7 +262,7 @@ html {
   max-width: 640px;
   margin-inline: auto;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 .hero-qwilr .hero-gallery img {
   position: absolute;
@@ -247,7 +277,9 @@ html {
   object-position: bottom center;
   opacity: 0;
   transition: opacity 1.35s ease-in-out;
-  filter: drop-shadow(0 22px 40px rgba(15, 30, 25, 0.14));
+  filter:
+    drop-shadow(0 2px 0 rgba(255, 255, 255, 0.72))
+    drop-shadow(0 18px 32px rgba(15, 30, 25, 0.1));
 }
 .hero-qwilr .hero-gallery img:only-child,
 .hero-qwilr .hero-gallery img.hero-gallery-active {
@@ -289,10 +321,12 @@ html {
     height: clamp(300px, 44vh, 500px);
   }
   .hero-qwilr-blob {
-    width: min(130%, 600px);
-    height: min(130%, 600px);
-    inset-inline-end: -6%;
-    bottom: -16%;
+    width: min(140vw, 780px);
+    height: min(140vw, 780px);
+    inset-inline-end: -12%;
+    bottom: -32%;
+    filter: blur(64px);
+    -webkit-filter: blur(64px);
   }
 }
 
@@ -300,6 +334,7 @@ html {
   scroll-margin-top: 88px;
 }
 
+.wa-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;

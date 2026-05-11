@@ -159,25 +159,15 @@ html {
 .hero-qwilr-bg {
   position: absolute;
   inset: 0;
-  overflow: hidden;
   background-color: #eef1ef;
-}
-.hero-qwilr-bg-img {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: left center;
-  display: block;
-  max-width: none;
-  z-index: 0;
-  /* iOS/Safari: preserve aspect ratio (never stretch like 100%×100% backgrounds) */
+  background-image: url("/ui/images/hero-bus-light.png");
+  background-size: cover;
+  background-position: left center;
+  background-repeat: no-repeat;
 }
 @media (max-width: 600px) {
-  .hero-qwilr-bg-img {
-    object-position: 22% center;
+  .hero-qwilr-bg {
+    background-position: 22% center;
   }
 }
 .hero-qwilr-bg::after {
@@ -327,8 +317,8 @@ html {
   .hero-qwilr--bg {
     min-height: clamp(480px, 54vh, 720px);
   }
-  .hero-qwilr-bg-img {
-    object-position: 30% center;
+  .hero-qwilr-bg {
+    background-position: 30% center;
   }
 }
 

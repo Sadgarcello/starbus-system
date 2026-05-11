@@ -196,7 +196,7 @@ html {
 }
 .hero-qwilr-inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
   padding: clamp(36px, 7vw, 88px) clamp(10px, 1.75vw, 22px) clamp(20px, 4vw, 48px);
@@ -290,7 +290,7 @@ html {
 }
 .hero-qwilr-proof {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   text-align: center;
   margin: 0;
   padding: 8px clamp(12px, 3vw, 24px) 24px;
@@ -320,6 +320,15 @@ html {
   }
   .hero-qwilr--bg .hero-qwilr-proof {
     text-align: center;
+  }
+}
+
+@media (min-width: 960px) {
+  .hero-qwilr--bg {
+    min-height: clamp(480px, 54vh, 720px);
+  }
+  .hero-qwilr-bg-img {
+    object-position: 30% center;
   }
 }
 

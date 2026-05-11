@@ -245,7 +245,9 @@ router.get("/daily", async (req, res, next) => {
          bk.booking_type,
          bk.payment_status,
          bk.lifecycle,
-         bk.created_at
+         bk.created_at,
+         b.date AS bus_date,
+         b.departure_time AS bus_departure_time
        FROM bookings bk
        JOIN buses b ON b.id = bk.bus_id
        JOIN routes rt ON rt.id = b.route_id

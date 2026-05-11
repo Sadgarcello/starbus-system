@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/style.css?v=20260505" />
+    <link rel="stylesheet" href="/ui/style.css?v=20260510-serviceday" />
   </head>
   <body class="theme-dark">
     <div class="wrap">
@@ -57,10 +57,18 @@
         <!-- Today's route + KPIs (visible when logged in) -->
         <div class="card" id="workerRouteCard" hidden>
           <div class="hd">
-            <h2>رحلة اليوم (من أم درمان)</h2>
+            <h2>رحلة التشغيل (من أم درمان)</h2>
             <button class="secondary" id="refreshBtn" style="width:auto; padding:8px 14px;">تحديث</button>
           </div>
           <div class="bd">
+            <label>يوم تشغيل الرحلة</label>
+            <div
+              class="workerServiceDayStrip"
+              id="workerServiceDayStrip"
+              role="tablist"
+              aria-label="يوم التشغيل"
+            ></div>
+            <p class="muted" id="workerServiceDayLine" style="margin: 8px 0 12px;">—</p>
             <label>الوجهة</label>
             <select id="routeSelect" disabled>
               <option value="">جاري التحميل…</option>
@@ -231,7 +239,8 @@
                 <th>الإسم</th>
                 <th>الرحلة</th>
                 <th>الدفع</th>
-                <th>الوقت</th>
+                <th>يوم الرحلة</th>
+                <th>مسجّل</th>
               </tr>
             </thead>
             <tbody id="bookingsBody"></tbody>
@@ -240,13 +249,13 @@
       </div>
 
       <div class="footer">
-        <div>كل الرحلات من أم درمان • باص واحد لكل وجهة لليوم</div>
+        <div>كل الرحلات من أم درمان • اختار يوم التشغيل حتى أسبوع مقدّم</div>
         <div style="font-family: var(--font-mono);">/worker</div>
       </div>
     </div>
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/app.js?v=20260509" defer></script>
+    <script src="/ui/app.js?v=20260510-serviceday" defer></script>
   </body>
 </html>

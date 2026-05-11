@@ -8,12 +8,31 @@ const router = Router();
 
 router.use(requireAuth);
 
+const AUTH_ACTIVE_MAX_DAY_OFFSET = Number(process.env.PUBLIC_MAX_SERVICE_DAY_OFFSET ?? 6);
+
 router.get("/active", async (req, res, next) => {
   try {
     const dateParam =
       typeof req.query?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
         ? req.query.date
         : null;
+
+    const maxOff = Number.isFinite(AUTH_ACTIVE_MAX_DAY_OFFSET) ? AUTH_ACTIVE_MAX_DAY_OFFSET : 6;
+
+    if (dateParam) {
+      const [[row]] = await pool.execute(
+        `SELECT CASE
+           WHEN :bus_day BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :max_off DAY) THEN 1
+           ELSE 0
+         END AS ok`,
+        { bus_day: dateParam, max_off: maxOff }
+      );
+      if (Number(row?.ok) !== 1) {
+        return res.status(400).json({
+          error: "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)",
+        });
+      }
+    }
 
     const [rows] = await pool.execute(
       `SELECT

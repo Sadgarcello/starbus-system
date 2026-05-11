@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260506" />
-    <link rel="stylesheet" href="/ui/admin.css?v=20260509" />
+    <link rel="stylesheet" href="/ui/admin.css?v=20260510-serviceday" />
   </head>
   <body class="theme-light admin-dashboard">
     <div class="admin-app">
@@ -172,7 +172,7 @@
             <div class="admin-card-bd">
               <div class="admin-toolbar-row ops-toolbar">
                 <div>
-                  <label for="adminRouteSelect">باص اليوم للفلتر</label>
+                  <label for="adminRouteSelect">باص يوم التشغيل للفلتر</label>
                   <select id="adminRouteSelect" disabled><option value="">—</option></select>
                 </div>
                 <div>
@@ -182,6 +182,16 @@
                     المرجع: <span class="day-pill-inline mono" id="dayLabel">—</span>
                   </div>
                 </div>
+              </div>
+
+              <div class="admin-day-chips-wrap">
+                <label class="admin-day-chips-label">أسبوع سريع (مزامن مع التقويم)</label>
+                <div
+                  class="adminDayChips"
+                  id="adminDayChips"
+                  role="tablist"
+                  aria-label="أيام التقرير السريعة"
+                ></div>
               </div>
 
               <p class="kpi-explainer muted sm">المؤشرات حسب <strong>يوم تشغيل الرحلة</strong> (تاريخ الباص في النظام) والفلتر اختياري لباص واحد.</p>
@@ -249,7 +259,8 @@
                       <th>الإسم</th>
                       <th>الرحلة</th>
                       <th>الدفع</th>
-                      <th>الوقت</th>
+                      <th>يوم الرحلة</th>
+                      <th>مسجّل</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -269,6 +280,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/app.js?v=20260509" defer></script>
+    <script src="/ui/app.js?v=20260510-serviceday" defer></script>
   </body>
 </html>

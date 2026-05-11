@@ -30,35 +30,96 @@ function checkPublicGlobalLimit(req, res, next) {
 
 router.use(checkPublicGlobalLimit);
 
+/** Inclusive: today + this many future days → 7 bookable days when 6. */
+const PUBLIC_MAX_SERVICE_DAY_OFFSET = Number(process.env.PUBLIC_MAX_SERVICE_DAY_OFFSET ?? 6);
+
+/** @param {import("express").Request} req */
+function parsePublicServiceDay(req) {
+  const raw = typeof req.query?.date === "string" ? req.query.date.trim() : "";
+  if (!raw) return { ok: true, ymd: null };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return { ok: false, error: "تاريخ غير صالح" };
+  }
+  return { ok: true, ymd: raw };
+}
+
+async function assertPublicServiceDayAllowed(ymd, maxOff) {
+  const [[row]] = await pool.execute(
+    `SELECT CASE
+       WHEN :bus_day BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :max_off DAY) THEN 1
+       ELSE 0
+     END AS ok`,
+    { bus_day: ymd, max_off: maxOff }
+  );
+  return Number(row?.ok) === 1;
+}
+
 /** Public config (whatsapp number etc) — never expose secrets. */
 router.get("/config", (_req, res) => {
   const raw = String(process.env.WHATSAPP_NUMBER || "").replace(/[^\d]/g, "");
   return res.json({ whatsapp: raw });
 });
 
-/** Today's available buses — same filter as worker /active. */
-router.get("/buses/active", async (_req, res, next) => {
+/** Available buses for a service day: `?date=YYYY-MM-DD` or default today; max ~7 days ahead. */
+router.get("/buses/active", async (req, res, next) => {
   try {
-    const [rows] = await pool.execute(
-      `SELECT
-         b.id,
-         b.bus_number,
-         b.total_seats,
-         b.seats_booked,
-         (b.total_seats - b.seats_booked) AS seats_remaining,
-         b.departure_time,
-         b.date,
-         b.status,
-         r.origin,
-         r.destination,
-         r.price
-       FROM buses b
-       JOIN routes r ON r.id = b.route_id
-       WHERE b.date = CURDATE()
-         AND b.status = 'scheduled'
-         AND r.origin = 'Omdurman'
-       ORDER BY r.destination ASC, b.id ASC`
-    );
+    const parsed = parsePublicServiceDay(req);
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+
+    const maxOff = Number.isFinite(PUBLIC_MAX_SERVICE_DAY_OFFSET) ? PUBLIC_MAX_SERVICE_DAY_OFFSET : 6;
+
+    let rows;
+    if (parsed.ymd) {
+      const allowed = await assertPublicServiceDayAllowed(parsed.ymd, maxOff);
+      if (!allowed) {
+        return res.status(400).json({
+          error: "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)",
+        });
+      }
+      [rows] = await pool.execute(
+        `SELECT
+           b.id,
+           b.bus_number,
+           b.total_seats,
+           b.seats_booked,
+           (b.total_seats - b.seats_booked) AS seats_remaining,
+           b.departure_time,
+           b.date,
+           b.status,
+           r.origin,
+           r.destination,
+           r.price
+         FROM buses b
+         JOIN routes r ON r.id = b.route_id
+         WHERE b.date = :bus_day
+           AND b.date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :max_off DAY)
+           AND b.status = 'scheduled'
+           AND r.origin = 'Omdurman'
+         ORDER BY r.destination ASC, b.id ASC`,
+        { bus_day: parsed.ymd, max_off: maxOff }
+      );
+    } else {
+      [rows] = await pool.execute(
+        `SELECT
+           b.id,
+           b.bus_number,
+           b.total_seats,
+           b.seats_booked,
+           (b.total_seats - b.seats_booked) AS seats_remaining,
+           b.departure_time,
+           b.date,
+           b.status,
+           r.origin,
+           r.destination,
+           r.price
+         FROM buses b
+         JOIN routes r ON r.id = b.route_id
+         WHERE b.date = CURDATE()
+           AND b.status = 'scheduled'
+           AND r.origin = 'Omdurman'
+         ORDER BY r.destination ASC, b.id ASC`
+      );
+    }
     return res.json({ buses: rows });
   } catch (err) {
     return next(err);
@@ -76,18 +137,46 @@ router.get("/buses/:id/seat-map", async (req, res, next) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
-    const [busRows] = await pool.execute(
-      `SELECT b.id, b.total_seats, b.status, b.date, b.departure_time,
-              r.origin, r.destination, r.price
-       FROM buses b
-       JOIN routes r ON r.id = b.route_id
-       WHERE b.id = :id
-         AND b.date = CURDATE()
-         AND b.status = 'scheduled'
-         AND r.origin = 'Omdurman'
-       LIMIT 1`,
-      { id }
-    );
+    const parsed = parsePublicServiceDay(req);
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+    const maxOff = Number.isFinite(PUBLIC_MAX_SERVICE_DAY_OFFSET) ? PUBLIC_MAX_SERVICE_DAY_OFFSET : 6;
+
+    /** @type {unknown[]} */
+    let busRows;
+    if (parsed.ymd) {
+      const allowed = await assertPublicServiceDayAllowed(parsed.ymd, maxOff);
+      if (!allowed) {
+        return res.status(400).json({
+          error: "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)",
+        });
+      }
+      [busRows] = await pool.execute(
+        `SELECT b.id, b.total_seats, b.status, b.date, b.departure_time,
+                r.origin, r.destination, r.price
+         FROM buses b
+         JOIN routes r ON r.id = b.route_id
+         WHERE b.id = :id
+           AND b.date = :bus_day
+           AND b.date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :max_off DAY)
+           AND b.status = 'scheduled'
+           AND r.origin = 'Omdurman'
+         LIMIT 1`,
+        { id, bus_day: parsed.ymd, max_off: maxOff }
+      );
+    } else {
+      [busRows] = await pool.execute(
+        `SELECT b.id, b.total_seats, b.status, b.date, b.departure_time,
+                r.origin, r.destination, r.price
+         FROM buses b
+         JOIN routes r ON r.id = b.route_id
+         WHERE b.id = :id
+           AND b.date = CURDATE()
+           AND b.status = 'scheduled'
+           AND r.origin = 'Omdurman'
+         LIMIT 1`,
+        { id }
+      );
+    }
     const bus = busRows?.[0];
     if (!bus) return res.status(404).json({ error: "الرحلة غير متاحة" });
 

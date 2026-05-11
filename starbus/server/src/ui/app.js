@@ -22,6 +22,81 @@ function todayLocalYmd() {
   return `${y}-${m}-${day}`;
 }
 
+const SERVICE_DAY_MAX_OFFSET = 6;
+
+function addDaysFromToday(days) {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function isYmdInBookableWindow(ymd) {
+  const raw = String(ymd).split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
+  const t0 = new Date(todayLocalYmd() + "T12:00:00").getTime();
+  const t1 = new Date(raw + "T12:00:00").getTime();
+  const diff = Math.round((t1 - t0) / 86400000);
+  return diff >= 0 && diff <= SERVICE_DAY_MAX_OFFSET;
+}
+
+function loadWorkerServiceDayFromStorage() {
+  const raw = localStorage.getItem("starbus_worker_service_day");
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return todayLocalYmd();
+  if (!isYmdInBookableWindow(raw)) return todayLocalYmd();
+  return raw;
+}
+
+function fmtDateLongArWorker(ymd) {
+  const raw = ymd == null ? "" : String(ymd).split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return String(ymd || "—");
+  const d = new Date(raw + "T12:00:00");
+  if (Number.isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("ar", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function tripRelativeHintWorker(ymd) {
+  const raw = ymd == null ? "" : String(ymd).split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "";
+  const today = todayLocalYmd();
+  if (raw === today) return "اليوم";
+  const t0 = new Date(today + "T12:00:00").getTime();
+  const t1 = new Date(raw + "T12:00:00").getTime();
+  const diff = Math.round((t1 - t0) / 86400000);
+  if (diff === 1) return "غداً";
+  if (diff > 1) return `بعد ${diff} يوم`;
+  if (diff < 0) return `قبل ${-diff} يوم`;
+  return "";
+}
+
+function bookingTripDayCellHtml(busDate, departureTime) {
+  const raw = busDate == null ? "" : String(busDate).split("T")[0];
+  const hasYmd = /^\d{4}-\d{2}-\d{2}$/.test(raw);
+  let depHtml = "";
+  if (departureTime) {
+    const dep = fmtTime(departureTime);
+    if (dep) depHtml = `<div class="muted sm" style="margin-top:2px;">انطلاق ${escapeHtml(dep)}</div>`;
+  }
+  if (!hasYmd) {
+    if (!depHtml) return "—";
+    return `<div class="tripDayCell">—${depHtml}</div>`;
+  }
+  const long = fmtDateLongArWorker(raw);
+  const hint = tripRelativeHintWorker(raw);
+  const hintHtml = hint
+    ? `<div class="muted sm" style="margin-top:2px;">${escapeHtml(hint)}</div>`
+    : "";
+  return `<div class="tripDayCell">${escapeHtml(long)}${hintHtml}${depHtml}</div>`;
+}
+
 const ROLE_AR = {
   worker: "موظف",
   admin: "أدمن",
@@ -246,6 +321,7 @@ function renderBookings(rows) {
       <td>${name}</td>
       <td>${escapeHtml(routeLabel)}</td>
       <td>${payPillHtml(r.payment_status)}</td>
+      <td class="tripDayTd">${bookingTripDayCellHtml(r.bus_date)}</td>
       <td class="mono">${escapeHtml(dateTime)}</td>
     `;
     tbody.appendChild(tr);
@@ -342,6 +418,7 @@ async function initWorkerPage() {
   let pickedSeats = [];
   let ticketCount = 1;
   const WORKER_MAX_TICKETS = 20;
+  let workerServiceYmd = loadWorkerServiceDayFromStorage();
 
   function pickedListLabel() {
     if (!pickedSeats.length) return "—";
@@ -417,6 +494,57 @@ async function initWorkerPage() {
     if (wrap) wrap.classList.toggle("collapsed");
   }
 
+  function persistWorkerServiceDay() {
+    localStorage.setItem("starbus_worker_service_day", workerServiceYmd);
+  }
+
+  function renderWorkerServiceDayStrip() {
+    const strip = $("#workerServiceDayStrip");
+    if (!strip) return;
+    strip.innerHTML = "";
+    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
+      const ymd = addDaysFromToday(i);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "workerServiceDayChip" + (ymd === workerServiceYmd ? " active" : "");
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", ymd === workerServiceYmd ? "true" : "false");
+      btn.dataset.date = ymd;
+      const main =
+        i === 0 ? "اليوم" : i === 1 ? "غداً" : (() => {
+          const d = new Date(ymd + "T12:00:00");
+          return d.toLocaleDateString("ar", { weekday: "long" });
+        })();
+      const subLbl = (() => {
+        const d = new Date(ymd + "T12:00:00");
+        return d.toLocaleDateString("ar", { day: "numeric", month: "short" });
+      })();
+      btn.innerHTML =
+        `<span class="workerServiceDayChipMain">${escapeHtml(main)}</span>` +
+        `<span class="workerServiceDayChipSub">${escapeHtml(subLbl)}</span>`;
+      btn.addEventListener("click", () => setWorkerServiceDay(ymd));
+      strip.appendChild(btn);
+    }
+  }
+
+  function updateWorkerServiceDayLine() {
+    const el = $("#workerServiceDayLine");
+    if (!el) return;
+    const t = tripRelativeHintWorker(workerServiceYmd);
+    const long = fmtDateLongArWorker(workerServiceYmd);
+    el.textContent = t ? `${long} — ${t}` : long;
+  }
+
+  function setWorkerServiceDay(ymd) {
+    if (ymd === workerServiceYmd) return;
+    workerServiceYmd = ymd;
+    persistWorkerServiceDay();
+    renderWorkerServiceDayStrip();
+    updateWorkerServiceDayLine();
+    clearPicked();
+    refresh();
+  }
+
   async function populateRoutes() {
     const sel = $("#routeSelect");
     if (!sel) return;
@@ -425,9 +553,10 @@ async function initWorkerPage() {
     sel.disabled = true;
     let buses = [];
     try {
-      const out = await loadActiveBuses();
+      const out = await loadActiveBuses(workerServiceYmd);
       buses = out.buses || [];
     } catch (err) {
+      if (err.status === 400 && err.message) showToast("warn", err.message);
       const hint =
         err.status === 401
           ? "انتهت الجلسة — سجل دخول"
@@ -439,7 +568,7 @@ async function initWorkerPage() {
 
     sel.innerHTML = "";
     if (!buses.length) {
-      sel.innerHTML = `<option value="">ما في باصات اليوم</option>`;
+      sel.innerHTML = `<option value="">ما في باصات في يوم التشغيل المختار</option>`;
       sel.disabled = true;
       return;
     }
@@ -476,8 +605,13 @@ async function initWorkerPage() {
       ]);
 
       const bus = busOut.bus;
-      if ($("#busMeta"))
-        $("#busMeta").textContent = `${bus.origin} ← ${bus.destination} · باص #${bus.bus_number} · ${bus.departure_time} · ${bus.date}`;
+      if ($("#busMeta")) {
+        const td = tripRelativeHintWorker(bus.date);
+        const dateLine = fmtDateLongArWorker(bus.date);
+        $("#busMeta").textContent =
+          `${bus.origin} ← ${bus.destination} · باص #${bus.bus_number} · ${bus.departure_time} · ${dateLine}` +
+          (td ? ` (${td})` : "");
+      }
 
       let empty = 0;
       let reserved = 0;
@@ -550,6 +684,9 @@ async function initWorkerPage() {
   updateCounterUI();
 
   $("#bookFormHeader")?.addEventListener("click", toggleBookForm);
+
+  renderWorkerServiceDayStrip();
+  updateWorkerServiceDayLine();
 
   $("#btnReserve")?.addEventListener("click", async () => {
     if (!selectedBusId || pickedSeats.length === 0) return;
@@ -688,12 +825,21 @@ async function initAdminPage() {
     if (!sel) return;
     const prev = sel.value;
     const day = $("#day")?.value || todayLocalYmd();
-    const out = await loadActiveBuses(day);
-    const buses = out.buses || [];
+    let buses = [];
+    try {
+      const out = await loadActiveBuses(day);
+      buses = out.buses || [];
+    } catch (err) {
+      if (err.status === 400 && err.message) showToast("warn", err.message);
+      sel.innerHTML = `<option value="">${escapeHtml(err.message || "ما قدرنا نحمل الباصات")}</option>`;
+      sel.disabled = true;
+      adminBusId = null;
+      return;
+    }
     sel.innerHTML = "";
     adminBusId = null;
     if (!buses.length) {
-      sel.innerHTML = `<option value="">ما في باصات اليوم</option>`;
+      sel.innerHTML = `<option value="">ما في باصات في يوم التشغيل المختار</option>`;
       sel.disabled = true;
       return;
     }
@@ -893,6 +1039,40 @@ async function initAdminPage() {
     );
   }
 
+  function renderAdminDayChips() {
+    const host = $("#adminDayChips");
+    const dayInput = $("#day");
+    if (!host || !dayInput) return;
+    const current = dayInput.value || todayLocalYmd();
+    host.innerHTML = "";
+    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
+      const ymd = addDaysFromToday(i);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adminDayChip" + (ymd === current ? " active" : "");
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", ymd === current ? "true" : "false");
+      const main =
+        i === 0 ? "اليوم" : i === 1 ? "غداً" : (() => {
+          const d = new Date(ymd + "T12:00:00");
+          return d.toLocaleDateString("ar", { weekday: "long" });
+        })();
+      const subLbl = (() => {
+        const d = new Date(ymd + "T12:00:00");
+        return d.toLocaleDateString("ar", { day: "numeric", month: "short" });
+      })();
+      btn.innerHTML =
+        `<span class="adminDayChipMain">${escapeHtml(main)}</span>` +
+        `<span class="adminDayChipSub">${escapeHtml(subLbl)}</span>`;
+      btn.addEventListener("click", () => {
+        dayInput.value = ymd;
+        renderAdminDayChips();
+        refresh();
+      });
+      host.appendChild(btn);
+    }
+  }
+
   async function refreshOverview(day) {
     try {
       const ov = await api(`/api/reports/overview?date=${encodeURIComponent(day)}&days=14`, {
@@ -955,6 +1135,7 @@ async function initAdminPage() {
           <td>${name}</td>
           <td>${escapeHtml(routeLabel)}</td>
           <td>${payPillHtml(r.payment_status)}</td>
+          <td class="tripDayTd">${bookingTripDayCellHtml(r.bus_date, r.bus_departure_time)}</td>
           <td class="mono">${escapeHtml(dateTime)}</td>
           ${cancelTd}
         `;
@@ -996,8 +1177,12 @@ async function initAdminPage() {
 
   $("#adminRouteSelect")?.addEventListener("change", refresh);
   $("#adminRefreshBtn").addEventListener("click", refresh);
-  $("#day")?.addEventListener("change", refresh);
+  $("#day")?.addEventListener("change", () => {
+    renderAdminDayChips();
+    refresh();
+  });
   $("#day").value = todayLocalYmd();
+  renderAdminDayChips();
   await refresh();
 }
 

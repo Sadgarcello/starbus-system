@@ -635,6 +635,73 @@ body.admin-dashboard .admin-app {
   font-size: 11px;
 }
 
+.admin-day-chips-wrap {
+  margin: 12px 0 4px;
+}
+.admin-day-chips-wrap > label,
+.admin-day-chips-label {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.adminDayChips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  margin: 0 -4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.adminDayChips::-webkit-scrollbar {
+  height: 6px;
+}
+.adminDayChips::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+.adminDayChip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 76px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fbfcfd;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+.adminDayChip:hover {
+  border-color: var(--brand);
+}
+.adminDayChip.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.adminDayChipMain {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.adminDayChipSub {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.admin-table .tripDayTd {
+  font-size: 12px;
+  line-height: 1.35;
+  max-width: 200px;
+}
+
 .table-card-body {
   padding: 0 !important;
 }

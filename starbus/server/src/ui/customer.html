@@ -3,15 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="theme-color" content="#0F7B3F" />
+    <meta name="theme-color" content="#00843D" />
     <meta name="color-scheme" content="light" />
     <title>ستار باص — احجز رحلتك</title>
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
+    <link rel="preload" as="image" href="/ui/images/hero-bus-light.png" />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260513-noheroimg" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260512-herosplit" />
   </head>
-  <body class="theme-light">
+  <body class="theme-light" id="top">
     <header class="site-header">
       <div class="site-header-inner">
         <a class="site-brand" href="/" aria-label="ستار باص الرئيسية">
@@ -19,9 +20,11 @@
           <span class="site-brand-text">ستار باص</span>
         </a>
         <nav class="site-nav" aria-label="التنقل">
+          <a class="site-nav-link" href="#top">الرئيسية</a>
           <a class="site-nav-link" href="#booking">الحجز</a>
           <a class="site-nav-link" href="#about">من نحن</a>
           <a class="site-nav-link" href="#features">المميزات</a>
+          <a class="site-nav-link" href="#contact">اتصل بنا</a>
         </nav>
         <div class="site-header-actions">
           <a class="site-header-link subtle" href="/worker">الموظفين</a>
@@ -34,11 +37,11 @@
       </div>
     </header>
 
-    <section class="hero-qwilr" aria-labelledby="hero-heading">
+    <section class="hero-qwilr hero-qwilr--split" aria-labelledby="hero-heading">
       <div class="hero-qwilr-inner">
         <div class="hero-qwilr-copy">
           <p class="hero-qwilr-eyebrow">رحلات يومية من أم درمان</p>
-          <h1 class="hero-qwilr-title" id="hero-heading">تذاكر بـ<span class="hero-qwilr-accent"> ثقة وبساطة.</span></h1>
+          <h1 class="hero-qwilr-title" id="hero-heading">تذاكر بثقة<span class="hero-qwilr-accent"> وبساطة.</span></h1>
           <p class="hero-qwilr-lead">
             احجز مقعدك أونلاين، تابع حجزك على واتساب، ادفع بطريقتك — بدون تعب الموقف ولا السماسرة.
           </p>
@@ -52,10 +55,19 @@
             </a>
           </div>
         </div>
+        <div class="hero-qwilr-visual" aria-hidden="true">
+          <img
+            class="hero-qwilr-img"
+            src="/ui/images/hero-bus-light.png"
+            width="900"
+            height="600"
+            alt=""
+            decoding="async"
+            fetchpriority="high"
+          />
+        </div>
       </div>
-      <p class="hero-qwilr-proof">
-        آلاف الزبائن اختاروا ستار باص <span aria-hidden="true">♥</span>
-      </p>
+      <p class="hero-qwilr-proof">آلاف الزبائن اختاروا ستار باص <span aria-hidden="true">♥</span></p>
     </section>
 
     <main class="page">
@@ -166,7 +178,7 @@
           </div>
         </section>
 
-        <div class="cta-band">
+        <div class="cta-band anchor-target" id="contact">
           <div class="cta-text">
             <strong>عندك سؤال؟</strong>
             <span>كلمنا على واتساب ونرد عليك بسرعة.</span>

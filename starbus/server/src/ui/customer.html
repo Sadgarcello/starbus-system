@@ -10,7 +10,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="preload" as="image" href="/ui/images/hero-bus-light.png" />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260512-herosplit" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260512-herobg" />
   </head>
   <body class="theme-light" id="top">
     <header class="site-header">
@@ -37,7 +37,8 @@
       </div>
     </header>
 
-    <section class="hero-qwilr hero-qwilr--split" aria-labelledby="hero-heading">
+    <section class="hero-qwilr hero-qwilr--bg" aria-labelledby="hero-heading">
+      <div class="hero-qwilr-bg" aria-hidden="true"></div>
       <div class="hero-qwilr-inner">
         <div class="hero-qwilr-copy">
           <p class="hero-qwilr-eyebrow">رحلات يومية من أم درمان</p>
@@ -49,22 +50,11 @@
             <a href="#booking" class="btn btn-primary btn-lg">
               ابدأ الحجز الآن<span class="btn-icon" aria-hidden="true">‹</span>
             </a>
-            <a class="btn btn-outline btn-lg" id="topWa" href="#" target="_blank" rel="noopener">
+            <a class="btn btn-outline btn-lg hero-qwilr-outline" id="topWa" href="#" target="_blank" rel="noopener">
               <span class="waicon" aria-hidden="true"></span>
               تحدّث معنا
             </a>
           </div>
-        </div>
-        <div class="hero-qwilr-visual" aria-hidden="true">
-          <img
-            class="hero-qwilr-img"
-            src="/ui/images/hero-bus-light.png"
-            width="900"
-            height="600"
-            alt=""
-            decoding="async"
-            fetchpriority="high"
-          />
         </div>
       </div>
       <p class="hero-qwilr-proof">آلاف الزبائن اختاروا ستار باص <span aria-hidden="true">♥</span></p>

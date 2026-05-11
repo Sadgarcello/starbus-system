@@ -64,45 +64,6 @@
     if (!Number.isFinite(n) || n <= 0) return "—";
     return n.toLocaleString("ar-EG") + " ج.س";
   }
-
-  /** Today through today+6 for public booking window (must match server). */
-  const SERVICE_DAY_MAX_OFFSET = 6;
-
-  function todayLocalYmd() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  function addDaysFromToday(days) {
-    const d = new Date();
-    d.setHours(12, 0, 0, 0);
-    d.setDate(d.getDate() + days);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  function fmtDateLongAr(ymd) {
-    const d = new Date(String(ymd) + "T12:00:00");
-    if (Number.isNaN(d.getTime())) return String(ymd || "—");
-    return d.toLocaleDateString("ar-EG", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }
-
-  function serviceDayRelativePhrase(ymd) {
-    if (ymd === todayLocalYmd()) return "اليوم";
-    if (ymd === addDaysFromToday(1)) return "غداً";
-    return fmtDateLongAr(ymd);
-  }
-
   function seatsRemainingPill(r) {
     const n = Number(r);
     if (!Number.isFinite(n) || n <= 0) return { cls: "full", text: "محجوزة بالكامل" };
@@ -124,130 +85,7 @@
     refreshTimer: null,
     whatsapp: "",
     booking: null,          // local summary for receipt / WhatsApp (no DB rows yet)
-    serviceDayYmd: "",       // YYYY-MM-DD travel day (filled on init)
-    heroDestinationFilter: "", // optional filter from hero search widget
   };
-
-  function updateRoutesSectionSub() {
-    const sub = $("#routesSectionSub");
-    if (!sub) return;
-    sub.textContent = "رحلات " + serviceDayRelativePhrase(state.serviceDayYmd) + " من أم درمان";
-  }
-
-  function renderServiceDayStrip() {
-    const strip = $("#serviceDayStrip");
-    if (!strip) return;
-    strip.innerHTML = "";
-    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
-      const ymd = addDaysFromToday(i);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "serviceDayChip" + (ymd === state.serviceDayYmd ? " active" : "");
-      btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", ymd === state.serviceDayYmd ? "true" : "false");
-      btn.dataset.date = ymd;
-      const main =
-        i === 0 ? "اليوم" : i === 1 ? "غداً" : (() => {
-          const d = new Date(ymd + "T12:00:00");
-          return d.toLocaleDateString("ar-EG", { weekday: "long" });
-        })();
-      const sub = (() => {
-        const d = new Date(ymd + "T12:00:00");
-        return d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
-      })();
-      btn.innerHTML =
-        "<span class=\"serviceDayChipMain\">" + escapeHtml(main) + "</span>" +
-        "<span class=\"serviceDayChipSub\">" + escapeHtml(sub) + "</span>";
-      btn.addEventListener("click", () => setServiceDay(ymd));
-      strip.appendChild(btn);
-    }
-  }
-
-  function setServiceDay(ymd) {
-    if (ymd === state.serviceDayYmd) return;
-    state.serviceDayYmd = ymd;
-    const stepSeats = $("#stepSeats");
-    if (stepSeats && !stepSeats.hidden) {
-      stopSeatRefresh();
-      state.selected = null;
-      state.pickedSeats = [];
-      state.seatMap = null;
-      setStep("stepRoutes");
-    }
-    renderServiceDayStrip();
-    updateRoutesSectionSub();
-    syncBookingSearchDateInput();
-    loadRoutes();
-  }
-
-  function syncBookingSearchDateInput() {
-    const el = $("#bookingSearchDate");
-    if (!el) return;
-    el.value = state.serviceDayYmd;
-  }
-
-  function isAllowedServiceYmd(ymd) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
-    const min = todayLocalYmd();
-    const max = addDaysFromToday(SERVICE_DAY_MAX_OFFSET);
-    return ymd >= min && ymd <= max;
-  }
-
-  function populateBookingDestSelect() {
-    const sel = $("#bookingSearchDest");
-    if (!sel) return;
-    const prev = sel.value;
-    const dests = [...new Set((state.buses || []).map((b) => b.destination).filter(Boolean))].sort();
-    sel.innerHTML = "<option value=\"\">كل الوجهات</option>";
-    for (const d of dests) {
-      const o = document.createElement("option");
-      o.value = d;
-      o.textContent = d;
-      sel.appendChild(o);
-    }
-    if (prev && dests.includes(prev)) sel.value = prev;
-  }
-
-  function runBookingSearch() {
-    const sel = $("#bookingSearchDest");
-    state.heroDestinationFilter = (sel && sel.value ? sel.value : "").trim();
-    const dateEl = $("#bookingSearchDate");
-    const v = dateEl && dateEl.value ? dateEl.value : "";
-    if (v && !isAllowedServiceYmd(v)) {
-      toast("warn", "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)");
-      syncBookingSearchDateInput();
-      return;
-    }
-    if (v && v !== state.serviceDayYmd) {
-      setServiceDay(v);
-    } else {
-      loadRoutes();
-    }
-    $("#booking")?.scrollIntoView({ behavior: "smooth" });
-  }
-
-  function setupBookingSearchControls() {
-    const dateEl = $("#bookingSearchDate");
-    if (dateEl) {
-      dateEl.min = todayLocalYmd();
-      dateEl.max = addDaysFromToday(SERVICE_DAY_MAX_OFFSET);
-      dateEl.value = state.serviceDayYmd;
-      dateEl.addEventListener("change", () => {
-        const val = dateEl.value;
-        if (!val) {
-          syncBookingSearchDateInput();
-          return;
-        }
-        if (!isAllowedServiceYmd(val)) {
-          toast("warn", "التاريخ خارج نطاق الحجز");
-          syncBookingSearchDateInput();
-          return;
-        }
-        if (val !== state.serviceDayYmd) setServiceDay(val);
-      });
-    }
-    $("#bookingSearchBtn")?.addEventListener("click", runBookingSearch);
-  }
 
   // ===== Step 1: Routes =====
   async function loadRoutes() {
@@ -261,20 +99,15 @@
       '<div class="skeleton route-skel"></div>';
 
     try {
-      const qs = "?date=" + encodeURIComponent(state.serviceDayYmd);
-      const out = await api("/api/public/buses/active" + qs);
+      const out = await api("/api/public/buses/active");
       state.buses = out.buses || [];
-      populateBookingDestSelect();
-      const filt = state.heroDestinationFilter;
-      const buses = filt ? state.buses.filter((b) => b.destination === filt) : state.buses;
       list.innerHTML = "";
-      if (!buses.length) { empty.hidden = false; return; }
-      for (const b of buses) {
+      if (!state.buses.length) { empty.hidden = false; return; }
+      for (const b of state.buses) {
         list.appendChild(routeCard(b));
       }
     } catch (e) {
       list.innerHTML = "";
-      if (e.status === 400 && e.message) toast("warn", e.message);
       error.hidden = false;
     }
   }
@@ -291,7 +124,6 @@
     main.appendChild(route);
 
     const sub = el("div", "routeSub");
-    sub.appendChild(el("span", null, "📅 " + fmtDateLongAr(b.date || state.serviceDayYmd)));
     sub.appendChild(el("span", null, "🕒 " + fmtTime(b.departure_time)));
     sub.appendChild(el("span", null, "🚌 رقم " + (b.bus_number || "—")));
     sub.appendChild(el("span", null, "💵 " + fmtPrice(b.price)));
@@ -314,9 +146,7 @@
     state.pickedSeats = [];
     state.ticketCount = 1;
     setStep("stepSeats");
-    $("#seatBusMeta").textContent =
-      b.origin + " ← " + b.destination + " · " + fmtTime(b.departure_time) +
-      " · " + fmtDateLongAr(b.date || state.serviceDayYmd);
+    $("#seatBusMeta").textContent = b.origin + " ← " + b.destination + " · " + fmtTime(b.departure_time);
     updateCounterUI();
     await refreshSeats();
     startSeatRefresh();
@@ -368,8 +198,7 @@
   async function refreshSeats() {
     if (!state.selected) return;
     try {
-      const qs = "?date=" + encodeURIComponent(state.serviceDayYmd);
-      const map = await api("/api/public/buses/" + state.selected.id + "/seat-map" + qs);
+      const map = await api("/api/public/buses/" + state.selected.id + "/seat-map");
       state.seatMap = map;
       // Drop any picked seat that is no longer empty.
       const before = state.pickedSeats.length;
@@ -383,8 +212,7 @@
       updateCounterUI();
       paintBus();
     } catch (e) {
-      if (e.status === 400 && e.message) toast("warn", e.message);
-      else toast("warn", "تعذر تحديث المقاعد");
+      toast("warn", "تعذر تحديث المقاعد");
     }
   }
 
@@ -478,10 +306,9 @@
       : "";
     $("#formSummary").innerHTML =
       "<b>" + escapeHtml(b.origin) + " ← " + escapeHtml(b.destination) + "</b>" +
-      " · " + escapeHtml(fmtDateLongAr(b.date || state.serviceDayYmd)) +
       " · " + escapeHtml(fmtTime(b.departure_time)) +
-      " · <b>" + state.ticketCount + " مقاعد</b> (" + escapeHtml(seatList) + ")" 
-      + priceLine;
+      " · <b>" + state.ticketCount + " مقاعد</b> (" + escapeHtml(seatList) + ")" +
+      priceLine;
     setStep("stepForm");
     setTimeout(() => $("#cname")?.focus(), 200);
   }
@@ -528,15 +355,13 @@
       : "— (بانتظار تأكيد الموظف)";
     const total = b.total_price != null ? Number(b.total_price) : (Number(b.price) || 0) * (b.seat_numbers?.length || 1);
 
-    const travelDay = b.date ? fmtDateLongAr(b.date) : fmtDateLongAr(state.serviceDayYmd);
     const lines = [
       ["أرقام الحجز", "<span class='ref'>" + escapeHtml(refs) + "</span>"],
       ["رقم الرحلة (للموظف)", "<span class='ref'>" + escapeHtml(String(b.bus_id ?? "—")) + "</span>"],
       ["الراكب", escapeHtml(b.name)],
       ["الهاتف", escapeHtml(b.phone)],
       ["الرحلة", escapeHtml(b.origin) + " ← " + escapeHtml(b.destination)],
-      ["يوم السفر", escapeHtml(travelDay)],
-      ["موعد الانطلاق", escapeHtml(fmtTime(b.departure_time))],
+      ["الموعد", escapeHtml(fmtTime(b.departure_time))],
       ["المقاعد", escapeHtml(seats) + " (" + (b.seat_numbers?.length || 1) + " تذكرة)"],
       ["المجموع المتوقع", escapeHtml(fmtPrice(total))],
       ["الحالة", "طلب من الموقع — أكمل على واتساب"],
@@ -563,8 +388,7 @@
       "الإسم: " + b.name,
       "الهاتف (واتساب): " + b.phone,
       "الرحلة: " + b.origin + " ← " + b.destination,
-      "يوم السفر: " + (b.date ? fmtDateLongAr(b.date) : fmtDateLongAr(state.serviceDayYmd)),
-      "موعد الانطلاق: " + fmtTime(b.departure_time),
+      "الموعد: " + fmtTime(b.departure_time),
       "المقاعد المطلوبة: " + seats,
       "المجموع المتوقع: " + fmtPrice(total),
       "",
@@ -621,10 +445,6 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
-    state.serviceDayYmd = todayLocalYmd();
-    renderServiceDayStrip();
-    updateRoutesSectionSub();
-    setupBookingSearchControls();
     bindBacks();
     bindCounter();
     $("#continueBtn")?.addEventListener("click", gotoForm);
@@ -635,9 +455,6 @@
       state.seatMap = null;
       state.selected = null;
       state.ticketCount = 1;
-      state.heroDestinationFilter = "";
-      const destSel = $("#bookingSearchDest");
-      if (destSel) destSel.value = "";
       setStep("stepRoutes");
       loadRoutes();
     });

@@ -41,11 +41,35 @@ html {
 .site-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-weight: 800;
   font-size: 19px;
   color: var(--ink);
   letter-spacing: -0.02em;
+}
+.site-brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 12px;
+  filter: drop-shadow(0 2px 6px rgba(15, 123, 63, 0.22));
+}
+.site-brand-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.15;
+}
+.site-brand-text {
+  font-size: 19px;
+  font-weight: 800;
+}
+.site-brand-tagline {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
 }
 .site-brand-mark {
   font-size: 24px;
@@ -149,13 +173,42 @@ html {
 
 .hero-qwilr {
   position: relative;
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--ink);
+  color: #f8fafc;
+  overflow: hidden;
+}
+.hero-qwilr--media .hero-qwilr-bg {
+  position: absolute;
+  inset: 0;
+  background-color: #0b1220;
+  background-image: url("/ui/images/hero-bus-sunset.png");
+  background-size: cover;
+  background-position: 28% center;
+  transform: scale(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-qwilr--media .hero-qwilr-bg {
+    transform: none;
+  }
+}
+.hero-qwilr--media .hero-qwilr-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(11, 18, 32, 0.82) 0%,
+    rgba(11, 18, 32, 0.45) 38%,
+    rgba(11, 18, 32, 0.25) 100%
+  );
+  pointer-events: none;
 }
 .hero-qwilr-inner {
+  position: relative;
+  z-index: 1;
   max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
-  padding: clamp(36px, 7vw, 88px) clamp(10px, 1.75vw, 22px) clamp(20px, 4vw, 48px);
+  padding: clamp(36px, 7vw, 88px) clamp(10px, 1.75vw, 22px) clamp(28px, 5vw, 56px);
   display: flex;
   flex-direction: column;
   gap: clamp(20px, 4vw, 40px);
@@ -174,8 +227,19 @@ html {
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: rgba(248, 250, 252, 0.72);
   margin: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-qwilr-eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+  flex-shrink: 0;
 }
 .hero-qwilr-title {
   font-weight: 800;
@@ -183,10 +247,11 @@ html {
   line-height: 1.06;
   letter-spacing: -0.045em;
   margin: 0 0 16px;
-  color: var(--ink);
+  color: #f8fafc;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
 }
 .hero-qwilr-accent {
-  background: linear-gradient(120deg, var(--brand) 0%, #0a8f4f 42%, var(--brand-hover) 100%);
+  background: linear-gradient(120deg, #4ade80 0%, var(--brand) 48%, #2dd4bf 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -194,10 +259,24 @@ html {
 .hero-qwilr-lead {
   font-size: clamp(15px, 1.55vw, 19px);
   line-height: 1.68;
-  color: var(--ink-soft);
+  color: rgba(248, 250, 252, 0.88);
   margin: 0 0 30px;
   max-width: 38ch;
   font-weight: 500;
+}
+.hero-qwilr--media .hero-btn-outline {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #f8fafc;
+  backdrop-filter: blur(8px);
+}
+.hero-qwilr--media .hero-btn-outline:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+.hero-qwilr--media .hero-btn-outline .waicon {
+  background: #fff;
 }
 .hero-qwilr-ctas {
   display: flex;
@@ -206,26 +285,202 @@ html {
   justify-content: center;
 }
 .hero-qwilr-proof {
+  position: relative;
+  z-index: 1;
   text-align: center;
   margin: 0;
-  padding: 20px clamp(12px, 3vw, 24px) 28px;
+  padding: 0 clamp(12px, 3vw, 24px) 20px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
+  color: rgba(248, 250, 252, 0.55);
+}
+
+.bookingSearchShell {
+  position: relative;
+  z-index: 2;
+  max-width: min(1680px, calc(100vw - 28px));
+  margin: 0 auto;
+  padding: 0 clamp(10px, 1.75vw, 22px);
+  margin-bottom: -40px;
+}
+.bookingSearch {
+  position: relative;
+  z-index: 3;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2.5vw, 24px);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line);
+}
+.bookingSearch-grid {
+  display: grid;
+  gap: 14px 16px;
+  align-items: end;
+}
+@media (min-width: 900px) {
+  .bookingSearch-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1fr) auto;
+  }
+}
+.bookingSearch-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.bookingSearch-field--action {
+  align-self: stretch;
+}
+.bookingSearch-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.bookingSearch-label--ghost {
+  visibility: hidden;
+  min-height: 1.2em;
+}
+@media (max-width: 899px) {
+  .bookingSearch-label--ghost {
+    display: none;
+  }
+  .bookingSearch-field--action {
+    margin-top: 4px;
+  }
+}
+.bookingSearch-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+.bookingSearch-control:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+.bookingSearch-glyph {
+  flex-shrink: 0;
+  color: var(--brand);
+  display: flex;
+}
+.bookingSearch-input,
+.bookingSearch-select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 12px 0;
+}
+.bookingSearch-input:focus,
+.bookingSearch-select:focus {
+  outline: none;
+}
+.bookingSearch-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0 center;
+  padding-left: 28px;
+}
+.bookingSearch-input[readonly] {
+  cursor: default;
+  color: var(--ink-soft);
+}
+.bookingSearch-submit {
+  width: 100%;
+  min-height: 50px;
+  padding-left: 22px;
+  padding-right: 22px;
+  gap: 10px;
+  white-space: nowrap;
+}
+.bookingSearch-searchIcon {
+  flex-shrink: 0;
+}
+
+.landing-features {
+  padding: clamp(56px, 10vw, 88px) clamp(10px, 1.75vw, 22px) clamp(28px, 6vw, 48px);
+  background: var(--bg);
+}
+.landing-features-inner {
+  max-width: min(1680px, calc(100vw - 28px));
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(20px, 4vw, 28px);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .landing-features-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .landing-features-inner {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.landing-feature {
+  text-align: center;
+  padding: 12px 8px;
+}
+.landing-feature-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.landing-feature-icon svg {
+  width: 26px;
+  height: 26px;
+}
+.landing-feature-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.landing-feature-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--muted);
+  font-weight: 500;
 }
 
 @media (min-width: 960px) {
   .hero-qwilr-inner {
-    max-width: min(900px, calc(100vw - 28px));
+    max-width: min(1200px, calc(100vw - 28px));
   }
   .hero-qwilr-copy {
     max-width: 720px;
+    margin-inline-start: 0;
+    margin-inline-end: auto;
     text-align: start;
     align-items: flex-start;
   }
   .hero-qwilr-ctas {
     justify-content: flex-start;
+  }
+  .hero-qwilr-proof {
+    text-align: start;
+    max-width: min(1200px, calc(100vw - 28px));
+    margin-inline: auto;
+    padding-inline: clamp(10px, 1.75vw, 22px);
   }
 }
 
@@ -260,7 +515,7 @@ html {
 .page {
   max-width: min(1680px, calc(100vw - 28px));
   margin: 0 auto;
-  padding: 16px clamp(10px, 1.75vw, 22px) clamp(48px, 10vh, 100px);
+  padding: clamp(32px, 6vw, 52px) clamp(10px, 1.75vw, 22px) clamp(48px, 10vh, 100px);
 }
 .step {
   animation: fadeUp 0.22s var(--ease);
@@ -288,6 +543,21 @@ html {
   margin: 0 0 4px;
   color: var(--ink);
   letter-spacing: -0.3px;
+}
+.section-head--accent h1 {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 10px;
+}
+.section-head--accent h1::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 48px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--brand);
 }
 .section-head p {
   margin: 0;
@@ -324,6 +594,59 @@ html {
   display: grid;
   gap: 12px;
 }
+
+.serviceDayStrip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  margin: 0 -4px 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.serviceDayStrip::-webkit-scrollbar {
+  height: 6px;
+}
+.serviceDayStrip::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+.serviceDayChip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 78px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.serviceDayChip:hover {
+  border-color: var(--brand);
+}
+.serviceDayChip.active {
+  border-color: var(--brand);
+  background: var(--brand-soft, rgba(15, 123, 63, 0.12));
+  box-shadow: var(--shadow-sm);
+}
+.serviceDayChipMain {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.serviceDayChipSub {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
 .routeCard {
   background: var(--bg-card);
   border: 1px solid var(--line);
@@ -484,76 +807,6 @@ html {
   color: var(--ink-soft);
   font-size: 14px;
   line-height: 1.85;
-}
-
-.features {
-  background: var(--bg-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 14px;
-}
-.features h2 {
-  margin: 0 0 14px;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.features h2::before {
-  content: "";
-  display: inline-block;
-  width: 4px;
-  height: 18px;
-  background: var(--brand);
-  border-radius: 2px;
-}
-.featureList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 14px;
-}
-.featureList li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-.featureIcon {
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--brand-soft);
-  color: var(--brand);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.featureIcon svg {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-.featureList li > div {
-  flex: 1;
-  min-width: 0;
-}
-.featureList li strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 3px;
-}
-.featureList li span {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.7;
 }
 
 /* ===== Partner logo belt (OEM / coach builders) ===== */
@@ -1161,11 +1414,6 @@ a.primary.wa:hover {
   .routes {
     gap: 14px;
   }
-  .featureList {
-    grid-template-columns: 1fr 1fr;
-    gap: 18px 28px;
-    align-items: start;
-  }
   .hero-qwilr-inner {
     padding-bottom: clamp(28px, 5vw, 52px);
   }
@@ -1201,7 +1449,6 @@ a.primary.wa:hover {
     font-size: 18px;
   }
   .info-card,
-  .features,
   .cta-band {
     padding: 16px;
   }

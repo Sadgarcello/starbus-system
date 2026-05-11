@@ -13,6 +13,7 @@ body.theme-light {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -258,6 +259,7 @@ html {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 .hero-qwilr-lead {
   font-size: clamp(15px, 1.55vw, 19px);
@@ -670,9 +672,9 @@ html {
 }
 .partner-belt-mask {
   overflow: hidden;
-  width: 100vw;
-  max-width: 100vw;
-  margin-inline: calc(50% - 50vw);
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
   padding-block: 14px;
   border-block: 1px solid var(--line);
   background: linear-gradient(180deg, #f6f7f8 0%, #ffffff 55%, #fafafa 100%);

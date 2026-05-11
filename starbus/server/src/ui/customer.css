@@ -139,9 +139,6 @@ html {
 .btn-outline .waicon {
   background: var(--brand);
 }
-.hero-qwilr-ctas .btn-outline:hover .waicon {
-  background: var(--brand);
-}
 .btn-icon {
   font-size: 1.15em;
   line-height: 0;
@@ -150,46 +147,8 @@ html {
 
 .hero-qwilr {
   position: relative;
-  background: var(--bg);
+  background: var(--bg-soft);
   color: var(--ink);
-}
-.hero-qwilr--fullbg {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  min-height: min(92vh, 900px);
-  color: var(--ink);
-}
-.hero-qwilr--fullbg .hero-qwilr-bg {
-  position: absolute;
-  inset: 0;
-  background-color: #eef1ef;
-  background-image: url("/ui/images/hero-bus-fullbg.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: 22% center;
-}
-.hero-qwilr--fullbg .hero-qwilr-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* Hide duplicate UI baked into the artwork on the text side (only real HTML should show). */
-  background: linear-gradient(
-    to left,
-    #ffffff 0%,
-    #ffffff 22%,
-    rgba(255, 255, 255, 0.97) 34%,
-    rgba(255, 255, 255, 0.72) 48%,
-    rgba(255, 255, 255, 0.2) 62%,
-    transparent 78%
-  );
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-qwilr--fullbg .hero-qwilr-bg {
-    background-position: 22% center;
-  }
 }
 .hero-qwilr-inner {
   max-width: min(1680px, calc(100vw - 28px));
@@ -200,61 +159,26 @@ html {
   gap: clamp(20px, 4vw, 40px);
   align-items: center;
 }
-.hero-qwilr--fullbg .hero-qwilr-inner {
-  position: relative;
-  z-index: 1;
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: min(1200px, calc(100vw - 28px));
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: clamp(72px, 14vh, 120px);
+.hero-qwilr--textonly .hero-qwilr-inner {
+  align-items: stretch;
+  max-width: min(640px, calc(100vw - 28px));
+  padding-top: clamp(28px, 6vw, 56px);
   padding-bottom: clamp(20px, 4vw, 40px);
 }
 .hero-qwilr-copy {
   width: 100%;
-  max-width: 620px;
-  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-.hero-qwilr--fullbg .hero-qwilr-copy {
-  max-width: min(520px, 100%);
-  text-align: start;
   align-items: flex-start;
-  position: relative;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.97);
-  padding: clamp(20px, 3vw, 28px) clamp(20px, 3.5vw, 32px);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.07);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: start;
 }
 .hero-qwilr-eyebrow {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: none;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 0 0 14px;
-}
-.hero-qwilr--fullbg .hero-qwilr-eyebrow {
-  color: var(--brand);
   letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.hero-qwilr--fullbg .hero-qwilr-eyebrow::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--brand);
-  flex-shrink: 0;
+  color: var(--brand);
+  margin: 0 0 12px;
 }
 .hero-qwilr-title {
   font-weight: 800;
@@ -265,86 +189,46 @@ html {
   color: var(--ink);
 }
 .hero-qwilr-accent {
-  background: linear-gradient(120deg, var(--brand) 0%, #0a8f4f 42%, var(--brand-hover) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  color: var(--brand);
 }
 .hero-qwilr-lead {
   font-size: clamp(15px, 1.55vw, 19px);
   line-height: 1.68;
   color: var(--ink-soft);
-  margin: 0 0 30px;
-  max-width: 38ch;
+  margin: 0 0 18px;
+  max-width: 42ch;
   font-weight: 500;
 }
-.hero-qwilr-ctas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
+.hero-qwilr-minlinks {
+  margin: 0 0 20px;
+  font-size: 15px;
+  font-weight: 600;
 }
-.hero-qwilr--fullbg .hero-qwilr-ctas {
-  justify-content: flex-start;
+.hero-qwilr-minlinks a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.hero-qwilr-minlinks a:hover {
+  color: var(--brand-hover);
+}
+.hero-qwilr-minlinks-sep {
+  color: var(--muted);
+  font-weight: 500;
 }
 .hero-qwilr-proof {
-  text-align: center;
   margin: 0;
-  padding: 12px clamp(12px, 3vw, 24px) 28px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
-.hero-qwilr--fullbg .hero-qwilr-proof {
-  position: relative;
-  z-index: 1;
-  margin-top: auto;
-  box-sizing: border-box;
-  max-width: min(1200px, calc(100vw - 28px));
-  width: 100%;
-  margin-inline: auto;
-  text-align: center;
-  padding: 8px clamp(10px, 1.75vw, 22px) 24px;
-}
-@media (max-width: 639px) {
-  .hero-qwilr--fullbg {
-    min-height: min(100vh, 840px);
-  }
-  .hero-qwilr--fullbg .hero-qwilr-bg {
-    background-position: 48% center;
-  }
-  .hero-qwilr--fullbg .hero-qwilr-bg::after {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.98) 0%,
-      rgba(255, 255, 255, 0.9) 35%,
-      rgba(255, 255, 255, 0.45) 58%,
-      transparent 85%
-    );
-  }
-  .hero-qwilr--fullbg .hero-qwilr-copy {
-    background: rgba(255, 255, 255, 0.98);
-  }
-  .hero-qwilr--fullbg .hero-qwilr-inner {
-    justify-content: flex-end;
-    padding-top: clamp(56px, 18vw, 96px);
-    padding-bottom: 20px;
-  }
-  .hero-qwilr--fullbg .hero-qwilr-copy {
-    text-align: center;
-    align-items: center;
-  }
-  .hero-qwilr--fullbg .hero-qwilr-ctas {
-    justify-content: center;
-  }
-  .hero-qwilr--fullbg .hero-qwilr-proof {
-    text-align: center;
+@media (min-width: 960px) {
+  .hero-qwilr--textonly .hero-qwilr-inner {
+    padding-top: clamp(40px, 8vh, 72px);
   }
 }
-
-.anchor-target {
   scroll-margin-top: 88px;
 }
 

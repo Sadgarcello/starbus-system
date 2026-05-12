@@ -8,7 +8,8 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "smoke": "node src/scripts/smoke.mjs",
-    "set-password": "node src/scripts/set-password.mjs"
+    "set-password": "node src/scripts/set-password.mjs",
+    "apply-seed": "node src/scripts/apply-seed.mjs"
   },
   "engines": {
     "node": ">=20"

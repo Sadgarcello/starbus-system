@@ -628,6 +628,60 @@ body.admin-dashboard .admin-app {
   font-weight: 600;
   color: var(--brand-ink);
 }
+.admin-booking-hd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.admin-booking-hd h2 {
+  margin: 0;
+}
+.admin-booking-hd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.admin-route-quick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--input-bg, #f8fafc);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.admin-route-quick[hidden] {
+  display: none !important;
+}
+.admin-route-quick-btn {
+  appearance: none;
+  border: none;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink-soft);
+  background: transparent;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+  white-space: nowrap;
+}
+.admin-route-quick-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.85);
+}
+.admin-route-quick-btn.active {
+  color: var(--brand-ink);
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
 .kpi-explainer {
   margin: 14px 0 8px;
 }

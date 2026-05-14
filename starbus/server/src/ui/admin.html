@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260506" />
-    <link rel="stylesheet" href="/ui/admin.css?v=20260510-serviceday" />
+    <link rel="stylesheet" href="/ui/admin.css?v=20260514-route-quick" />
   </head>
   <body class="theme-light admin-dashboard">
     <div class="admin-app">
@@ -244,9 +244,18 @@
           </section>
 
           <section class="admin-card loft admin-table-section">
-            <div class="admin-card-hd slim">
+            <div class="admin-card-hd slim admin-booking-hd">
               <h2>سجلّ الحجوزات</h2>
-              <span class="hint">حذف/إلغاء للسوبر أدمن فقط</span>
+              <div class="admin-booking-hd-actions">
+                <div
+                  class="admin-route-quick"
+                  id="adminRouteQuick"
+                  role="group"
+                  aria-label="تبديل الوجهة في التقرير"
+                  hidden
+                ></div>
+                <span class="hint">حذف/إلغاء للسوبر أدمن فقط</span>
+              </div>
             </div>
             <div class="admin-card-bd table-card-body">
               <div class="table-scroll">
@@ -280,6 +289,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/app.js?v=20260510-serviceday" defer></script>
+    <script src="/ui/app.js?v=20260514-route-quick" defer></script>
   </body>
 </html>

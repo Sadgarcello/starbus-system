@@ -819,6 +819,35 @@ async function initAdminPage() {
 
   const isSuper = user.role === "superadmin";
   let adminBusId = null;
+  let lastAdminBuses = [];
+
+  const adminBookTbody = $("#adminBody");
+  if (adminBookTbody && isSuper && !adminBookTbody.dataset.starbusCancelDelegate) {
+    adminBookTbody.dataset.starbusCancelDelegate = "1";
+    adminBookTbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".cancel-booking");
+      if (!btn || btn.disabled) return;
+      const id = btn.getAttribute("data-id");
+      if (!id || !confirm("إلغاء الحجز وتحرير المقعد؟")) return;
+      btn.disabled = true;
+      let ok = false;
+      try {
+        await api(`/api/bookings/${id}`, { method: "DELETE", timeoutMs: 15000 });
+        ok = true;
+      } catch (err) {
+        if (err.status === 404) ok = true;
+        else showToast("danger", err.message || "فشل الإلغاء");
+      }
+      if (ok) {
+        try {
+          await refresh();
+        } catch {
+          /* refresh already showed toast + rethrew */
+        }
+      }
+      btn.disabled = false;
+    });
+  }
 
   async function populateAdminRoutes() {
     const sel = $("#adminRouteSelect");
@@ -834,6 +863,8 @@ async function initAdminPage() {
       sel.innerHTML = `<option value="">${escapeHtml(err.message || "ما قدرنا نحمل الباصات")}</option>`;
       sel.disabled = true;
       adminBusId = null;
+      lastAdminBuses = [];
+      renderAdminRouteQuick([], null);
       return;
     }
     sel.innerHTML = "";
@@ -841,6 +872,8 @@ async function initAdminPage() {
     if (!buses.length) {
       sel.innerHTML = `<option value="">ما في باصات في يوم التشغيل المختار</option>`;
       sel.disabled = true;
+      lastAdminBuses = [];
+      renderAdminRouteQuick([], null);
       return;
     }
     for (const b of buses) {
@@ -853,6 +886,41 @@ async function initAdminPage() {
     const keep = buses.find((x) => String(x.id) === prev) || buses[0];
     sel.value = String(keep.id);
     adminBusId = Number(sel.value);
+    lastAdminBuses = buses;
+    renderAdminRouteQuick(buses, keep.id);
+  }
+
+  function renderAdminRouteQuick(buses, selectedId) {
+    const host = $("#adminRouteQuick");
+    if (!host) return;
+    host.innerHTML = "";
+    if (!buses.length) {
+      host.hidden = true;
+      return;
+    }
+    host.hidden = false;
+    const sid =
+      selectedId != null && selectedId !== ""
+        ? String(selectedId)
+        : String(buses[0]?.id ?? "");
+    for (const b of buses) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "admin-route-quick-btn";
+      if (String(b.id) === sid) btn.classList.add("active");
+      btn.setAttribute("data-bus-id", String(b.id));
+      btn.setAttribute("aria-pressed", String(b.id) === sid ? "true" : "false");
+      btn.textContent = String(b.destination || "—");
+      btn.title = `${b.origin} ← ${b.destination} · باص ${b.bus_number}`;
+      btn.addEventListener("click", () => {
+        const routeSel = $("#adminRouteSelect");
+        if (routeSel && !routeSel.disabled) routeSel.value = String(b.id);
+        adminBusId = Number(b.id);
+        renderAdminRouteQuick(lastAdminBuses, b.id);
+        refresh().catch(() => {});
+      });
+      host.appendChild(btn);
+    }
   }
 
   function setOvText(id, v) {
@@ -1067,7 +1135,7 @@ async function initAdminPage() {
       btn.addEventListener("click", () => {
         dayInput.value = ymd;
         renderAdminDayChips();
-        refresh();
+        refresh().catch(() => {});
       });
       host.appendChild(btn);
     }
@@ -1141,22 +1209,6 @@ async function initAdminPage() {
         `;
           tbody.appendChild(tr);
         }
-
-        tbody.querySelectorAll(".cancel-booking").forEach((btn) => {
-          btn.addEventListener("click", async () => {
-            const id = btn.getAttribute("data-id");
-            if (!id || !confirm("إلغاء الحجز وتحرير المقعد؟")) return;
-            btn.disabled = true;
-            try {
-              await api(`/api/bookings/${id}`, { method: "DELETE", timeoutMs: 15000 });
-              await refresh();
-            } catch (err) {
-              showToast("danger", err.message || "فشل الإلغاء");
-            } finally {
-              btn.disabled = false;
-            }
-          });
-        });
       }
     } catch (err) {
       if (err.status === 401) {
@@ -1170,20 +1222,33 @@ async function initAdminPage() {
       } else {
         showToast("warn", err.message || "فشل التحديث");
       }
+      throw err;
     } finally {
       $("#adminRefreshBtn").disabled = false;
     }
   }
 
-  $("#adminRouteSelect")?.addEventListener("change", refresh);
-  $("#adminRefreshBtn").addEventListener("click", refresh);
+  $("#adminRouteSelect")?.addEventListener("change", () => {
+    const sel = $("#adminRouteSelect");
+    const v = sel?.value || "";
+    adminBusId = v ? Number(v) : null;
+    renderAdminRouteQuick(lastAdminBuses, v || null);
+    refresh().catch(() => {});
+  });
+  $("#adminRefreshBtn").addEventListener("click", () => {
+    refresh().catch(() => {});
+  });
   $("#day")?.addEventListener("change", () => {
     renderAdminDayChips();
-    refresh();
+    refresh().catch(() => {});
   });
   $("#day").value = todayLocalYmd();
   renderAdminDayChips();
-  await refresh();
+  try {
+    await refresh();
+  } catch {
+    /* handled inside refresh */
+  }
 }
 
 function initLogout() {

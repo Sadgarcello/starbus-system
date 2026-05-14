@@ -199,11 +199,15 @@ router.get("/daily", async (req, res, next) => {
 
     /** Service day (bus.date) matches the admin "تشغيل / تقرير" calendar — not created_at. */
     const where = ["b.date = :day"];
-    const params = { day, limit, offset };
+    /** Only placeholders used in WHERE — never pass LIMIT/OFFSET here (mysql2 + PS can error). */
+    const whereParams = { day };
     if (bus_id) {
       where.push("bk.bus_id = :bus_id");
-      params.bus_id = bus_id;
+      whereParams.bus_id = bus_id;
     }
+
+    const lim = Math.min(500, Math.max(1, Number(limit)));
+    const off = Math.min(50000, Math.max(0, Number(offset)));
 
     const [summaryRows] = await pool.execute(
       `SELECT
@@ -216,7 +220,7 @@ router.get("/daily", async (req, res, next) => {
        FROM bookings bk
        JOIN buses b ON b.id = bk.bus_id
        WHERE ${where.join(" AND ")}`,
-      params
+      whereParams
     );
 
     const sRaw = summaryRows?.[0] || {};
@@ -253,15 +257,15 @@ router.get("/daily", async (req, res, next) => {
        JOIN routes rt ON rt.id = b.route_id
        WHERE ${where.join(" AND ")}
        ORDER BY bk.created_at DESC, bk.id DESC
-       LIMIT :limit OFFSET :offset`,
-      params
+       LIMIT ${lim} OFFSET ${off}`,
+      whereParams
     );
 
     return res.json({
       date: day,
       summary,
       bookings: rows,
-      page: { limit, offset, returned: rows.length },
+      page: { limit: lim, offset: off, returned: rows.length },
     });
   } catch (err) {
     return next(err);

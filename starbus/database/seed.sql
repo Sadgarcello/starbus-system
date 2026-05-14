@@ -19,10 +19,10 @@
 --   then UPDATE users SET password = '<paste hash>' WHERE email = '...';
 --
 -- Re-running seed on the same calendar day wipes TODAY's bookings + buses, then inserts 3 buses.
--- If "No buses today" but you expect some: DB server date (CURDATE) vs seed day, or script not run.
+-- If "No buses today": wrong calendar day vs clouds (UTC), or seed not run. Prefer `npm run apply-seed`
+-- (sets session TZ from DB_SERVICE_TIMEZONE). For raw mysql, prefix: SET time_zone = '+02:00';
 
 SET NAMES utf8mb4;
-SET time_zone = '+00:00';
 
 START TRANSACTION;
 

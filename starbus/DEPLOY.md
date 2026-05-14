@@ -21,6 +21,8 @@ Use any managed MySQL 8 (or MariaDB-compatible) instance: same PaaS MySQL add-on
 
 `seed.sql` deletes **today’s** bookings and buses for `CURDATE()` before inserting fresh buses — re-run when you need a clean day.
 
+**“No trips today” on Railway:** the API defaults to **`DB_SERVICE_TIMEZONE=+02:00`** (Sudan calendar day) so `CURDATE()` matches local operations; `seed.sql` uses the same offset. Deploy the app with that env (or omit it for the default), then run **`npm run apply-seed`** so rows exist for that calendar day.
+
 **Railway / cloud without pasting SQL in the dashboard:** from [`server/`](server/), put MySQL **Connect** values in `server/.env.railway` (see [`server/.env.railway.example`](server/.env.railway.example)), then run **`npm run apply-seed`** — it applies `database/seed.sql` over the network (same TLS behavior as `set-password`).
 
 **Customer flow:** the public site **does not** create database rows. Customers pick seats and send a **WhatsApp** message; staff confirm bookings in **`/worker`**. Only workers create `reserved` / confirmed rows via the authenticated API.

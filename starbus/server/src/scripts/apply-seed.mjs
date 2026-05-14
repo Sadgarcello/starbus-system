@@ -12,6 +12,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
+import { resolveDbServiceTimezone } from "../db/serviceTimezone.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const serverRoot = join(__dirname, "..", "..");
@@ -68,6 +69,8 @@ async function main() {
   console.log("Applying seed to", DB_HOST, "database", DB_NAME, "…");
   const conn = await mysql.createConnection(buildConnectionConfig());
   try {
+    const tz = resolveDbServiceTimezone();
+    if (tz) await conn.query("SET time_zone = ?", [tz]);
     await conn.query(sql);
   } finally {
     await conn.end();

@@ -1,4 +1,5 @@
 import mysql from "mysql2/promise";
+import { resolveDbServiceTimezone } from "./serviceTimezone.js";
 
 const onRender = process.env.RENDER === "true";
 const dbHostRaw = (process.env.DB_HOST ?? "").trim();
@@ -43,6 +44,17 @@ if (useTls) {
 }
 
 export const pool = mysql.createPool(poolConfig);
+
+const serviceTz = resolveDbServiceTimezone();
+if (serviceTz) {
+  pool.on("connection", (conn) => {
+    conn.query("SET time_zone = ?", [serviceTz], (err) => {
+      if (err) {
+        console.error("[db] SET time_zone failed:", err.message);
+      }
+    });
+  });
+}
 
 export async function pingDb() {
   const conn = await pool.getConnection();

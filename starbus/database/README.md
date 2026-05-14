@@ -3,7 +3,7 @@
 Apply in this order on a **new** cloud or local database:
 
 1. **`schema.sql`** — creates `users`, `routes`, `buses`, `bookings`.
-2. **`seed.sql`** — routes, staff users (including **`online@starbus.sd`** for the public booking channel), and buses for **`CURDATE()`**.
+2. **`seed.sql`** — routes, staff users (including **`online@starbus.sd`** for the public booking channel), and buses for **`CURDATE()`** in the **session timezone** (use **`npm run apply-seed`** from `server/` so it matches `DB_SERVICE_TIMEZONE`, default `+02:00`). For bare `mysql < seed.sql`, set the same `time_zone` in that session first.
 
 **Upgrade path** (existing DB created before lifecycle columns):
 

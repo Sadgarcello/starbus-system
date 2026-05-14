@@ -903,24 +903,50 @@ async function initAdminPage() {
       selectedId != null && selectedId !== ""
         ? String(selectedId)
         : String(buses[0]?.id ?? "");
-    for (const b of buses) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "admin-route-quick-btn";
-      if (String(b.id) === sid) btn.classList.add("active");
-      btn.setAttribute("data-bus-id", String(b.id));
-      btn.setAttribute("aria-pressed", String(b.id) === sid ? "true" : "false");
-      btn.textContent = String(b.destination || "—");
-      btn.title = `${b.origin} ← ${b.destination} · باص ${b.bus_number}`;
-      btn.addEventListener("click", () => {
-        const routeSel = $("#adminRouteSelect");
-        if (routeSel && !routeSel.disabled) routeSel.value = String(b.id);
-        adminBusId = Number(b.id);
-        renderAdminRouteQuick(lastAdminBuses, b.id);
-        refresh().catch(() => {});
-      });
-      host.appendChild(btn);
+    let idx = buses.findIndex((x) => String(x.id) === sid);
+    if (idx < 0) idx = 0;
+    const current = buses[idx];
+    const n = buses.length;
+
+    function applyBus(b) {
+      const routeSel = $("#adminRouteSelect");
+      if (routeSel && !routeSel.disabled) routeSel.value = String(b.id);
+      adminBusId = Number(b.id);
+      renderAdminRouteQuick(lastAdminBuses, b.id);
+      refresh().catch(() => {});
     }
+
+    const wrap = document.createElement("div");
+    wrap.className = "admin-route-switch";
+
+    const prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "admin-route-switch-nav";
+    prev.setAttribute("aria-label", "الوجهة السابقة");
+    prev.textContent = "‹";
+    prev.disabled = n <= 1;
+    prev.addEventListener("click", () => applyBus(buses[(idx - 1 + n) % n]));
+
+    const readout = document.createElement("div");
+    readout.className = "admin-route-switch-readout";
+    readout.title = `${current.origin} ← ${current.destination} · باص ${current.bus_number}`;
+    readout.innerHTML =
+      `<span class="admin-route-switch-dest">${escapeHtml(String(current.destination || "—"))}</span>` +
+      `<span class="admin-route-switch-meta mono">باص ${escapeHtml(String(current.bus_number ?? "—"))}</span>` +
+      (n > 1 ? `<span class="admin-route-switch-hint">${idx + 1} / ${n}</span>` : "");
+
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "admin-route-switch-nav";
+    next.setAttribute("aria-label", "الوجهة التالية");
+    next.textContent = "›";
+    next.disabled = n <= 1;
+    next.addEventListener("click", () => applyBus(buses[(idx + 1) % n]));
+
+    wrap.appendChild(prev);
+    wrap.appendChild(readout);
+    wrap.appendChild(next);
+    host.appendChild(wrap);
   }
 
   function setOvText(id, v) {

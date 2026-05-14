@@ -10,7 +10,8 @@
 --
 -- Dev passwords:
 --   superadmin@starbus.sd   / changeme     superadmin
---   worker@starbus.sd       / changeme     worker
+--   qusai@starbus.sd        / changeme     superadmin (second platform admin)
+--   worker@starbus.sd       / changeme     worker (employer = superadmin in seed)
 --   monsterawab@gmail.com     / awab2637     superadmin (your account; Admin + Worker UIs)
 --
 -- If login says "Invalid credentials", that email is not in DB — run this seed (or the SQL patch below).
@@ -62,6 +63,12 @@ VALUES
     'monsterawab@gmail.com',
     '$2a$10$/Uw6.GvlMpZpvoTva0y4/eSCKRAhYLUIcEET6dO8tl1ukJAvaWGlW',
     'superadmin'
+  ),
+  (
+    'Qusai',
+    'qusai@starbus.sd',
+    '$2a$10$6wEWSZAgcNGFCZOIJfanQ.Fv8Q2uiEbL8trvTADEOdBXGNXo5SQC6',
+    'superadmin'
   )
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
@@ -74,6 +81,11 @@ JOIN buses b ON b.id = bk.bus_id
 WHERE b.date = CURDATE();
 
 DELETE FROM buses WHERE date = CURDATE();
+
+-- Booth / online workers operate under the fleet owner row (adjust per real owner in production).
+UPDATE users u
+SET employer_user_id = (SELECT id FROM users WHERE email = 'superadmin@starbus.sd' LIMIT 1)
+WHERE u.role = 'worker' AND u.email IN ('worker@starbus.sd', 'online@starbus.sd');
 
 -- Bus 1 = Omdurman → Kassala, Bus 2 = Port Sudan, Bus 3 = Khartoum
 INSERT INTO buses (bus_owner_id, bus_number, total_seats, seats_booked, departure_time, route_id, date, status)

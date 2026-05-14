@@ -17,15 +17,18 @@ Use any managed MySQL 8 (or MariaDB-compatible) instance: same PaaS MySQL add-on
 
 1. **[`database/schema.sql`](database/schema.sql)** — base tables (run on an empty database).
 2. If you already had an **old** Starbus DB without lifecycle / nullable passengers, run **[`database/migration_add_lifecycle.sql`](database/migration_add_lifecycle.sql)** once (safe to skip on fresh schema).
-3. **[`database/seed.sql`](database/seed.sql)** — routes, staff users, optional **`online@starbus.sd`** (legacy online channel user), and **today’s** buses from Omdurman.
+3. If the DB lacks **`users.employer_user_id`** (multi-tenant workers), run **[`database/migration_add_employer_user_id.sql`](database/migration_add_employer_user_id.sql)** once (safe to skip on fresh schema after the updated `schema.sql`).
+4. **[`database/seed.sql`](database/seed.sql)** — routes, staff users, optional **`online@starbus.sd`** (legacy online channel user), and **today’s** buses from Omdurman.
 
-`seed.sql` deletes **today’s** bookings and buses for `CURDATE()` before inserting fresh buses — re-run when you need a clean day.
+`seed.sql` deletes **today’s** bookings and buses for `CURDATE()` before inserting fresh buses — re-run when you need a clean day. The seed sets **`employer_user_id`** for booth workers so they only see their operator’s buses (requires step 3 on upgraded databases).
 
 **“No trips today” on Railway:** the API defaults to **`DB_SERVICE_TIMEZONE=+02:00`** (Sudan calendar day) so `CURDATE()` matches local operations; `seed.sql` uses the same offset. Deploy the app with that env (or omit it for the default), then run **`npm run apply-seed`** so rows exist for that calendar day.
 
 **Railway / cloud without pasting SQL in the dashboard:** from [`server/`](server/), put MySQL **Connect** values in `server/.env.railway` (see [`server/.env.railway.example`](server/.env.railway.example)), then run **`npm run apply-seed`** — it applies `database/seed.sql` over the network (same TLS behavior as `set-password`).
 
 **Customer flow:** the public site **does not** create database rows. Customers pick seats and send a **WhatsApp** message; staff confirm bookings in **`/worker`**. Only workers create `reserved` / confirmed rows via the authenticated API.
+
+**Roles (multi-tenant):** **`superadmin`** sees the full network and may cancel bookings. **`admin`** is a bus owner: reports and `/api/buses/active` only include buses where `buses.bus_owner_id` is that user; creating a bus forces `bus_owner_id` to the logged-in admin. **`worker`** accounts must have **`employer_user_id`** set to their owner’s `users.id` (seed ties booth workers to the seeded superadmin); they can only load and book seats on that owner’s buses. After changing `employer_user_id` in the DB, workers should **log in again** so the JWT includes the new claim.
 
 ## Render (recommended for this repo)
 

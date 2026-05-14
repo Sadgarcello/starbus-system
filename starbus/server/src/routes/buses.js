@@ -3,6 +3,7 @@ import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { BUS46_ROWS, BUS46_TOTAL_SEATS } from "../utils/busLayout.js";
+import { busOwnerScopeForUser, mergeScopeParams, userCanAccessBusRow } from "../utils/ownerScope.js";
 
 const router = Router();
 
@@ -34,6 +35,10 @@ router.get("/active", async (req, res, next) => {
       }
     }
 
+    const scope = busOwnerScopeForUser(req.user);
+    const baseParams = dateParam ? { bus_day: dateParam } : {};
+    const qParams = mergeScopeParams(baseParams, scope.params);
+
     const [rows] = await pool.execute(
       `SELECT
          b.id,
@@ -53,8 +58,9 @@ router.get("/active", async (req, res, next) => {
        WHERE b.date = ${dateParam ? ":bus_day" : "CURDATE()"}
          AND b.status = 'scheduled'
          AND r.origin = 'Omdurman'
+         ${scope.sql}
        ORDER BY r.destination ASC, b.id ASC`,
-      dateParam ? { bus_day: dateParam } : {}
+      qParams
     );
     return res.json({ buses: rows });
   } catch (err) {
@@ -68,7 +74,7 @@ router.get("/:id/seat-map", async (req, res, next) => {
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
     const [busRows] = await pool.execute(
-      `SELECT b.id, b.total_seats, r.origin, r.destination
+      `SELECT b.id, b.total_seats, b.bus_owner_id, r.origin, r.destination
        FROM buses b
        JOIN routes r ON r.id = b.route_id
        WHERE b.id = :id
@@ -77,6 +83,9 @@ router.get("/:id/seat-map", async (req, res, next) => {
     );
     const bus = busRows?.[0];
     if (!bus) return res.status(404).json({ error: "Not found" });
+    if (!userCanAccessBusRow(req.user, bus)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
 
     const total = Number(bus.total_seats) || BUS46_TOTAL_SEATS;
 
@@ -115,8 +124,9 @@ router.get("/:id/seat-map", async (req, res, next) => {
   }
 });
 
-router.get("/", async (_req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
+    const scope = busOwnerScopeForUser(req.user);
     const [rows] = await pool.execute(
       `SELECT
          b.id,
@@ -134,7 +144,10 @@ router.get("/", async (_req, res, next) => {
          r.price
        FROM buses b
        JOIN routes r ON r.id = b.route_id
-       ORDER BY b.date DESC, b.departure_time ASC, b.id DESC`
+       WHERE 1=1
+       ${scope.sql}
+       ORDER BY b.date DESC, b.departure_time ASC, b.id DESC`,
+      scope.params
     );
 
     return res.json({ buses: rows });
@@ -172,6 +185,9 @@ router.get("/:id", async (req, res, next) => {
 
     const bus = rows?.[0];
     if (!bus) return res.status(404).json({ error: "Not found" });
+    if (!userCanAccessBusRow(req.user, bus)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     return res.json({ bus });
   } catch (err) {
     return next(err);
@@ -193,6 +209,11 @@ router.post("/", requireRole(["admin", "superadmin"]), async (req, res, next) =>
     const body = createBusSchema.parse(req.body);
     const departureTime = body.departure_time.length === 5 ? `${body.departure_time}:00` : body.departure_time;
 
+    let bus_owner_id = body.bus_owner_id;
+    if (req.user.role === "admin") {
+      bus_owner_id = Number(req.user.id);
+    }
+
     const [result] = await pool.execute(
       `INSERT INTO buses (
         bus_owner_id, bus_number, total_seats, seats_booked, departure_time, route_id, date, status
@@ -201,6 +222,7 @@ router.post("/", requireRole(["admin", "superadmin"]), async (req, res, next) =>
       )`,
       {
         ...body,
+        bus_owner_id,
         departure_time: departureTime,
         status: body.status ?? "scheduled",
       }

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { assertBusAccessForBooking, userCanAccessBusRow } from "../utils/ownerScope.js";
 
 const router = Router();
 
@@ -96,7 +97,7 @@ router.post("/reserve", requireRole(["worker", "superadmin"]), async (req, res, 
     await conn.beginTransaction();
 
     const [busRows] = await conn.execute(
-      `SELECT b.id, b.total_seats, b.status, r.origin, r.destination
+      `SELECT b.id, b.bus_owner_id, b.total_seats, b.status, r.origin, r.destination
        FROM buses b
        JOIN routes r ON r.id = b.route_id
        WHERE b.id = :bus_id
@@ -107,6 +108,11 @@ router.post("/reserve", requireRole(["worker", "superadmin"]), async (req, res, 
     if (!bus) {
       await conn.rollback();
       return res.status(404).json({ error: "Bus not found" });
+    }
+    const reserveGate = assertBusAccessForBooking(req.user, bus);
+    if (!reserveGate.ok) {
+      await conn.rollback();
+      return res.status(reserveGate.status).json({ error: reserveGate.message || "Forbidden" });
     }
     if (bus.status !== "scheduled") {
       await conn.rollback();
@@ -180,7 +186,7 @@ router.post("/full", requireRole(["worker", "superadmin"]), async (req, res, nex
     await conn.beginTransaction();
 
     const [busRows] = await conn.execute(
-      `SELECT b.id, b.total_seats, b.status
+      `SELECT b.id, b.bus_owner_id, b.total_seats, b.status
        FROM buses b
        WHERE b.id = :bus_id
        FOR UPDATE`,
@@ -190,6 +196,11 @@ router.post("/full", requireRole(["worker", "superadmin"]), async (req, res, nex
     if (!bus) {
       await conn.rollback();
       return res.status(404).json({ error: "Bus not found" });
+    }
+    const gate = assertBusAccessForBooking(req.user, bus);
+    if (!gate.ok) {
+      await conn.rollback();
+      return res.status(gate.status).json({ error: gate.message || "Forbidden" });
     }
     if (bus.status !== "scheduled") {
       await conn.rollback();
@@ -298,7 +309,7 @@ router.post("/reserve-bulk", requireRole(["worker", "superadmin"]), async (req, 
     await conn.beginTransaction();
 
     const [busRows] = await conn.execute(
-      `SELECT b.id, b.total_seats, b.status, r.origin, r.destination
+      `SELECT b.id, b.bus_owner_id, b.total_seats, b.status, r.origin, r.destination
        FROM buses b
        JOIN routes r ON r.id = b.route_id
        WHERE b.id = :bus_id
@@ -309,6 +320,11 @@ router.post("/reserve-bulk", requireRole(["worker", "superadmin"]), async (req, 
     if (!bus) {
       await conn.rollback();
       return res.status(404).json({ error: "Bus not found" });
+    }
+    const reserveGate = assertBusAccessForBooking(req.user, bus);
+    if (!reserveGate.ok) {
+      await conn.rollback();
+      return res.status(reserveGate.status).json({ error: reserveGate.message || "Forbidden" });
     }
     if (bus.status !== "scheduled") {
       await conn.rollback();
@@ -404,13 +420,18 @@ router.post("/full-bulk", requireRole(["worker", "superadmin"]), async (req, res
     await conn.beginTransaction();
 
     const [busRows] = await conn.execute(
-      `SELECT b.id, b.total_seats, b.status FROM buses b WHERE b.id = :bus_id FOR UPDATE`,
+      `SELECT b.id, b.bus_owner_id, b.total_seats, b.status FROM buses b WHERE b.id = :bus_id FOR UPDATE`,
       { bus_id: body.bus_id }
     );
     const bus = busRows?.[0];
     if (!bus) {
       await conn.rollback();
       return res.status(404).json({ error: "Bus not found" });
+    }
+    const fbGate = assertBusAccessForBooking(req.user, bus);
+    if (!fbGate.ok) {
+      await conn.rollback();
+      return res.status(fbGate.status).json({ error: fbGate.message || "Forbidden" });
     }
     if (bus.status !== "scheduled") {
       await conn.rollback();
@@ -553,6 +574,15 @@ router.get("/bus/:busId", async (req, res, next) => {
   try {
     const busId = Number(req.params.busId);
     if (!Number.isFinite(busId)) return res.status(400).json({ error: "Invalid busId" });
+
+    const [busOwnerRows] = await pool.execute(`SELECT bus_owner_id FROM buses WHERE id = :id LIMIT 1`, {
+      id: busId,
+    });
+    const ownerRow = busOwnerRows?.[0];
+    if (!ownerRow) return res.status(404).json({ error: "Not found" });
+    if (!userCanAccessBusRow(req.user, ownerRow)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
 
     const [rows] = await pool.execute(
       `SELECT

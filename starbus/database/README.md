@@ -9,6 +9,10 @@ Apply in this order on a **new** cloud or local database:
 
 - Run **`migration_add_lifecycle.sql`** once if those columns are missing.
 
+**Upgrade path** (multi-tenant workers):
+
+- Run **`migration_add_employer_user_id.sql`** once if `users.employer_user_id` is missing. Re-login for worker accounts after setting `employer_user_id`.
+
 **Legacy** (optional):
 
 - **`migration_online_user.sql`** — only if you need the online user row without re-running full `seed.sql`. New installs get this from `seed.sql`.

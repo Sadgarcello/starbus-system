@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { busOwnerScopeForUser, mergeScopeParams } from "../utils/ownerScope.js";
 
 const router = Router();
 
@@ -62,6 +63,9 @@ router.get("/overview", async (req, res, next) => {
     const spanDays = Math.min(60, Math.max(7, daysParam ?? 14));
     const interval = spanDays - 1;
 
+    const scope = busOwnerScopeForUser(req.user);
+    const fleetParams = mergeScopeParams({ endDay }, scope.params);
+
     const [fleetRows] = await pool.execute(
       `SELECT
          b.id,
@@ -75,8 +79,9 @@ router.get("/overview", async (req, res, next) => {
        FROM buses b
        JOIN routes r ON r.id = b.route_id
        WHERE b.date = :endDay AND b.status = 'scheduled' AND r.origin = 'Omdurman'
+       ${scope.sql}
        ORDER BY r.destination ASC, b.id ASC`,
-      { endDay }
+      fleetParams
     );
 
     const buses = (fleetRows || []).map((b) => ({
@@ -102,6 +107,7 @@ router.get("/overview", async (req, res, next) => {
           10
         : null;
 
+    const sumParams = mergeScopeParams({ endDay }, scope.params);
     const [sumRows] = await pool.execute(
       `SELECT
          COUNT(*) AS bookings_count,
@@ -113,8 +119,10 @@ router.get("/overview", async (req, res, next) => {
          SUM(CASE WHEN bk.booking_type = 'online' THEN 1 ELSE 0 END) AS online_count,
          SUM(CASE WHEN bk.booking_type = 'booth' THEN 1 ELSE 0 END) AS booth_count
        FROM bookings bk
-       WHERE DATE(bk.created_at) = :endDay`,
-      { endDay }
+       JOIN buses b ON b.id = bk.bus_id
+       WHERE DATE(bk.created_at) = :endDay
+       ${scope.sql}`,
+      sumParams
     );
 
     const s0 = sumRows?.[0] || {};
@@ -137,18 +145,21 @@ router.get("/overview", async (req, res, next) => {
        JOIN buses b ON b.id = bk.bus_id
        JOIN routes r ON r.id = b.route_id
        WHERE DATE(bk.created_at) = :endDay
+       ${scope.sql}
        GROUP BY r.id, r.destination
        ORDER BY bookings_count DESC`,
-      { endDay }
+      sumParams
     );
 
     const [trendRows] = await pool.execute(
       `SELECT DATE(bk.created_at) AS d, COUNT(*) AS bookings_count
        FROM bookings bk
+       JOIN buses b ON b.id = bk.bus_id
        WHERE DATE(bk.created_at) BETWEEN DATE_SUB(:endDay, INTERVAL ${interval} DAY) AND :endDay
+       ${scope.sql}
        GROUP BY DATE(bk.created_at)
        ORDER BY d ASC`,
-      { endDay }
+      sumParams
     );
 
     const byTrend = {};
@@ -198,9 +209,13 @@ router.get("/daily", async (req, res, next) => {
     const day = date || new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
 
     /** Service day (bus.date) matches the admin "تشغيل / تقرير" calendar — not created_at. */
+    const scope = busOwnerScopeForUser(req.user);
     const where = ["b.date = :day"];
-    /** Only placeholders used in WHERE — never pass LIMIT/OFFSET here (mysql2 + PS can error). */
-    const whereParams = { day };
+    const whereParams = mergeScopeParams({ day }, scope.params);
+    if (scope.sql.trim()) {
+      const cond = scope.sql.trim().replace(/^\s*AND\s+/i, "");
+      if (cond) where.push(cond);
+    }
     if (bus_id) {
       where.push("bk.bus_id = :bus_id");
       whereParams.bus_id = bus_id;

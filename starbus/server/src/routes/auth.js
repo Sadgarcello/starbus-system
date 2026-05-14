@@ -17,7 +17,7 @@ router.post("/login", async (req, res, next) => {
     const { email, password } = loginSchema.parse(req.body);
 
     const [rows] = await pool.execute(
-      `SELECT id, name, email, password, role
+      `SELECT id, name, email, password, role, employer_user_id
        FROM users
        WHERE email = :email
        LIMIT 1`,
@@ -36,6 +36,7 @@ router.post("/login", async (req, res, next) => {
       role: user.role,
       name: user.name,
       email: user.email,
+      employer_user_id: user.employer_user_id != null ? Number(user.employer_user_id) : null,
     });
 
     return res.json({

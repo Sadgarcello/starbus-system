@@ -17,11 +17,16 @@ CREATE TABLE IF NOT EXISTS users (
   email         VARCHAR(255)    NOT NULL,
   password      VARCHAR(255)    NOT NULL,
   role          ENUM('superadmin','admin','worker','owner','driver') NOT NULL,
+  employer_user_id BIGINT UNSIGNED NULL DEFAULT NULL COMMENT 'Bus owner (users.id) for workers',
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
   KEY idx_users_role (role),
-  KEY idx_users_created_at (created_at)
+  KEY idx_users_employer (employer_user_id),
+  KEY idx_users_created_at (created_at),
+  CONSTRAINT fk_users_employer
+    FOREIGN KEY (employer_user_id) REFERENCES users (id)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;

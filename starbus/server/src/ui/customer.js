@@ -153,6 +153,37 @@
     return document.hidden ? POLL_MS_HIDDEN : POLL_MS_VISIBLE;
   }
 
+  /** Cleared when `loadRoutes` finishes so stuck skeleton UX recovers automatically. */
+  let routesSkeletonWatchdogTimer = null;
+
+  function bumpRoutesSkeletonWatchdog(ms) {
+    clearTimeout(routesSkeletonWatchdogTimer);
+    routesSkeletonWatchdogTimer = setTimeout(() => {
+      routesSkeletonWatchdogTimer = null;
+      const list = $("#routesList");
+      if (!list || !list.querySelector(".skeleton.route-skel")) return;
+      console.warn(
+        "[customer] routes skeleton watchdog (travel-lines did not settle in time)"
+      );
+      list.innerHTML = "";
+      const err = $("#routesError");
+      const empty = $("#routesEmpty");
+      if (empty) empty.hidden = true;
+      if (err) {
+        err.hidden = false;
+        err.textContent =
+          "انتهى وقت انتظار تحميل الرحلات — غالباً شبكة بطيئة أو السيرفر/قاعدة البيانات غير جاهزة. افتح لوحة شبكة المتصفّح وحاول تحديث الصفحة أو تحقّق من /api/ready.";
+      }
+      toast("warn", "تأخُّر تحميل الرحلات. حاول تحديث الصفحة.");
+      setRoutesAria("err", "");
+    }, ms);
+  }
+
+  function clearRoutesSkeletonWatchdog() {
+    clearTimeout(routesSkeletonWatchdogTimer);
+    routesSkeletonWatchdogTimer = null;
+  }
+
   // ===== State =====
   const state = {
     buses: [],
@@ -179,47 +210,65 @@
   }
 
   function populateTravelDates() {
-    const sel = $("#travelDateSel");
-    const anchor =
-      state.calendar.service_today && /^\d{4}-\d{2}-\d{2}$/.test(state.calendar.service_today)
+    try {
+      const sel = $("#travelDateSel");
+      const anchor =
+        state.calendar.service_today &&
+        /^\d{4}-\d{2}-\d{2}$/.test(state.calendar.service_today)
+          ? state.calendar.service_today
+          : clientTodayYmd();
+      state.calendar.service_today = anchor;
+      if (!sel) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(String(state.travelYmd || "")))
+          state.travelYmd = anchor;
+        return;
+      }
+
+      sel.innerHTML = "";
+      const n = Number(state.calendar.max_offset);
+      const max =
+        Number.isFinite(n) && n >= 0 && n <= 60 ? Math.floor(n) : 6;
+      state.calendar.max_offset = max;
+
+      let keep = state.travelYmd;
+      if (!keep || !/^\d{4}-\d{2}-\d{2}$/.test(keep)) keep = anchor;
+
+      for (let i = 0; i <= max; i++) {
+        const ymd = addDaysFromYmd(anchor, i);
+        const opt = el("option", "", fmtDateLongAr(ymd));
+        opt.value = ymd;
+        if (ymd === keep) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      state.travelYmd = sel.value || anchor;
+
+      const sub = $("#routesSubhead");
+      if (sub) {
+        sub.textContent =
+          "خطوط من أم درمان — نعرض اليوم وفق اليوم الخدمي من السيرفر؛ لتبديل اليوم ستجد قائمة «تاريخ السفر» في خطوة اختيار المقعد قبل الحجز.";
+      }
+
+      const hint = $("#travelDateHint");
+      if (hint) {
+        hint.textContent =
+          "اليوم الخدمي الافتراضي من السيرفر: " +
+          anchor +
+          ". لتبديل اليوم عدّله من هذه القائمة؛ تُحدَّث قائمة الخطوط فتعود لاختيار الوجهة.";
+      }
+    } catch (e) {
+      console.error("[customer] populateTravelDates", e);
+      const anchor = /^\d{4}-\d{2}-\d{2}$/.test(
+        String(state.calendar.service_today || "")
+      )
         ? state.calendar.service_today
         : clientTodayYmd();
-    state.calendar.service_today = anchor;
-    if (!sel) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(state.travelYmd || ""))) state.travelYmd = anchor;
-      return;
-    }
-
-    sel.innerHTML = "";
-    const n = Number(state.calendar.max_offset);
-    const max =
-      Number.isFinite(n) && n >= 0 && n <= 60 ? Math.floor(n) : 6;
-    state.calendar.max_offset = max;
-
-    let keep = state.travelYmd;
-    if (!keep || !/^\d{4}-\d{2}-\d{2}$/.test(keep)) keep = anchor;
-
-    for (let i = 0; i <= max; i++) {
-      const ymd = addDaysFromYmd(anchor, i);
-      const opt = el("option", "", fmtDateLongAr(ymd));
-      opt.value = ymd;
-      if (ymd === keep) opt.selected = true;
-      sel.appendChild(opt);
-    }
-    state.travelYmd = sel.value || anchor;
-
-    const sub = $("#routesSubhead");
-    if (sub) {
-      sub.textContent =
-        "خطوط من أم درمان — نعرض اليوم وفق اليوم الخدمي من السيرفر؛ لتبديل اليوم ستجد قائمة «تاريخ السفر» في خطوة اختيار المقعد قبل الحجز.";
-    }
-
-    const hint = $("#travelDateHint");
-    if (hint) {
-      hint.textContent =
-        "اليوم الخدمي الافتراضي من السيرفر: " +
-        anchor +
-        ". لتبديل اليوم عدّله من هذه القائمة؛ تُحدَّث قائمة الخطوط فتعود لاختيار الوجهة.";
+      state.calendar.service_today = anchor;
+      state.calendar.max_offset =
+        Number.isFinite(state.calendar.max_offset) && state.calendar.max_offset > 0
+          ? state.calendar.max_offset
+          : 6;
+      state.travelYmd = anchor;
+      toast("warn", "تعذَّر ضبط التقويم — نستخدم اليوم الحالي لهذا المتصفّح كبدء.");
     }
   }
 
@@ -266,6 +315,9 @@
       '<div class="skeleton route-skel"></div>' +
       '<div class="skeleton route-skel"></div>';
 
+    clearRoutesSkeletonWatchdog();
+    bumpRoutesSkeletonWatchdog(18_000);
+
     try {
       if (empty) empty.hidden = true;
       if (error) error.hidden = true;
@@ -286,8 +338,10 @@
 
       const qs = travelQs();
       const out = await api("/api/public/travel-lines" + qs);
-
-      const items = Array.isArray(out.items) ? out.items : [];
+      const items =
+        out && typeof out === "object" && Array.isArray(out.items)
+          ? out.items
+          : [];
       state.buses = items.filter((x) => x && routeItemKind(x) === "bookable");
       list.innerHTML = "";
 
@@ -347,6 +401,8 @@
           : "حصل خطأ غير متوقع. حاول تاني.";
       }
       setRoutesAria("err", "");
+    } finally {
+      clearRoutesSkeletonWatchdog();
     }
   }
 
@@ -817,7 +873,11 @@
       state.calendar.max_offset = 6;
     }
 
-    populateTravelDates();
+    try {
+      populateTravelDates();
+    } catch (e) {
+      console.error("[customer] populate after config failed", e);
+    }
   }
 
   function bindTravelDateChange() {

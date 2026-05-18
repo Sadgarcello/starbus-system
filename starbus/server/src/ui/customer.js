@@ -64,6 +64,50 @@
     if (!Number.isFinite(n) || n <= 0) return "—";
     return n.toLocaleString("ar-EG") + " ج.س";
   }
+  function clientTodayYmd() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  function fmtDateLongAr(rawYmd) {
+    const raw = String(rawYmd || "").split("T")[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "—";
+    const x = new Date(raw + "T12:00:00");
+    if (Number.isNaN(x.getTime())) return raw;
+    return x.toLocaleDateString("ar", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+  /** @param {number} days */
+  function addDaysFromYmd(anchorYmd, days) {
+    const base = String(anchorYmd || "").split("T")[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(base)) {
+      const p = clientTodayYmd().split("-");
+      const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      d.setDate(d.getDate() + days);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    const d = new Date(base + "T12:00:00");
+    if (Number.isNaN(d.getTime())) return base;
+    d.setDate(d.getDate() + days);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  function busDayYmd(bus) {
+    if (!bus || bus.date == null) return "";
+    return String(bus.date).split("T")[0];
+  }
+
   function seatsRemainingPill(r) {
     const n = Number(r);
     if (!Number.isFinite(n) || n <= 0) return { cls: "full", text: "محجوزة بالكامل" };
@@ -75,7 +119,6 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // ===== State =====
   const state = {
     buses: [],
     selected: null,         // bus object
@@ -84,10 +127,88 @@
     pickedSeats: [],        // selected seat numbers (in tap order)
     refreshTimer: null,
     whatsapp: "",
-    booking: null,          // local summary for receipt / WhatsApp (no DB rows yet)
+    booking: null,
+    calendar: { service_today: "", max_offset: 6 },
+    travelYmd: "",
   };
 
-  // ===== Step 1: Routes =====
+  function travelQs() {
+    const d = state.travelYmd;
+    return d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? `?date=${encodeURIComponent(d)}` : "";
+  }
+
+  function populateTravelSelectors() {
+    const selR = $("#travelDateSelRoutes");
+    const selF = $("#formTravelDateSel");
+    const anchor =
+      state.calendar.service_today && /^\d{4}-\d{2}-\d{2}$/.test(state.calendar.service_today)
+        ? state.calendar.service_today
+        : clientTodayYmd();
+    state.calendar.service_today = anchor;
+    const n = Number(state.calendar.max_offset);
+    const max =
+      Number.isFinite(n) && n >= 0 && n <= 60 ? Math.floor(n) : 6;
+    state.calendar.max_offset = max;
+
+    let keep = state.travelYmd;
+    if (!keep || !/^\d{4}-\d{2}-\d{2}$/.test(keep)) keep = anchor;
+
+    function fill(sel) {
+      if (!sel) return;
+      sel.innerHTML = "";
+      for (let i = 0; i <= max; i++) {
+        const ymd = addDaysFromYmd(anchor, i);
+        let lbl;
+        if (i === 0) lbl = "اليوم — " + fmtDateLongAr(ymd);
+        else if (i === 1) lbl = "غداً — " + fmtDateLongAr(ymd);
+        else lbl = "+" + String(i) + " — " + fmtDateLongAr(ymd);
+        const opt = el("option", "", lbl);
+        opt.value = ymd;
+        if (ymd === keep) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+    fill(selR);
+    fill(selF);
+    const vRaw = selR?.value || selF?.value || keep;
+    const v = /^\d{4}-\d{2}-\d{2}$/.test(String(vRaw)) ? String(vRaw) : keep;
+    state.travelYmd = v;
+    if (selR) selR.value = state.travelYmd;
+    if (selF) selF.value = state.travelYmd;
+    const ht = "اليوم الخدمي من السيرفر يبدأ عند " + anchor + ". يمكن الحجز حتى نهاية نافذة الأيام الموضحة أعلاه.";
+    const hR = $("#travelDateHintRoutes");
+    const hF = $("#formTravelDateHint");
+    if (hR) hR.textContent = ht;
+    if (hF) hF.textContent = ht;
+  }
+
+  /** Keep routes + seat step consistent with يوم الخدمة المختار. */
+  function commitTravelPick() {
+    const selR = $("#travelDateSelRoutes");
+    const selF = $("#formTravelDateSel");
+    const picked =
+      selR?.value && /^\d{4}-\d{2}-\d{2}$/.test(selR.value)
+        ? selR.value
+        : selF?.value && /^\d{4}-\d{2}-\d{2}$/.test(selF.value)
+          ? selF.value
+          : state.travelYmd;
+    state.travelYmd = picked;
+    if (selR) selR.value = state.travelYmd;
+    if (selF) selF.value = state.travelYmd;
+
+    let needReload = !state.selected;
+    if (state.selected && busDayYmd(state.selected) !== state.travelYmd) {
+      stopSeatRefresh();
+      state.selected = null;
+      state.pickedSeats = [];
+      state.seatMap = null;
+      setStep("stepRoutes");
+      toast("warn", "تغيّر يوم الخدمة — اختر رحلة جديدة والمقاعد لهذا اليوم.");
+      needReload = true;
+    }
+    if (needReload) loadRoutes();
+  }
+
   async function loadRoutes() {
     const list = $("#routesList");
     const empty = $("#routesEmpty");
@@ -99,7 +220,7 @@
       '<div class="skeleton route-skel"></div>';
 
     try {
-      const out = await api("/api/public/buses/active");
+      const out = await api("/api/public/buses/active" + travelQs());
       state.buses = out.buses || [];
       list.innerHTML = "";
       if (!state.buses.length) { empty.hidden = false; return; }
@@ -145,8 +266,23 @@
     state.selected = b;
     state.pickedSeats = [];
     state.ticketCount = 1;
+    const bd = busDayYmd(b);
+    if (bd && /^\d{4}-\d{2}-\d{2}$/.test(bd)) {
+      state.travelYmd = bd;
+      const rr = $("#travelDateSelRoutes");
+      const ff = $("#formTravelDateSel");
+      if (rr) rr.value = bd;
+      if (ff) ff.value = bd;
+    }
     setStep("stepSeats");
-    $("#seatBusMeta").textContent = b.origin + " ← " + b.destination + " · " + fmtTime(b.departure_time);
+    $("#seatBusMeta").textContent =
+      b.origin +
+      " ← " +
+      b.destination +
+      " · " +
+      fmtDateLongAr(state.travelYmd) +
+      " · " +
+      fmtTime(b.departure_time);
     updateCounterUI();
     await refreshSeats();
     startSeatRefresh();
@@ -198,7 +334,7 @@
   async function refreshSeats() {
     if (!state.selected) return;
     try {
-      const map = await api("/api/public/buses/" + state.selected.id + "/seat-map");
+      const map = await api("/api/public/buses/" + state.selected.id + "/seat-map" + travelQs());
       state.seatMap = map;
       // Drop any picked seat that is no longer empty.
       const before = state.pickedSeats.length;
@@ -306,9 +442,14 @@
       : "";
     $("#formSummary").innerHTML =
       "<b>" + escapeHtml(b.origin) + " ← " + escapeHtml(b.destination) + "</b>" +
+      " · " + escapeHtml(fmtDateLongAr(state.travelYmd)) +
       " · " + escapeHtml(fmtTime(b.departure_time)) +
       " · <b>" + state.ticketCount + " مقاعد</b> (" + escapeHtml(seatList) + ")" +
       priceLine;
+    const busY = busDayYmd(b);
+    const fr = $("#formTravelDateSel");
+    if (fr && busY && /^\d{4}-\d{2}-\d{2}$/.test(busY)) fr.value = busY;
+
     setStep("stepForm");
     setTimeout(() => $("#cname")?.focus(), 200);
   }
@@ -328,6 +469,11 @@
     const seats = state.pickedSeats.slice().sort((a, b) => a - b);
     const total_price = (Number(sel.price) || 0) * seats.length;
 
+    const ymdPrefer =
+      state.travelYmd && /^\d{4}-\d{2}-\d{2}$/.test(state.travelYmd)
+        ? state.travelYmd
+        : busDayYmd(sel);
+
     state.booking = {
       bus_id: sel.id,
       booking_ids: [],
@@ -340,8 +486,9 @@
       total_price,
       name,
       phone,
+      travel_label: fmtDateLongAr(ymdPrefer),
     };
-    showDone();
+    window.location.assign(waLink(buildConfirmText(state.booking)));
   }
 
   // ===== Step 4: Done =====
@@ -388,7 +535,8 @@
       "الإسم: " + b.name,
       "الهاتف (واتساب): " + b.phone,
       "الرحلة: " + b.origin + " ← " + b.destination,
-      "الموعد: " + fmtTime(b.departure_time),
+      "التاريخ: " + (b.travel_label || "—"),
+      "وقت الانطلاق: " + fmtTime(b.departure_time),
       "المقاعد المطلوبة: " + seats,
       "المجموع المتوقع: " + fmtPrice(total),
       "",
@@ -410,7 +558,21 @@
     try {
       const cfg = await api("/api/public/config", { timeoutMs: 6000 });
       state.whatsapp = String(cfg.whatsapp || "").replace(/[^\d]/g, "");
-    } catch { /* non-fatal */ }
+      const st = String(cfg.service_today || "").trim();
+      state.calendar.service_today =
+        /^\d{4}-\d{2}-\d{2}$/.test(st) ? st : clientTodayYmd();
+      const mx = Number(cfg.max_service_day_offset);
+      state.calendar.max_offset =
+        Number.isFinite(mx) && mx >= 0 && mx <= 60 ? Math.floor(mx) : 6;
+    } catch {
+      state.calendar.service_today = clientTodayYmd();
+      state.calendar.max_offset = 6;
+    }
+    if (!state.travelYmd || !/^\d{4}-\d{2}-\d{2}$/.test(state.travelYmd)) {
+      state.travelYmd = state.calendar.service_today;
+    }
+    populateTravelSelectors();
+
     const waMsg = "السلام عليكم ستار باص، عندي استفسار 🙏";
     const askMsg = "السلام عليكم ستار باص، عندي سؤال 🙏";
     const link = waLink(waMsg);
@@ -447,6 +609,8 @@
   document.addEventListener("DOMContentLoaded", async () => {
     bindBacks();
     bindCounter();
+    $("#travelDateSelRoutes")?.addEventListener("change", commitTravelPick);
+    $("#formTravelDateSel")?.addEventListener("change", commitTravelPick);
     $("#continueBtn")?.addEventListener("click", gotoForm);
     $("#bookForm")?.addEventListener("submit", submitForm);
     $("#anotherBtn")?.addEventListener("click", () => {

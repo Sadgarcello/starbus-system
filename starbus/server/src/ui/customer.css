@@ -293,6 +293,36 @@ html {
   font-size: 14px;
   color: var(--muted);
 }
+
+.travelDateToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.travelDateToolbar--form {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+.travelDateLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.travelDateSel {
+  flex: 1;
+  min-width: min(100%, 220px);
+  max-width: 320px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  color: var(--ink);
+}
 .muted {
   color: var(--muted);
 }

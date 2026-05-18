@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260512-herortl" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260219-form-date-wa" />
   </head>
   <body class="theme-light" id="top">
     <header class="site-header">
@@ -63,7 +63,12 @@
       <section class="step active" id="stepRoutes">
         <div class="section-head anchor-target" id="booking">
           <h1>اختار وجهتك</h1>
-          <p>رحلات اليوم من أم درمان</p>
+          <p>اختر اليوم وبعدين الرحلة من أم درمان</p>
+          <div class="travelDateToolbar" aria-label="تاريخ الرحلة">
+            <label class="travelDateLabel" for="travelDateSelRoutes">تاريخ الرحلة</label>
+            <select id="travelDateSelRoutes" class="travelDateSel" aria-describedby="travelDateHintRoutes"></select>
+          </div>
+          <p class="muted small" id="travelDateHintRoutes"></p>
         </div>
         <div id="routesList" class="routes">
           <div class="skeleton route-skel"></div>
@@ -249,6 +254,12 @@
         <form id="bookForm" class="card">
           <div class="summary" id="formSummary">—</div>
 
+          <div class="travelDateToolbar travelDateToolbar--form" aria-label="تاريخ الرحلة">
+            <label class="travelDateLabel" for="formTravelDateSel">تاريخ الرحلة</label>
+            <select id="formTravelDateSel" class="travelDateSel" aria-describedby="formTravelDateHint"></select>
+          </div>
+          <p class="muted small" id="formTravelDateHint"></p>
+
           <label for="cname">الاسم بالكامل</label>
           <input id="cname" name="name" type="text" required minlength="2" maxlength="120" autocomplete="name" placeholder="مثال: محمد علي" />
 
@@ -288,6 +299,6 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="/ui/customer.js?v=20260511-qwilr" defer></script>
+    <script src="/ui/customer.js?v=20260219-form-date-wa" defer></script>
   </body>
 </html>

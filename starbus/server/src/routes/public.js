@@ -54,10 +54,24 @@ async function assertPublicServiceDayAllowed(ymd, maxOff) {
   return Number(row?.ok) === 1;
 }
 
-/** Public config (whatsapp number etc) — never expose secrets. */
-router.get("/config", (_req, res) => {
-  const raw = String(process.env.WHATSAPP_NUMBER || "").replace(/[^\d]/g, "");
-  return res.json({ whatsapp: raw });
+/** Public config (whatsapp, operational calendar for DB `CURDATE()`). */
+router.get("/config", async (_req, res, next) => {
+  try {
+    const [[row]] = await pool.execute(
+      `SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS service_today`
+    );
+    const maxOff = Number.isFinite(PUBLIC_MAX_SERVICE_DAY_OFFSET)
+      ? PUBLIC_MAX_SERVICE_DAY_OFFSET
+      : 6;
+    const raw = String(process.env.WHATSAPP_NUMBER || "").replace(/[^\d]/g, "");
+    return res.json({
+      whatsapp: raw,
+      service_today: row?.service_today ? String(row.service_today) : "",
+      max_service_day_offset: maxOff,
+    });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 /** Available buses for a service day: `?date=YYYY-MM-DD` or default today; max ~7 days ahead. */

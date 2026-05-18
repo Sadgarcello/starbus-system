@@ -9,7 +9,10 @@
     "start": "node src/index.js",
     "smoke": "node src/scripts/smoke.mjs",
     "set-password": "node src/scripts/set-password.mjs",
-    "apply-seed": "node src/scripts/apply-seed.mjs"
+    "apply-seed": "node src/scripts/apply-seed.mjs",
+    "apply-seed-day": "node src/scripts/apply-seed-day.mjs",
+    "apply-sql": "node src/scripts/apply-sql.mjs",
+    "apply-migration-employer": "node src/scripts/apply-sql.mjs ../database/migration_add_employer_user_id.sql"
   },
   "engines": {
     "node": ">=20"

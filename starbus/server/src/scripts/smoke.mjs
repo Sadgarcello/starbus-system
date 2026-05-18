@@ -40,11 +40,22 @@ async function main() {
     console.log("OK /api/health");
   }
 
+  const ready = await request("/api/ready");
+  if (!ready.res.ok || !ready.data?.ok || !ready.data?.db) {
+    bad = fail("/api/ready", ready.data) || bad;
+  } else {
+    console.log("OK /api/ready (db)");
+  }
+
   const cfg = await request("/api/public/config");
-  if (!cfg.res.ok) {
+  if (!cfg.res.ok || !cfg.data?.service_today) {
     bad = fail("/api/public/config", cfg.data) || bad;
   } else {
-    console.log("OK /api/public/config");
+    console.log(
+      "OK /api/public/config (service_today=",
+      cfg.data.service_today,
+      ")",
+    );
   }
 
   const buses = await request("/api/public/buses/active");
@@ -53,6 +64,19 @@ async function main() {
   } else {
     const n = buses.data?.buses?.length ?? 0;
     console.log(`OK /api/public/buses/active (${n} buses)`);
+    if (
+      typeof process.env.SMOKE_FETCH_SEATMAP === "string" &&
+      process.env.SMOKE_FETCH_SEATMAP === "1" &&
+      n > 0
+    ) {
+      const id = buses.data.buses[0].id;
+      const mp = await request(`/api/public/buses/${id}/seat-map`);
+      if (!mp.res.ok || !mp.data?.seats) {
+        bad = fail("/api/public/buses/:id/seat-map", mp.data) || bad;
+      } else {
+        console.log("OK /api/public/buses/:id/seat-map");
+      }
+    }
   }
 
   const email = process.env.SMOKE_EMAIL;

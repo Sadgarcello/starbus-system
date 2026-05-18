@@ -22,11 +22,49 @@ function todayLocalYmd() {
   return `${y}-${m}-${day}`;
 }
 
-const SERVICE_DAY_MAX_OFFSET = 6;
+/** Filled from `/api/public/config` (DB-aligned `CURDATE()` + offset). */
+let serverCalendar = null;
 
-function addDaysFromToday(days) {
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
+async function loadPublicCalendar() {
+  try {
+    const data = await api("/api/public/config", { timeoutMs: 8000 });
+    const ymd = String(data?.service_today || "").trim();
+    const mx = Number(data?.max_service_day_offset);
+    serverCalendar = {
+      service_today: /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : null,
+      max_service_day_offset:
+        Number.isFinite(mx) && mx >= 0 && mx <= 60 ? Math.floor(mx) : null,
+    };
+  } catch {
+    serverCalendar = null;
+  }
+}
+
+function maxServiceDayOffset() {
+  const n = Number(serverCalendar?.max_service_day_offset);
+  if (Number.isFinite(n) && n >= 0) return n;
+  return 6;
+}
+
+function serviceTodayYmd() {
+  const st = serverCalendar?.service_today;
+  if (st && /^\d{4}-\d{2}-\d{2}$/.test(st)) return st;
+  return todayLocalYmd();
+}
+
+function addDaysFromYmd(anchorYmd, days) {
+  const base = String(anchorYmd || "").split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(base)) {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() + days);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  const d = new Date(base + "T12:00:00");
+  if (Number.isNaN(d.getTime())) return base;
   d.setDate(d.getDate() + days);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -34,19 +72,24 @@ function addDaysFromToday(days) {
   return `${y}-${m}-${day}`;
 }
 
+/** @param {number} days */
+function addDaysFromServiceAnchor(days) {
+  return addDaysFromYmd(serviceTodayYmd(), days);
+}
+
 function isYmdInBookableWindow(ymd) {
   const raw = String(ymd).split("T")[0];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
-  const t0 = new Date(todayLocalYmd() + "T12:00:00").getTime();
+  const t0 = new Date(serviceTodayYmd() + "T12:00:00").getTime();
   const t1 = new Date(raw + "T12:00:00").getTime();
   const diff = Math.round((t1 - t0) / 86400000);
-  return diff >= 0 && diff <= SERVICE_DAY_MAX_OFFSET;
+  return diff >= 0 && diff <= maxServiceDayOffset();
 }
 
 function loadWorkerServiceDayFromStorage() {
   const raw = localStorage.getItem("starbus_worker_service_day");
-  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return todayLocalYmd();
-  if (!isYmdInBookableWindow(raw)) return todayLocalYmd();
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return serviceTodayYmd();
+  if (!isYmdInBookableWindow(raw)) return serviceTodayYmd();
   return raw;
 }
 
@@ -66,7 +109,7 @@ function fmtDateLongArWorker(ymd) {
 function tripRelativeHintWorker(ymd) {
   const raw = ymd == null ? "" : String(ymd).split("T")[0];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "";
-  const today = todayLocalYmd();
+  const today = serviceTodayYmd();
   if (raw === today) return "اليوم";
   const t0 = new Date(today + "T12:00:00").getTime();
   const t1 = new Date(raw + "T12:00:00").getTime();
@@ -502,8 +545,8 @@ async function initWorkerPage() {
     const strip = $("#workerServiceDayStrip");
     if (!strip) return;
     strip.innerHTML = "";
-    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
-      const ymd = addDaysFromToday(i);
+    for (let i = 0; i <= maxServiceDayOffset(); i++) {
+      const ymd = addDaysFromServiceAnchor(i);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "workerServiceDayChip" + (ymd === workerServiceYmd ? " active" : "");
@@ -853,7 +896,7 @@ async function initAdminPage() {
     const sel = $("#adminRouteSelect");
     if (!sel) return;
     const prev = sel.value;
-    const day = $("#day")?.value || todayLocalYmd();
+    const day = $("#day")?.value || serviceTodayYmd();
     let buses = [];
     try {
       const out = await loadActiveBuses(day);
@@ -1137,10 +1180,10 @@ async function initAdminPage() {
     const host = $("#adminDayChips");
     const dayInput = $("#day");
     if (!host || !dayInput) return;
-    const current = dayInput.value || todayLocalYmd();
+    const current = dayInput.value || serviceTodayYmd();
     host.innerHTML = "";
-    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
-      const ymd = addDaysFromToday(i);
+    for (let i = 0; i <= maxServiceDayOffset(); i++) {
+      const ymd = addDaysFromServiceAnchor(i);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "adminDayChip" + (ymd === current ? " active" : "");
@@ -1181,7 +1224,7 @@ async function initAdminPage() {
   async function refresh() {
     $("#adminRefreshBtn").disabled = true;
     try {
-      const day = $("#day").value || todayLocalYmd();
+      const day = $("#day").value || serviceTodayYmd();
       await populateAdminRoutes();
       await refreshOverview(day);
 
@@ -1268,7 +1311,7 @@ async function initAdminPage() {
     renderAdminDayChips();
     refresh().catch(() => {});
   });
-  $("#day").value = todayLocalYmd();
+  $("#day").value = serviceTodayYmd();
   renderAdminDayChips();
   try {
     await refresh();
@@ -1287,9 +1330,10 @@ function initLogout() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadPublicCalendar();
   initLogout();
   initLogin();
-  initWorkerPage();
-  initAdminPage();
+  await initWorkerPage();
+  await initAdminPage();
 });

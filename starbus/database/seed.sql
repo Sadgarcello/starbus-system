@@ -84,7 +84,8 @@ DELETE FROM buses WHERE date = CURDATE();
 
 -- Booth / online workers operate under the fleet owner row (adjust per real owner in production).
 UPDATE users u
-SET employer_user_id = (SELECT id FROM users WHERE email = 'superadmin@starbus.sd' LIMIT 1)
+INNER JOIN users owner ON owner.email = 'superadmin@starbus.sd'
+SET u.employer_user_id = owner.id
 WHERE u.role = 'worker' AND u.email IN ('worker@starbus.sd', 'online@starbus.sd');
 
 -- Bus 1 = Omdurman → Kassala, Bus 2 = Port Sudan, Bus 3 = Khartoum

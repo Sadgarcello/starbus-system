@@ -11,6 +11,7 @@ import busesRoutes from "./routes/buses.js";
 import bookingsRoutes from "./routes/bookings.js";
 import reportsRoutes from "./routes/reports.js";
 import publicRoutes from "./routes/public.js";
+import { pool } from "./db/pool.js";
 
 export function createApp() {
   const app = express();
@@ -59,6 +60,16 @@ export function createApp() {
   );
 
   app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+  app.get("/api/ready", async (_req, res) => {
+    try {
+      await pool.execute("SELECT 1 AS ok");
+      return res.json({ ok: true, db: true });
+    } catch (err) {
+      console.error("[api/ready]", err?.message || err);
+      return res.status(503).json({ ok: false, db: false });
+    }
+  });
   app.use("/api/public", publicRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/buses", busesRoutes);

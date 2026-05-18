@@ -8,8 +8,8 @@
     <title>ستار باص — احجز رحلتك</title>
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
-    <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260512-herortl" />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260215-starbus-improvements" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260215-starbus-improvements" />
   </head>
   <body class="theme-light" id="top">
     <header class="site-header">
@@ -63,17 +63,23 @@
       <section class="step active" id="stepRoutes">
         <div class="section-head anchor-target" id="booking">
           <h1>اختار وجهتك</h1>
-          <p>رحلات اليوم من أم درمان</p>
+          <p id="routesSubhead">اختار يوم الرحلة، ثم خط السير من أم درمان</p>
+          <div class="travelDateToolbar">
+            <label class="travelDateLabel" for="travelDateSel">تاريخ السفر</label>
+            <select id="travelDateSel" class="travelDateSel" aria-describedby="travelDateHint"></select>
+          </div>
+          <p class="muted small" id="travelDateHint"></p>
         </div>
+        <div id="routesLive" class="srOnly" aria-live="polite" aria-atomic="true"></div>
         <div id="routesList" class="routes">
           <div class="skeleton route-skel"></div>
           <div class="skeleton route-skel"></div>
           <div class="skeleton route-skel"></div>
         </div>
-        <div id="routesEmpty" class="empty" hidden>
-          ما في رحلات اليوم. تواصل معانا عبر واتساب لو محتاج معلومات.
+        <div id="routesEmpty" class="empty" hidden role="status">
+          <span id="routesEmptyReason"></span>
         </div>
-        <div id="routesError" class="empty error" hidden>
+        <div id="routesError" class="empty error" hidden role="alert">
           ما قدرنا نحمل الرحلات الآن. حاول تاني بعد شوية.
         </div>
 
@@ -286,8 +292,8 @@
       </div>
     </footer>
 
-    <div class="toast" id="toast" hidden></div>
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
-    <script src="/ui/customer.js?v=20260511-qwilr" defer></script>
+    <script src="/ui/customer.js?v=20260215-starbus-improvements" defer></script>
   </body>
 </html>

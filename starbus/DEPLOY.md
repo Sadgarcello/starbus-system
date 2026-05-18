@@ -34,7 +34,7 @@ Use any managed MySQL 8 (or MariaDB-compatible) instance: same PaaS MySQL add-on
 
 Script: [`database/seed_fixed_day.sql`](database/seed_fixed_day.sql) via [`npm run apply-seed-day`](server/package.json) — **idempotent** for that route/day/time/bus_number. **`apply-seed` still resets only today**, not future-dated buses.
 
-The public **`/`** page includes a **travel date** selector that calls **`GET /api/public/buses/active?date=`** within **`PUBLIC_MAX_SERVICE_DAY_OFFSET`** (same window as staff). **[`GET /api/public/config`](server/src/routes/public.js)** returns **`service_today`** (DB **`CURDATE()`** with **`DB_SERVICE_TIMEZONE`**) plus **`max_service_day_offset`** so browsers align with operations time.
+The public **`/`** page lists **`GET /api/public/travel-lines?date=`** — every **`routes`** row from أمدرمان for that calendar day, **`LEFT JOIN`** scheduled **`buses`**. Rows **with** a bus open the live seat picker; rows **without** show a muted card + WhatsApp (workers add **`buses`** for that `(route_id, date)` via **`/worker`**/**`/admin`** to enable seating). **`GET /api/public/buses/active`** remains available for tooling; same date window applies.
 
 **`/worker`** and **`/admin`** service-day chips consume the same **`/api/public/config`** on load (fallback: browser-local date).
 

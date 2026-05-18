@@ -320,6 +320,13 @@ html {
   color: var(--ink);
 }
 
+.travelDateToolbar--seats {
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+.travelDateSeatHint {
+  margin: 0 0 14px;
+}
 .travelDateSel {
   flex: 1;
   min-width: min(100%, 220px);
@@ -400,6 +407,60 @@ html {
 .routeCard.disabled:hover {
   border-color: var(--line);
   box-shadow: var(--shadow-sm);
+}
+
+.routeCard--muted {
+  cursor: default;
+  align-items: flex-start;
+}
+.routeCard--muted:hover {
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
+.routeMutedCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.routeSubMuted {
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.routeMutedTxt {
+  font-weight: 600;
+}
+.routeMutedActions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.routeMuteWaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  background: #25d366;
+  color: #fff !important;
+  text-decoration: none;
+  gap: 6px;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
+}
+.routeMuteWaBtn:hover {
+  filter: brightness(1.06);
+}
+
+.routeOnlyPill {
+  align-self: center;
+  background: var(--line-soft);
+  color: var(--muted);
 }
 
 .routeMain {

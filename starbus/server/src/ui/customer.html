@@ -8,8 +8,8 @@
     <title>ستار باص — احجز رحلتك</title>
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
-    <link rel="stylesheet" href="/ui/tokens.css?v=20260215-starbus-improvements" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260215-starbus-improvements" />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260217-travel-date-seats-step" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260217-travel-date-seats-step" />
   </head>
   <body class="theme-light" id="top">
     <header class="site-header">
@@ -63,12 +63,7 @@
       <section class="step active" id="stepRoutes">
         <div class="section-head anchor-target" id="booking">
           <h1>اختار وجهتك</h1>
-          <p id="routesSubhead">اختار يوم الرحلة، ثم خط السير من أم درمان</p>
-          <div class="travelDateToolbar">
-            <label class="travelDateLabel" for="travelDateSel">تاريخ السفر</label>
-            <select id="travelDateSel" class="travelDateSel" aria-describedby="travelDateHint"></select>
-          </div>
-          <p class="muted small" id="travelDateHint"></p>
+          <p id="routesSubhead">اختيار خط من أم درمان — التاريخ يظهر خطوة اختيار المقعد حيث يمكنك تعديل يوم الخدمة</p>
         </div>
         <div id="routesLive" class="srOnly" aria-live="polite" aria-atomic="true"></div>
         <div id="routesList" class="routes">
@@ -192,6 +187,12 @@
           <p id="seatBusMeta">—</p>
         </div>
 
+        <div class="travelDateToolbar travelDateToolbar--seats" aria-label="اختيار تاريخ السفر">
+          <label class="travelDateLabel" for="travelDateSel">تاريخ السفر</label>
+          <select id="travelDateSel" class="travelDateSel" aria-describedby="travelDateHint"></select>
+        </div>
+        <p class="muted small travelDateSeatHint" id="travelDateHint"></p>
+
         <div class="counterCard">
           <div class="counterTitle">كم تذكرة عايز؟</div>
           <div class="counter">
@@ -294,6 +295,6 @@
 
     <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
-    <script src="/ui/customer.js?v=20260215-starbus-improvements" defer></script>
+    <script src="/ui/customer.js?v=20260217-travel-date-seats-step" defer></script>
   </body>
 </html>

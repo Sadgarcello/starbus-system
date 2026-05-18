@@ -32,6 +32,8 @@ function fail(msg, extra) {
 
 async function main() {
   let bad = false;
+  /** @type {string} */
+  let smokeServiceDay = "";
 
   const health = await request("/api/health");
   if (!health.res.ok || !health.data?.ok) {
@@ -56,6 +58,22 @@ async function main() {
       cfg.data.service_today,
       ")",
     );
+    const ymd = String(cfg.data.service_today || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) smokeServiceDay = ymd;
+    const tlUrl =
+      /^\d{4}-\d{2}-\d{2}$/.test(ymd)
+        ? `/api/public/travel-lines?date=${encodeURIComponent(ymd)}`
+        : null;
+    if (tlUrl) {
+      const tl = await request(tlUrl);
+      if (!tl.res.ok || !Array.isArray(tl.data?.items)) {
+        bad = fail("/api/public/travel-lines", tl.data) || bad;
+      } else {
+        const book = tl.data.items.filter((x) => x?.kind === "bookable").length;
+        const lines = tl.data.items.length;
+        console.log(`OK /api/public/travel-lines (${lines} rows, ${book} bookable)`);
+      }
+    }
   }
 
   const buses = await request("/api/public/buses/active");
@@ -70,7 +88,11 @@ async function main() {
       n > 0
     ) {
       const id = buses.data.buses[0].id;
-      const mp = await request(`/api/public/buses/${id}/seat-map`);
+      const q =
+        smokeServiceDay &&
+        `/api/public/buses/${id}/seat-map?date=${encodeURIComponent(smokeServiceDay)}`;
+      const mpPath = q || `/api/public/buses/${id}/seat-map`;
+      const mp = await request(mpPath);
       if (!mp.res.ok || !mp.data?.seats) {
         bad = fail("/api/public/buses/:id/seat-map", mp.data) || bad;
       } else {

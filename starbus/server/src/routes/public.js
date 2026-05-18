@@ -141,6 +141,87 @@ router.get("/buses/active", async (req, res, next) => {
 });
 
 /**
+ * All أمدرمان lines (`routes`) for a service day, with optional scheduled `buses`.
+ * Requires `?date=YYYY-MM-DD`. Customers see route-only rows until workers attach a bus.
+ */
+router.get("/travel-lines", async (req, res, next) => {
+  try {
+    const parsed = parsePublicServiceDay(req);
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+    if (!parsed.ymd) {
+      return res.status(400).json({ error: "حدّد تاريخ الرحلة" });
+    }
+
+    const maxOff = Number.isFinite(PUBLIC_MAX_SERVICE_DAY_OFFSET) ? PUBLIC_MAX_SERVICE_DAY_OFFSET : 6;
+    const allowed = await assertPublicServiceDayAllowed(parsed.ymd, maxOff);
+    if (!allowed) {
+      return res.status(400).json({
+        error: "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)",
+      });
+    }
+
+    const [rows] = await pool.execute(
+      `SELECT
+         r.id AS route_id,
+         r.origin,
+         r.destination,
+         r.price,
+         b.id AS bus_id,
+         b.bus_number,
+         b.total_seats,
+         b.seats_booked,
+         (b.total_seats - b.seats_booked) AS seats_remaining,
+         b.departure_time,
+         b.date AS service_date,
+         b.status AS bus_status
+       FROM routes r
+       LEFT JOIN buses b ON b.route_id = r.id
+         AND b.date = :bus_day
+         AND b.status = 'scheduled'
+       WHERE r.origin = 'Omdurman'
+       ORDER BY r.destination ASC, b.id ASC`,
+      { bus_day: parsed.ymd }
+    );
+
+    const items = (rows || []).map((row) => {
+      const busIdRaw = row.bus_id;
+      const busId = busIdRaw != null ? Number(busIdRaw) : null;
+      const base = {
+        route_id: Number(row.route_id),
+        origin: row.origin,
+        destination: row.destination,
+        price: row.price,
+      };
+      if (busId != null && Number.isFinite(busId)) {
+        let dateStr = parsed.ymd;
+        if (row.service_date != null) {
+          dateStr = String(row.service_date).split("T")[0];
+        }
+        return {
+          kind: "bookable",
+          ...base,
+          id: busId,
+          bus_number: row.bus_number,
+          total_seats: row.total_seats != null ? Number(row.total_seats) : null,
+          seats_booked:
+            row.seats_booked != null ? Number(row.seats_booked) : 0,
+          seats_remaining:
+            row.seats_remaining != null ? Number(row.seats_remaining) : 0,
+          departure_time: row.departure_time,
+          date: dateStr,
+          status: row.bus_status || "scheduled",
+        };
+      }
+      return { kind: "route_only", ...base };
+    });
+
+    return res.json({ date: parsed.ymd, items });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/**
  * Public seat map — identical structure to worker seat-map but with NO
  * booking_id (privacy). State per seat: empty | reserved | full.
  * Customer view stays in lockstep with the worker view because both read

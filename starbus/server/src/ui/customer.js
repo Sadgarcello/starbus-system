@@ -180,12 +180,15 @@
 
   function populateTravelDates() {
     const sel = $("#travelDateSel");
-    if (!sel) return;
     const anchor =
       state.calendar.service_today && /^\d{4}-\d{2}-\d{2}$/.test(state.calendar.service_today)
         ? state.calendar.service_today
         : clientTodayYmd();
     state.calendar.service_today = anchor;
+    if (!sel) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(state.travelYmd || ""))) state.travelYmd = anchor;
+      return;
+    }
 
     sel.innerHTML = "";
     const n = Number(state.calendar.max_offset);
@@ -208,61 +211,140 @@
     const sub = $("#routesSubhead");
     if (sub) {
       sub.textContent =
-        "اختر تاريخ الرحلة، ثم وجهة من أم درمان";
+        "خطوط من أم درمان — نعرض اليوم وفق اليوم الخدمي من السيرفر؛ لتبديل اليوم ستجد قائمة «تاريخ السفر» في خطوة اختيار المقعد قبل الحجز.";
     }
 
-    $("#travelDateHint").textContent =
-      "اليوم الخدمي وفق وقت السيرفر: " + anchor;
+    const hint = $("#travelDateHint");
+    if (hint) {
+      hint.textContent =
+        "اليوم الخدمي الافتراضي من السيرفر: " +
+        anchor +
+        ". لتبديل اليوم عدّله من هذه القائمة؛ تُحدَّث قائمة الخطوط فتعود لاختيار الوجهة.";
+    }
+  }
+
+  function inquireLineWaBody(item) {
+    const dateLine = fmtDateLongAr(state.travelYmd);
+    return [
+      "السلام عليكم ستار باص",
+      "",
+      `طلب أو استفسار عن خط بدون موعد نشط اليوم على الموقع:`,
+      `الخط: ${item.origin || ""} ← ${item.destination || ""}`,
+      `التاريخ المرغوب: ${dateLine}`,
+      item.price ? `إشعار سعر المرجع: ${fmtPrice(Number(item.price))}` : "",
+      "",
+      "نرجو التنسيق أو إضافة الخط لهذا اليوم لو متاح.",
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   // ===== Step 1: Routes =====
+  /** Infer API kind when proxies strip `kind`. */
+  function routeItemKind(it) {
+    if (!it || typeof it !== "object") return null;
+    if (it.kind === "bookable" || it.kind === "route_only") return it.kind;
+    const bid = Number(it.id ?? it.bus_id);
+    if (Number.isFinite(bid)) return "bookable";
+    const rid = it.route_id != null ? Number(it.route_id) : NaN;
+    if (Number.isFinite(rid) && (it.destination != null || it.origin != null))
+      return "route_only";
+    return null;
+  }
+
   async function loadRoutes() {
     const list = $("#routesList");
     const empty = $("#routesEmpty");
     const error = $("#routesError");
-    empty.hidden = true;
-    error.hidden = true;
+    const emptyReasonEl = $("#routesEmptyReason");
+
     state.routesHadNetworkError = false;
     state.routesHadValidationError = false;
 
-    list.innerHTML =
+    const skelHtml =
       '<div class="skeleton route-skel"></div>' +
       '<div class="skeleton route-skel"></div>' +
       '<div class="skeleton route-skel"></div>';
-    setRoutesAria("loading", "");
 
     try {
-      const out = await api("/api/public/buses/active" + travelQs());
-      state.buses = out.buses || [];
+      if (empty) empty.hidden = true;
+      if (error) error.hidden = true;
+
+      if (!list) {
+        setRoutesAria("err", "عنصر القائمة غير موجود في الصفحة");
+        console.error("[customer] #routesList missing");
+        return;
+      }
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(state.travelYmd || ""))) populateTravelDates();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(state.travelYmd || ""))) {
+        state.travelYmd = clientTodayYmd();
+      }
+
+      list.innerHTML = skelHtml;
+      setRoutesAria("loading", "");
+
+      const qs = travelQs();
+      const out = await api("/api/public/travel-lines" + qs);
+
+      const items = Array.isArray(out.items) ? out.items : [];
+      state.buses = items.filter((x) => x && routeItemKind(x) === "bookable");
       list.innerHTML = "";
-      if (!state.buses.length) {
-        empty.hidden = false;
+
+      if (!items.length) {
+        if (empty) empty.hidden = false;
         const dayLabel = fmtDateLongAr(state.travelYmd);
-        $("#routesEmptyReason").textContent =
-          `ما في رحلات متاحة لـ ${dayLabel}. جرّب تاريخ ثاني أو كلمّنا لو محتاج معلومات — واتساب.`;
+        if (emptyReasonEl) {
+          emptyReasonEl.textContent =
+            `ما في خطوط معروضة حالياً. جرّب تاريخاً آخر أو كلمّنا — واتساب. (${dayLabel})`;
+        }
         setRoutesAria("empty", "");
         return;
       }
-      for (const b of state.buses) {
-        list.appendChild(routeCard(b));
+
+      let bookableCount = 0;
+      for (const raw of items) {
+        const kind = routeItemKind(raw);
+        if (kind === "bookable") {
+          bookableCount += 1;
+          list.appendChild(routeCard(raw));
+        } else if (kind === "route_only") {
+          list.appendChild(mutedRouteCard(raw));
+        }
       }
-      setRoutesAria("ok", "");
+      if (!list.children.length) {
+        console.warn("[customer] travel-lines returned rows but none rendered", items);
+        if (empty) empty.hidden = false;
+        if (emptyReasonEl)
+          emptyReasonEl.textContent =
+            "البيانات وصلت بصيغة غير متوقعة. حدِّث الصفحة أو كلِّمنا على واتساب.";
+      }
+      if (bookableCount === 0 && items.length > 0) {
+        toast(
+          "warn",
+          "الخطوط ظاهرة لكن لم تُفعّل باصات لهذا اليوم بعد — الموظفين يمكنهم الجدولة، أو كلِّمنا على واتساب."
+        );
+      }
+      setRoutesAria(items.length ? "ok" : "empty", "");
     } catch (e) {
-      list.innerHTML = "";
+      if (list) list.innerHTML = "";
+      console.error("[customer] loadRoutes", e);
+
       state.routesHadNetworkError = !e.status || e.status >= 500;
       state.routesHadValidationError =
         !!(e.status && e.status >= 400 && e.status < 500);
       if (state.routesHadValidationError) {
-        empty.hidden = false;
-        $("#routesEmptyReason").textContent =
-          e.message || "التاريخ خارج نطاق الحجز. اختار تاريخاً بين اليوم والأيام المسموحة.";
+        if (empty) empty.hidden = false;
+        const msg =
+          e.message ||
+          "التاريخ خارج نطاق الحجز. اختار تاريخاً بين اليوم والأيام المسموحة.";
+        if (emptyReasonEl) emptyReasonEl.textContent = msg;
         toast("warn", e.message || "تاريخ غير صالح");
-      } else {
+      } else if (error) {
         error.hidden = false;
-        error.textContent =
-          state.routesHadNetworkError
-            ? "ما قدرنا نحمل الرحلات الآن (شبكة أو السيرفر). حاول بعد شوي."
-            : "حصل خطأ غير متوقع. حاول تاني.";
+        error.textContent = state.routesHadNetworkError
+          ? "ما قدرنا نحمل الرحلات الآن (شبكة أو السيرفر). حاول بعد شوي."
+          : "حصل خطأ غير متوقع. حاول تاني.";
       }
       setRoutesAria("err", "");
     }
@@ -315,6 +397,59 @@
         }
       });
     }
+    return card;
+  }
+
+  /** Route exists in catalog but workers have not scheduled a bus this day yet. */
+  function mutedRouteCard(item) {
+    const card = el("div", "routeCard routeCard--muted");
+    card.setAttribute("role", "group");
+    card.setAttribute(
+      "aria-label",
+      (item.origin || "") +
+        " إلى " +
+        (item.destination || "") +
+        " — غير مفعّل لهذا اليوم"
+    );
+
+    const main = el("div", "routeMain");
+    const route = el("div", "routeRoute");
+    route.textContent = item.origin + " ← " + item.destination;
+    main.appendChild(route);
+
+    const sub = el("div", "routeSub routeSubMuted");
+    sub.appendChild(el("span", null, fmtPrice(Number(item.price))));
+    sub.appendChild(
+      el(
+        "span",
+        "routeMutedTxt",
+        "لم يُجدّل الباص لهذا اليوم في النظام"
+      )
+    );
+    main.appendChild(sub);
+
+    const foot = el("div", "routeMutedActions");
+    const wa = document.createElement("a");
+    wa.href = waLink(inquireLineWaBody(item));
+    wa.className = "routeMuteWaBtn";
+    wa.target = "_blank";
+    wa.rel = "noopener";
+    wa.textContent = "واتساب — تنسيق التاريخ أو الخط";
+    foot.appendChild(wa);
+
+    const col = el("div", "routeMutedCol");
+    col.appendChild(main);
+    col.appendChild(foot);
+
+    const stat = el(
+      "span",
+      "statePill routeOnlyPill",
+      "خط معروض"
+    );
+
+    card.appendChild(col);
+    card.appendChild(stat);
+
     return card;
   }
 
@@ -688,12 +823,25 @@
   function bindTravelDateChange() {
     $("#travelDateSel")?.addEventListener("change", () => {
       const sel = $("#travelDateSel");
+      const seatSection = $("#stepSeats");
       if (!sel) return;
       const v = sel.value;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-        state.travelYmd = v;
-        loadRoutes();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+      state.travelYmd = v;
+      const onSeatPicker = !!(seatSection && !seatSection.hidden);
+      if (onSeatPicker && state.selected) {
+        stopSeatRefresh();
+        state.selected = null;
+        state.pickedSeats = [];
+        state.seatMap = null;
+        state.ticketCount = 1;
+        setStep("stepRoutes");
+        toast(
+          "warn",
+          "تم تعديل اليوم الخدمي — عدنا لخطوات اختيار الرحلة لتحديث القائمة."
+        );
       }
+      loadRoutes();
     });
   }
 
@@ -753,6 +901,8 @@
     const cta = $("#ctaWa");
     if (cta) cta.href = waLink(askMsg);
 
-    await loadRoutes();
+    await loadRoutes().catch((err) =>
+      console.error("[customer] loadRoutes bootstrap", err)
+    );
   });
 })();

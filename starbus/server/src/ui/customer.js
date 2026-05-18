@@ -1,6 +1,12 @@
 (function () {
   "use strict";
 
+  try {
+    window.STARBUS_CUSTOMER_JS_BUILD = "20260218-routes-diag";
+  } catch (_) {
+    /* ignore */
+  }
+
   const MAX_TICKETS = 8;
   const POLL_MS_VISIBLE = 14500 + Math.floor(Math.random() * 3000);
   const POLL_MS_HIDDEN = 62000;
@@ -47,8 +53,16 @@
   async function api(path, { method = "GET", body, timeoutMs = 12000 } = {}) {
     const ctrl = new AbortController();
     const tmr = setTimeout(() => ctrl.abort(), timeoutMs);
+    let resolved = path;
+    if (!/^https?:\/\//i.test(path)) {
+      try {
+        resolved = new URL(path, window.location.origin).href;
+      } catch {
+        resolved = path;
+      }
+    }
     try {
-      const res = await fetch(path, {
+      const res = await fetch(resolved, {
         method,
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
@@ -932,6 +946,15 @@
       setTicketCount(state.ticketCount + 1)
     );
   }
+
+  window.addEventListener("load", () => {
+    const list = $("#routesList");
+    if (!list || !list.querySelector(".skeleton.route-skel")) return;
+    console.warn(
+      "[customer] window.load: skeleton still visible, retry loadRoutes()"
+    );
+    void loadRoutes();
+  });
 
   document.addEventListener("DOMContentLoaded", async () => {
     bindBacks();

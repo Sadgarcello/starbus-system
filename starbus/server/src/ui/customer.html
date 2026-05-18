@@ -8,8 +8,8 @@
     <title>ستار باص — احجز رحلتك</title>
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
-    <link rel="stylesheet" href="/ui/tokens.css?v=20260217-routes-skeleton-guard" />
-    <link rel="stylesheet" href="/ui/customer.css?v=20260217-routes-skeleton-guard" />
+    <link rel="stylesheet" href="/ui/tokens.css?v=20260218-travel-lines-db-timeout" />
+    <link rel="stylesheet" href="/ui/customer.css?v=20260218-travel-lines-db-timeout" />
   </head>
   <body class="theme-light" id="top">
     <header class="site-header">
@@ -63,7 +63,7 @@
       <section class="step active" id="stepRoutes">
         <div class="section-head anchor-target" id="booking">
           <h1>اختار وجهتك</h1>
-          <p id="routesSubhead">اختيار خط من أم درمان — التاريخ يظهر خطوة اختيار المقعد حيث يمكنك تعديل يوم الخدمة</p>
+          <p id="routesSubhead">خطوط من أم درمان — نعرض اليوم وفق اليوم الخدمي من السيرفر؛ لتبديل اليوم ستجد قائمة «تاريخ السفر» في خطوة اختيار المقعد قبل الحجز.</p>
         </div>
         <div id="routesLive" class="srOnly" aria-live="polite" aria-atomic="true"></div>
         <div id="routesList" class="routes">
@@ -295,6 +295,6 @@
 
     <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
-    <script src="/ui/customer.js?v=20260217-routes-skeleton-guard" defer></script>
+    <script src="/ui/customer.js?v=20260218-travel-lines-db-timeout" defer></script>
   </body>
 </html>

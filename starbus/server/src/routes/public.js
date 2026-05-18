@@ -4,6 +4,24 @@ import { BUS46_ROWS, BUS46_TOTAL_SEATS } from "../utils/busLayout.js";
 
 const router = Router();
 
+async function timeoutWrap(ms, name, promise) {
+  let t;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, rej) => {
+        t = setTimeout(
+          () =>
+            rej(Object.assign(new Error(`${name}: timed out after ${ms}ms`), { code: "ETIMEDOUT" })),
+          ms,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 // Every /api/public request counts (GET + POST). Stops naive scraping and spammy POSTs.
 const GLOBAL_WINDOW_MS = Number(process.env.PUBLIC_GLOBAL_WINDOW_MS || 60_000);
 const GLOBAL_MAX = Number(process.env.PUBLIC_GLOBAL_MAX || 120);
@@ -153,14 +171,24 @@ router.get("/travel-lines", async (req, res, next) => {
     }
 
     const maxOff = Number.isFinite(PUBLIC_MAX_SERVICE_DAY_OFFSET) ? PUBLIC_MAX_SERVICE_DAY_OFFSET : 6;
-    const allowed = await assertPublicServiceDayAllowed(parsed.ymd, maxOff);
+    const allowMs = Number(process.env.TRAVELLINES_ALLOW_SQL_MS || 8000);
+    const selectMs = Number(process.env.TRAVELLINES_ROUTE_SQL_MS || 15000);
+
+    const allowed = await timeoutWrap(
+      allowMs,
+      "travel-lines/allow-window",
+      assertPublicServiceDayAllowed(parsed.ymd, maxOff),
+    );
     if (!allowed) {
       return res.status(400).json({
         error: "التاريخ خارج نطاق الحجز (اليوم وحتى أسبوع قادم)",
       });
     }
 
-    const [rows] = await pool.execute(
+    const q = timeoutWrap(
+      selectMs,
+      "travel-lines/routes-query",
+      pool.execute(
       `SELECT
          r.id AS route_id,
          r.origin,
@@ -180,14 +208,17 @@ router.get("/travel-lines", async (req, res, next) => {
          AND b.status = 'scheduled'
        WHERE r.origin = 'Omdurman'
        ORDER BY r.destination ASC, b.id ASC`,
-      { bus_day: parsed.ymd }
+        { bus_day: parsed.ymd },
+      ),
     );
+    const [rows] = await q;
 
     const items = (rows || []).map((row) => {
       const busIdRaw = row.bus_id;
       const busId = busIdRaw != null ? Number(busIdRaw) : null;
+      const ridRaw = row.route_id != null ? Number(row.route_id) : NaN;
       const base = {
-        route_id: Number(row.route_id),
+        route_id: Number.isFinite(ridRaw) ? ridRaw : null,
         origin: row.origin,
         destination: row.destination,
         price: row.price,

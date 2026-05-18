@@ -31,6 +31,8 @@ const poolConfig = {
   database: DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
+  /** Avoid hanging indefinitely when cloud DB DNS/TLS/handshake stalls */
+  connectTimeout: Number(process.env.DB_CONNECT_TIMEOUT_MS || 12000),
   queueLimit: 0,
   namedPlaceholders: true,
   timezone: "Z",

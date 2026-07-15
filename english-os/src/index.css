@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #111111;
+  --color-ink-muted: #3a3a3a;
+  --color-ink-subtle: #6b6b6b;
+  --color-paper: #ffffff;
+  --color-paper-soft: #f7f7f5;
+  --color-paper-line: #e8e8e4;
+  --color-club: #f5c518;
+  --color-club-hover: #e0b40f;
+  --color-club-soft: #fff6d1;
+  --color-danger: #c62828;
+  --color-success: #1b7a3d;
+
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper-soft text-ink antialiased;
+    font-family: var(--font-sans);
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Prevent iOS zoom-on-focus; keep readable on desktop */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  @media (min-width: 640px) {
+    input,
+    textarea,
+    select {
+      font-size: inherit;
+    }
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer utilities {
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .page-title {
+    @apply font-display text-3xl text-ink sm:text-4xl;
+  }
+}

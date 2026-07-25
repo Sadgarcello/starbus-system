@@ -9,7 +9,7 @@
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-700.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/ui/fonts/cairo-arabic-400.woff2" crossorigin />
     <link rel="stylesheet" href="/ui/tokens.css?v=20260504" />
-    <link rel="stylesheet" href="/ui/style.css?v=20260510-serviceday" />
+    <link rel="stylesheet" href="/ui/style.css?v=20260520-worker-date" />
   </head>
   <body class="theme-dark">
     <div class="wrap">
@@ -61,13 +61,13 @@
             <button class="secondary" id="refreshBtn" style="width:auto; padding:8px 14px;">تحديث</button>
           </div>
           <div class="bd">
-            <label>يوم تشغيل الرحلة</label>
-            <div
-              class="workerServiceDayStrip"
-              id="workerServiceDayStrip"
-              role="tablist"
-              aria-label="يوم التشغيل"
-            ></div>
+            <label for="workerServiceDate">يوم تشغيل الرحلة</label>
+            <input
+              id="workerServiceDate"
+              type="date"
+              class="workerServiceDateInput"
+              aria-describedby="workerServiceDayLine"
+            />
             <p class="muted" id="workerServiceDayLine" style="margin: 8px 0 12px;">—</p>
             <label>الوجهة</label>
             <select id="routeSelect" disabled>

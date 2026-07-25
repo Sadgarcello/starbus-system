@@ -1,0 +1,21 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+*.pyo
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Local data & uploads (never commit)
+data/*.db
+data/*.db-journal
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE / OS
+.env
+.DS_Store
+Thumbs.db

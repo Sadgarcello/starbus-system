@@ -43,6 +43,24 @@ function isYmdInBookableWindow(ymd) {
   return diff >= 0 && diff <= SERVICE_DAY_MAX_OFFSET;
 }
 
+function bookableWindowBounds() {
+  return {
+    min: todayLocalYmd(),
+    max: addDaysFromToday(SERVICE_DAY_MAX_OFFSET),
+  };
+}
+
+/** Native date input clamped to today … today+6. Returns the applied YMD. */
+function applyBookableDateInput(input, ymd) {
+  if (!input) return ymd || todayLocalYmd();
+  const { min, max } = bookableWindowBounds();
+  input.min = min;
+  input.max = max;
+  const v = ymd && isYmdInBookableWindow(ymd) ? ymd : min;
+  input.value = v;
+  return v;
+}
+
 function loadWorkerServiceDayFromStorage() {
   const raw = localStorage.getItem("starbus_worker_service_day");
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return todayLocalYmd();
@@ -498,32 +516,12 @@ async function initWorkerPage() {
     localStorage.setItem("starbus_worker_service_day", workerServiceYmd);
   }
 
-  function renderWorkerServiceDayStrip() {
-    const strip = $("#workerServiceDayStrip");
-    if (!strip) return;
-    strip.innerHTML = "";
-    for (let i = 0; i <= SERVICE_DAY_MAX_OFFSET; i++) {
-      const ymd = addDaysFromToday(i);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "workerServiceDayChip" + (ymd === workerServiceYmd ? " active" : "");
-      btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", ymd === workerServiceYmd ? "true" : "false");
-      btn.dataset.date = ymd;
-      const main =
-        i === 0 ? "اليوم" : i === 1 ? "غداً" : (() => {
-          const d = new Date(ymd + "T12:00:00");
-          return d.toLocaleDateString("ar", { weekday: "long" });
-        })();
-      const subLbl = (() => {
-        const d = new Date(ymd + "T12:00:00");
-        return d.toLocaleDateString("ar", { day: "numeric", month: "short" });
-      })();
-      btn.innerHTML =
-        `<span class="workerServiceDayChipMain">${escapeHtml(main)}</span>` +
-        `<span class="workerServiceDayChipSub">${escapeHtml(subLbl)}</span>`;
-      btn.addEventListener("click", () => setWorkerServiceDay(ymd));
-      strip.appendChild(btn);
+  function syncWorkerServiceDateInput() {
+    const input = $("#workerServiceDate");
+    const v = applyBookableDateInput(input, workerServiceYmd);
+    if (v !== workerServiceYmd) {
+      workerServiceYmd = v;
+      persistWorkerServiceDay();
     }
   }
 
@@ -536,10 +534,14 @@ async function initWorkerPage() {
   }
 
   function setWorkerServiceDay(ymd) {
-    if (ymd === workerServiceYmd) return;
+    if (!isYmdInBookableWindow(ymd)) ymd = todayLocalYmd();
+    if (ymd === workerServiceYmd) {
+      syncWorkerServiceDateInput();
+      return;
+    }
     workerServiceYmd = ymd;
     persistWorkerServiceDay();
-    renderWorkerServiceDayStrip();
+    syncWorkerServiceDateInput();
     updateWorkerServiceDayLine();
     clearPicked();
     refresh();
@@ -685,8 +687,13 @@ async function initWorkerPage() {
 
   $("#bookFormHeader")?.addEventListener("click", toggleBookForm);
 
-  renderWorkerServiceDayStrip();
+  syncWorkerServiceDateInput();
   updateWorkerServiceDayLine();
+  $("#workerServiceDate")?.addEventListener("change", () => {
+    const v = $("#workerServiceDate")?.value;
+    if (v && isYmdInBookableWindow(v)) setWorkerServiceDay(v);
+    else syncWorkerServiceDateInput();
+  });
 
   $("#btnReserve")?.addEventListener("click", async () => {
     if (!selectedBusId || pickedSeats.length === 0) return;

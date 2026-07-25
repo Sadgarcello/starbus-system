@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- SEO: title + description -->
+  <title>Fighters in Malaysia – Records & Profiles | TruBoxing</title>
+  <meta name="description" content="Browse TruBoxing fighter profiles in Malaysia. See weight class, records, and recent bouts on TruRec." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ url_for('fighters_page', _external=True) }}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="TruBoxing"/>
+  <meta property="og:title" content="Fighters in Malaysia – Records & Profiles | TruBoxing"/>
+  <meta property="og:description" content="Browse TruBoxing fighter profiles in Malaysia. See weight class, records, and recent bouts on TruRec."/>
+  <meta property="og:url" content="{{ url_for('fighters_page', _external=True) }}"/>
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- WebPage + site search schema (lets Google show a search box) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Fighters – TruBoxing",
+    "url": "{{ url_for('fighters_page', _external=True) }}",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "{{ url_for('fighters_page', _external=True) }}?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Assets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fighters.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruLogo" class="logo" />
+      </a>
+      <!-- Burger Icon (For mobile) -->
+      <i class="fas fa-bars burger" id="burger"></i>
+
+      <!-- Navigation Links -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="{{ url_for('events_page') }}">EVENTS</a></li>
+        <li><a href="{{ url_for('fighters_page') }}">TRUREC</a></li>
+        <li><a href="/merchandise">MERCHANDISE</a></li>
+        <li><a href="/sponsors">SPONSORS</a></li>
+        <li><a href="/contact">CONTACT US</a></li>
+      </ul>
+    </div>
+  </nav>
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="{{ url_for('home', _external=True) }}">
+        <span itemprop="name">Home</span>
+      </a>
+      <meta itemprop="position" content="1"/>
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">Fighters</span>
+      <meta itemprop="position" content="2"/>
+    </li>
+  </ol>
+</nav>
+
+  <!-- Page Title & Search Bar -->
+  <div class="fighters-header">
+    <h1>FIGHTERS</h1>
+
+    <form class="search-bar" method="GET" action="{{ url_for('fighters_page') }}">
+      <input type="text" id="searchInput" name="search" placeholder="Search for fighters..." value="{{ request.args.get('search', '') }}" />
+      <div class="icons">
+        <i class="fas fa-search" onclick="this.closest('form').submit()"></i>
+        <select id="weightFilter" name="weight">
+          <option value="">All Weights</option>
+          <option value="Lightweight" {% if request.args.get('weight') == 'Lightweight' %}selected{% endif %}>Lightweight</option>
+          <option value="Middleweight" {% if request.args.get('weight') == 'Middleweight' %}selected{% endif %}>Middleweight</option>
+          <option value="Welterweight" {% if request.args.get('weight') == 'Welterweight' %}selected{% endif %}>Welterweight</option>
+          <option value="Light Heavyweight" {% if request.args.get('weight') == 'Light Heavyweight' %}selected{% endif %}>Light Heavyweight</option>
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <!-- Fighters Grid -->
+  <section class="fighters-grid">
+    {% set searching = request.args.get('search') or request.args.get('weight') %}
+    {% for fighter in fighters %}
+      <a href="{{ url_for('fighter_profile', fighter_id=(fighter.id | replace('\r','') | replace('\n','') | trim)) }}" class="fighter-card">
+        <img src="{{ url_for('static', filename='images/fighters/' + fighter.image_thumb) }}" alt="{{ fighter.name }}" />
+        <h2>{{ fighter.name }}</h2>
+        <p>{{ fighter.weight_class }}</p>
+      </a>
+    {% endfor %}
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-column logo-column">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TruBoxing Logo" class="footer-logo">
+        <p><strong>TruBoxing – Building Malaysia’s Boxing Future</strong></p>
+        <p>At TruBoxing, we believe that every boxer deserves a stage — from newcomers stepping into the ring for the first time, to experienced fighters chasing greatness.</p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">HOME</a></li>
+          <li><a href="/events">EVENTS</a></li>
+          <li><a href="{{ url_for('fighters_page') }}">FIGHTERS</a></li>
+          <li><a href="/merchandise">MERCHANDISE</a></li>
+          <li><a href="/sponsors">SPONSORS</a></li>
+          <li><a href="/contact">CONTACT US</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact us</h3>
+        <ul>
+          <li>📞 +60 111 8808 511</li>
+          <li>📞 +60 14 360 9582</li>
+          <li>✉️ truboxingmy@gmail.com</li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Social Media</h3>
+        <ul>
+          <li>
+            <a href="https://instagram.com/truboxing.co" target="_blank">
+              <i class="fab fa-instagram"></i> Instagram
+            </a>
+          </li>
+          <li>
+            <a href="https://facebook.com/truboxing.co" target="_blank">
+              <i class="fab fa-facebook-f"></i> Facebook
+            </a>
+          </li>
+          <li>
+            <a href="https://youtube.com/@truboxing" target="_blank">
+              <i class="fab fa-youtube"></i> YouTube
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <p>&copy; 2025 TruRec. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

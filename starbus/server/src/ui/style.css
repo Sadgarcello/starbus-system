@@ -659,57 +659,33 @@ td.mono {
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* ---- Worker service day picker ---- */
-.workerServiceDayStrip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 2px 8px;
-  margin: 4px -4px 0;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-}
-.workerServiceDayStrip::-webkit-scrollbar {
-  height: 6px;
-}
-.workerServiceDayStrip::-webkit-scrollbar-thumb {
-  background: var(--line);
-  border-radius: 999px;
-}
-.workerServiceDayChip {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 76px;
-  padding: 9px 11px;
+/* ---- Worker service day picker (native calendar, today … +6 days) ---- */
+.workerServiceDateInput {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 6px;
+  padding: 11px 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.04);
-  font-family: inherit;
-  cursor: pointer;
   color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+  font-size: 15px;
+  color-scheme: dark;
+  cursor: pointer;
 }
-.workerServiceDayChip:hover {
+.workerServiceDateInput:focus {
+  outline: none;
   border-color: var(--brand, #22c55e);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
 }
-.workerServiceDayChip.active {
-  border-color: var(--brand, #22c55e);
-  background: rgba(34, 197, 94, 0.12);
+.workerServiceDateInput::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  filter: invert(1);
 }
-.workerServiceDayChipMain {
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-.workerServiceDayChipSub {
-  font-size: 10px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
+
 .tripDayTd {
   font-size: 12px;
   line-height: 1.35;

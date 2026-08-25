@@ -1,7 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install --prefix sudan-record-system",
-  "buildCommand": "npm run build --prefix sudan-record-system",
-  "outputDirectory": "sudan-record-system/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}

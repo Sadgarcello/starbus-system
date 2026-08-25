@@ -3,21 +3,13 @@ import { activityService } from '@/services/activityService';
 import { assignmentService } from '@/services/assignmentService';
 import { lessonService } from '@/services/lessonService';
 import { studentService } from '@/services/studentService';
+import { queryKeys } from '@/lib/queryKeys';
 import type { CreateActivityValues, CreateLessonValues, CreateStudentValues, ReviewValues, SubmitAssignmentValues } from '@/lib/validation';
 import type { ActivityType } from '@/types';
 
-export const academyKeys = {
-  students: ['students'] as const,
-  lessons: ['lessons'] as const,
-  activities: (type?: ActivityType) => ['activities', type ?? 'all'] as const,
-  studentAssignments: (studentId: string) => ['assignments', 'student', studentId] as const,
-  pendingReviews: ['assignments', 'pending'] as const,
-  assignment: (id: string) => ['assignments', id] as const,
-};
-
 export function useStudents(teacherId?: string) {
   return useQuery({
-    queryKey: [...academyKeys.students, teacherId],
+    queryKey: [...queryKeys.academy.students, teacherId],
     queryFn: () => (teacherId ? studentService.listForTeacher(teacherId) : studentService.listAll()),
     enabled: Boolean(teacherId),
   });
@@ -25,21 +17,21 @@ export function useStudents(teacherId?: string) {
 
 export function useLessons() {
   return useQuery({
-    queryKey: academyKeys.lessons,
+    queryKey: queryKeys.academy.lessons,
     queryFn: () => lessonService.list(),
   });
 }
 
 export function useActivities(type?: ActivityType) {
   return useQuery({
-    queryKey: academyKeys.activities(type),
+    queryKey: queryKeys.academy.activities(type),
     queryFn: () => activityService.list(type),
   });
 }
 
 export function useStudentAssignments(studentId?: string) {
   return useQuery({
-    queryKey: academyKeys.studentAssignments(studentId ?? ''),
+    queryKey: queryKeys.academy.studentAssignments(studentId ?? ''),
     queryFn: () => assignmentService.listForStudent(studentId as string),
     enabled: Boolean(studentId),
   });
@@ -47,7 +39,7 @@ export function useStudentAssignments(studentId?: string) {
 
 export function usePendingReviews(enabled = true) {
   return useQuery({
-    queryKey: academyKeys.pendingReviews,
+    queryKey: queryKeys.academy.pendingReviews,
     queryFn: () => assignmentService.listPendingReviews(),
     enabled,
   });
@@ -55,7 +47,7 @@ export function usePendingReviews(enabled = true) {
 
 export function useAssignment(id?: string) {
   return useQuery({
-    queryKey: academyKeys.assignment(id ?? ''),
+    queryKey: queryKeys.academy.assignment(id ?? ''),
     queryFn: () => assignmentService.getById(id as string),
     enabled: Boolean(id),
   });
@@ -66,7 +58,7 @@ export function useCreateStudent() {
   return useMutation({
     mutationFn: ({ values, teacherId }: { values: CreateStudentValues; teacherId: string }) =>
       studentService.createStudent(values, teacherId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: academyKeys.students }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.academy.students }),
   });
 }
 
@@ -75,7 +67,7 @@ export function useCreateLesson() {
   return useMutation({
     mutationFn: ({ values, createdBy }: { values: CreateLessonValues; createdBy: string }) =>
       lessonService.create(values, createdBy),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: academyKeys.lessons }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.academy.lessons }),
   });
 }
 
@@ -84,7 +76,7 @@ export function useCreateActivity() {
   return useMutation({
     mutationFn: ({ values, createdBy }: { values: CreateActivityValues; createdBy: string }) =>
       activityService.create(values, createdBy),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['activities'] }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['activities'] as const }),
   });
 }
 

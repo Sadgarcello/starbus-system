@@ -14,6 +14,7 @@ import {
   computeSkillCompletions,
   type ActivityFeedKind,
 } from '@/lib/studentProgress';
+import { queryKeys } from '@/lib/queryKeys';
 import { studentService } from '@/services/studentService';
 import { paths } from '@/routes/paths';
 import { useQuery } from '@tanstack/react-query';
@@ -37,7 +38,7 @@ export function StudentTrackingDashboard({
   showDetailLists = true,
 }: StudentTrackingDashboardProps) {
   const studentQuery = useQuery({
-    queryKey: ['student', studentId],
+    queryKey: queryKeys.student(studentId),
     queryFn: () => studentService.getById(studentId),
     enabled: Boolean(studentId),
   });

@@ -1,25 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { speakingService } from '@/services/speakingService';
-
-export const speakingKeys = {
-  formats: ['speaking', 'formats'] as const,
-  votes: ['speaking', 'votes'] as const,
-  session: (date: string) => ['speaking', 'session', date] as const,
-  marks: (sessionId: string) => ['speaking', 'marks', sessionId] as const,
-  myMark: (sessionId: string, studentId: string) =>
-    ['speaking', 'myMark', sessionId, studentId] as const,
-};
 
 export function useSpeakingFormats() {
   return useQuery({
-    queryKey: speakingKeys.formats,
+    queryKey: queryKeys.speaking.formats,
     queryFn: () => speakingService.listFormats(),
   });
 }
 
 export function useSpeakingVotes() {
   return useQuery({
-    queryKey: speakingKeys.votes,
+    queryKey: queryKeys.speaking.votes,
     queryFn: () => speakingService.listVotes(),
     refetchInterval: 12_000,
   });
@@ -30,7 +22,7 @@ export function useVoteSpeakingFormat() {
   return useMutation({
     mutationFn: (formatId: string) => speakingService.vote(formatId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.votes });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.votes });
     },
   });
 }
@@ -40,14 +32,14 @@ export function useClearSpeakingVote() {
   return useMutation({
     mutationFn: () => speakingService.clearVote(),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.votes });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.votes });
     },
   });
 }
 
 export function useSpeakingDay(sessionDate: string) {
   return useQuery({
-    queryKey: speakingKeys.session(sessionDate),
+    queryKey: queryKeys.speaking.session(sessionDate),
     queryFn: () => speakingService.getSessionByDate(sessionDate),
     enabled: Boolean(sessionDate),
   });
@@ -55,7 +47,7 @@ export function useSpeakingDay(sessionDate: string) {
 
 export function useSpeakingMarks(sessionId: string | undefined) {
   return useQuery({
-    queryKey: speakingKeys.marks(sessionId ?? ''),
+    queryKey: queryKeys.speaking.marks(sessionId ?? ''),
     queryFn: () => speakingService.listMarks(sessionId!),
     enabled: Boolean(sessionId),
   });
@@ -63,7 +55,7 @@ export function useSpeakingMarks(sessionId: string | undefined) {
 
 export function useMySpeakingMark(sessionId: string | undefined, studentId: string | undefined) {
   return useQuery({
-    queryKey: speakingKeys.myMark(sessionId ?? '', studentId ?? ''),
+    queryKey: queryKeys.speaking.myMark(sessionId ?? '', studentId ?? ''),
     queryFn: () => speakingService.getMyMark(sessionId!, studentId!),
     enabled: Boolean(sessionId && studentId),
   });
@@ -75,8 +67,8 @@ export function useOpenSpeakingDay() {
     mutationFn: ({ formatId, sessionDate }: { formatId: string; sessionDate?: string }) =>
       speakingService.openDay(formatId, sessionDate),
     onSuccess: (session) => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.session(session.session_date) });
-      void qc.invalidateQueries({ queryKey: speakingKeys.formats });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.session(session.session_date) });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.formats });
     },
   });
 }
@@ -86,7 +78,7 @@ export function useCloseSpeakingDay() {
   return useMutation({
     mutationFn: (sessionId: string) => speakingService.closeDay(sessionId),
     onSuccess: (session) => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.session(session.session_date) });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.session(session.session_date) });
     },
   });
 }
@@ -96,7 +88,7 @@ export function useMarkSpeakingPractice() {
   return useMutation({
     mutationFn: (sessionId: string) => speakingService.markPractice(sessionId),
     onSuccess: (_data, sessionId) => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.marks(sessionId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.marks(sessionId) });
       void qc.invalidateQueries({ queryKey: ['speaking'] });
       void qc.invalidateQueries({ queryKey: ['student'] });
     },
@@ -109,7 +101,7 @@ export function useCreateSpeakingFormat() {
     mutationFn: (input: { title: string; details: string; goal: string }) =>
       speakingService.createFormat(input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.formats });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.formats });
     },
   });
 }
@@ -119,7 +111,7 @@ export function useDeleteSpeakingFormat() {
   return useMutation({
     mutationFn: (formatId: string) => speakingService.deleteFormat(formatId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: speakingKeys.formats });
+      void qc.invalidateQueries({ queryKey: queryKeys.speaking.formats });
     },
   });
 }

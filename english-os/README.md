@@ -23,6 +23,8 @@ Teacher creates student
 
 ## Local setup
 
+From the **starbus-system** repo root:
+
 ```bash
 cd english-os
 cp .env.example .env

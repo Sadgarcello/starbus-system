@@ -2,13 +2,9 @@ import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { queryKeys } from '@/lib/queryKeys';
 import { membershipService } from '@/services/membershipService';
 import type { UserRole } from '@/types';
-
-export const membershipKeys = {
-  pending: ['memberships', 'pending'] as const,
-  students: ['memberships', 'students'] as const,
-};
 
 /** One shared realtime channel — AppLayout + ApprovalsPage both use this hook. */
 let pendingLiveRefCount = 0;
@@ -23,8 +19,8 @@ function attachPendingLive(qc: QueryClient) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
         () => {
-          void qc.invalidateQueries({ queryKey: membershipKeys.pending });
-          void qc.invalidateQueries({ queryKey: membershipKeys.students });
+          void qc.invalidateQueries({ queryKey: queryKeys.membership.pending });
+          void qc.invalidateQueries({ queryKey: queryKeys.membership.students });
         },
       )
       .subscribe();
@@ -46,7 +42,7 @@ export function usePendingMembers(enabled = true) {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: membershipKeys.pending,
+    queryKey: queryKeys.membership.pending,
     queryFn: () => membershipService.listPending(),
     enabled,
     refetchInterval: enabled ? 15_000 : false,
@@ -87,7 +83,7 @@ export function usePendingMembers(enabled = true) {
 
 export function useActiveStudents(enabled = true) {
   return useQuery({
-    queryKey: membershipKeys.students,
+    queryKey: queryKeys.membership.students,
     queryFn: () => membershipService.listStudents(),
     enabled,
   });
@@ -99,8 +95,8 @@ export function useApproveMember() {
     mutationFn: ({ userId, role }: { userId: string; role: UserRole }) =>
       membershipService.approve(userId, role),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: membershipKeys.pending });
-      void qc.invalidateQueries({ queryKey: membershipKeys.students });
+      void qc.invalidateQueries({ queryKey: queryKeys.membership.pending });
+      void qc.invalidateQueries({ queryKey: queryKeys.membership.students });
     },
   });
 }
@@ -109,7 +105,7 @@ export function useRejectMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) => membershipService.reject(userId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: membershipKeys.pending }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.membership.pending }),
   });
 }
 
@@ -118,6 +114,6 @@ export function useSetMemberLocked() {
   return useMutation({
     mutationFn: ({ userId, locked }: { userId: string; locked: boolean }) =>
       membershipService.setLocked(userId, locked),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: membershipKeys.students }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.membership.students }),
   });
 }

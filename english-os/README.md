@@ -45,8 +45,9 @@ npm run dev
 6. Deploy the frontend (Vercel / Netlify). This repo includes SPA fallbacks:
    - `vercel.json` (Vercel)
    - `public/_redirects` (Netlify)
-7. Set production env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
-8. Smoke test: register → pending → admin approve → student login → attendance → speaking practice → write task.
+7. Set production env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`.
+8. Configure Web Push (see **Web Push** section below).
+9. Smoke test: register → pending → admin approve → student login → attendance → speaking practice → write task.
 
 ### Production Auth tips
 
@@ -71,6 +72,67 @@ npm run dev
 13. `0011_listening_picks.sql`
 14. `0012_social_profiles.sql`
 15. **`0013_mvp_hardening.sql`** ← signup hardening, progress freeze, streaks, XP on review
+16. **`0014_notifications_push.sql`** ← in-app notifications + Web Push subscriptions + event triggers
+
+## Web Push (lock-screen alerts)
+
+Khawaja Club can notify users **even when the app is closed** (Android PWA; iPhone requires **Add to Home Screen** on iOS 16.4+).
+
+### One-time Supabase setup
+
+1. Run migration **`0014_notifications_push.sql`** in the SQL Editor.
+2. Generate VAPID keys (keep private key secret):
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+3. Deploy the Edge Function:
+   ```bash
+   supabase functions deploy send-push --no-verify-jwt
+   ```
+4. Set Edge Function secrets (Dashboard → Edge Functions → send-push → Secrets):
+   - `VAPID_PUBLIC_KEY` — from step 2
+   - `VAPID_PRIVATE_KEY` — from step 2
+   - `VAPID_SUBJECT` — e.g. `mailto:admin@yourdomain.com`
+   - `PUSH_DISPATCH_SECRET` — long random string (same value in step 5)
+   - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are usually injected automatically
+5. Connect the database to the function (SQL Editor — replace placeholders):
+   ```sql
+   insert into private.push_dispatch_config (id, functions_base_url, dispatch_secret)
+   values (
+     1,
+     'https://YOUR_PROJECT_REF.supabase.co/functions/v1',
+     'YOUR_PUSH_DISPATCH_SECRET'
+   )
+   on conflict (id) do update set
+     functions_base_url = excluded.functions_base_url,
+     dispatch_secret = excluded.dispatch_secret,
+     updated_at = now();
+   ```
+6. Add to frontend env (`.env` locally, Vercel production):
+   ```
+   VITE_VAPID_PUBLIC_KEY=<public key from step 2>
+   ```
+
+### What triggers notifications
+
+| Event | Who gets notified |
+|-------|-------------------|
+| New student registers | Admins |
+| Teacher opens speaking day | Active students |
+| New writing task | Active students |
+| New reading book | Active students |
+| Activity assigned (Studio) | That student |
+| Writing submitted | Teachers + admins |
+| Assignment submitted | Teachers + admins |
+| Listening pick shared | Teachers + admins |
+
+### User steps (phone)
+
+1. Open Khawaja Club in Chrome (Android) or Safari (iPhone).
+2. **Add to Home Screen** (required on iPhone for background push).
+3. Open the app → tap **Enable notifications** on Profile or Settings → **Allow**.
+
+In-app inbox: header **bell** → `/notifications`.
 
 ## How accounts work
 

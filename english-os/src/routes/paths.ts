@@ -17,4 +17,5 @@ export const paths = {
   assignment: (id: string) => `/assignments/${id}`,
   teacher: '/teacher',
   approvals: '/approvals',
+  notifications: '/notifications',
 };

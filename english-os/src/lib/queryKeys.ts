@@ -52,4 +52,8 @@ export const queryKeys = {
     pendingAdmin: ['hobbies', 'pendingAdmin'] as const,
   },
   student: (studentId: string) => ['student', studentId] as const,
+  notifications: {
+    inbox: ['notifications', 'inbox'] as const,
+    unread: ['notifications', 'unread'] as const,
+  },
 };

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PushEnableBanner } from '@/components/notifications/PushEnableBanner';
 import { WelcomeProfileHeader } from '@/components/profile/WelcomeProfileHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -43,6 +44,8 @@ export default function WelcomePage() {
           </dl>
         </div>
       </Card>
+
+      <PushEnableBanner />
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link to={paths.dashboard} className="flex-1">

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/common/Logo';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { usePendingMembers } from '@/hooks/useMembership';
+import { ensureServiceWorker } from '@/lib/pushNotifications';
 import { paths } from '@/routes/paths';
 import { cn } from '@/utils/cn';
 
@@ -102,12 +104,16 @@ function MobileTab({
 }
 
 export function AppLayout() {
-  const { profile, isTeacher, isAdmin, signOut } = useAuth();
+  const { profile, isTeacher, isAdmin, isActive, signOut } = useAuth();
   const pending = usePendingMembers(isAdmin);
   const pendingCount = pending.data?.length ?? 0;
   const navigate = useNavigate();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    if (isActive) void ensureServiceWorker();
+  }, [isActive]);
 
   const primary = isTeacher ? teacherPrimary : studentPrimary;
   const more = [
@@ -136,6 +142,7 @@ export function AppLayout() {
             <span className="hidden max-w-[12rem] truncate text-xs text-paper/70 lg:inline">
               {profile?.name || profile?.email} · {profile?.role}
             </span>
+            <NotificationBell />
             <Button
               variant="secondary"
               size="sm"

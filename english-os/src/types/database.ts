@@ -297,3 +297,26 @@ export interface StudentHobby {
   created_at: string;
   hobby: Hobby;
 }
+
+export type NotificationType =
+  | 'registration'
+  | 'content_speaking'
+  | 'content_writing'
+  | 'content_reading'
+  | 'content_listening'
+  | 'assignment'
+  | 'submission_writing'
+  | 'submission_assignment'
+  | 'submission_listening';
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  link_path: string | null;
+  metadata: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}

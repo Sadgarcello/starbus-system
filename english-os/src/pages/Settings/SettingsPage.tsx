@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
+import { PushEnableBanner } from '@/components/notifications/PushEnableBanner';
 import { InterestsEditor } from '@/components/student/InterestsEditor';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -33,6 +34,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <h1 className="page-title">Settings</h1>
+
+      <PushEnableBanner />
 
       <Card>
         <CardHeader title="Profile photo" subtitle="Shown on your student profile" />

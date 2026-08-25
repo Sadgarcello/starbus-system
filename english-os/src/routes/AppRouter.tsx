@@ -24,6 +24,7 @@ const SocialPage = lazy(() => import('@/pages/Social/SocialPage'));
 const SettingsPage = lazy(() => import('@/pages/Settings/SettingsPage'));
 const AttendancePage = lazy(() => import('@/pages/Attendance/AttendancePage'));
 const ApprovalsPage = lazy(() => import('@/pages/Approvals/ApprovalsPage'));
+const NotificationsPage = lazy(() => import('@/pages/Notifications/NotificationsPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFound/NotFoundPage'));
 
 function S({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,7 @@ const router = createBrowserRouter([
           { path: paths.progress, element: <S><ProgressPage /></S> },
           { path: paths.social, element: <S><SocialPage /></S> },
           { path: paths.settings, element: <S><SettingsPage /></S> },
+          { path: paths.notifications, element: <S><NotificationsPage /></S> },
           { path: paths.attendance, element: <S><AttendancePage /></S> },
           {
             element: <TeacherRoute />,

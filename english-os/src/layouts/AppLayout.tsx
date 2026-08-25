@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { usePendingMembers } from '@/hooks/useMembership';
 import { ensureServiceWorker } from '@/lib/pushNotifications';
+import { requestNotificationPermission } from '@/lib/browserNotify';
 import { paths } from '@/routes/paths';
 import { cn } from '@/utils/cn';
 
@@ -113,6 +114,10 @@ export function AppLayout() {
 
   useEffect(() => {
     if (isActive) void ensureServiceWorker();
+  }, [isActive]);
+
+  useEffect(() => {
+    if (isActive) requestNotificationPermission();
   }, [isActive]);
 
   const primary = isTeacher ? teacherPrimary : studentPrimary;

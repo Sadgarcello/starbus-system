@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
+import { showBrowserNotification } from '@/lib/browserNotify';
 import { notificationService } from '@/services/notificationService';
+import type { AppNotification } from '@/types';
 
 let inboxLiveRefCount = 0;
 let inboxLiveChannel: RealtimeChannel | null = null;
@@ -30,7 +32,11 @@ function attachInboxLive(qc: ReturnType<typeof useQueryClient>, userId: string) 
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        () => {
+        (payload) => {
+          const row = payload.new as AppNotification | undefined;
+          if (row?.title) {
+            showBrowserNotification(row.title, row.body, row.id);
+          }
           void qc.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
           void qc.invalidateQueries({ queryKey: queryKeys.notifications.unread });
         },
@@ -56,14 +62,14 @@ export function useNotifications(userId?: string, enabled = true) {
     queryKey: queryKeys.notifications.inbox,
     queryFn: () => notificationService.list(),
     enabled: active,
-    refetchInterval: active ? 60_000 : false,
+    refetchInterval: active ? 5_000 : false,
   });
 
   const unread = useQuery({
     queryKey: queryKeys.notifications.unread,
     queryFn: () => notificationService.unreadCount(),
     enabled: active,
-    refetchInterval: active ? 30_000 : false,
+    refetchInterval: active ? 5_000 : false,
   });
 
   useEffect(() => {

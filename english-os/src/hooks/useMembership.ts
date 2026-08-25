@@ -4,6 +4,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
 import { membershipService } from '@/services/membershipService';
+import { showBrowserNotification } from '@/lib/browserNotify';
 import type { UserRole } from '@/types';
 
 /** One shared realtime channel — AppLayout + ApprovalsPage both use this hook. */
@@ -45,7 +46,7 @@ export function usePendingMembers(enabled = true) {
     queryKey: queryKeys.membership.pending,
     queryFn: () => membershipService.listPending(),
     enabled,
-    refetchInterval: enabled ? 15_000 : false,
+    refetchInterval: enabled ? 5_000 : false,
   });
 
   useEffect(() => {
@@ -59,21 +60,11 @@ export function usePendingMembers(enabled = true) {
     if (lastNotifiedPendingCount !== null && count > lastNotifiedPendingCount) {
       const newest = query.data[query.data.length - 1];
       const label = newest?.name || newest?.email || 'A student';
-      if (typeof Notification !== 'undefined') {
-        if (Notification.permission === 'granted') {
-          new Notification('Khawaja Club — new request', {
-            body: `${label} asked to join. Open Approvals.`,
-          });
-        } else if (Notification.permission === 'default') {
-          void Notification.requestPermission().then((perm) => {
-            if (perm === 'granted') {
-              new Notification('Khawaja Club — new request', {
-                body: `${label} asked to join. Open Approvals.`,
-              });
-            }
-          });
-        }
-      }
+      showBrowserNotification(
+        'Khawaja Club — new request',
+        `${label} asked to join. Open Approvals.`,
+        'pending-registration',
+      );
     }
     lastNotifiedPendingCount = count;
   }, [enabled, query.data]);

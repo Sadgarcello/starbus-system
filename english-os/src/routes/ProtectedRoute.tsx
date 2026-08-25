@@ -19,20 +19,20 @@ export function AuthenticatedRoute() {
   const { isAuthenticated, loading, isActive } = useAuth();
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <Navigate to={paths.login} replace />;
-  if (isActive) return <Navigate to={paths.dashboard} replace />;
+  if (isActive) return <Navigate to={paths.home} replace />;
   return <Outlet />;
 }
 
 export function TeacherRoute() {
   const { isTeacher, loading } = useAuth();
   if (loading) return <Spinner />;
-  if (!isTeacher) return <Navigate to={paths.dashboard} replace />;
+  if (!isTeacher) return <Navigate to={paths.home} replace />;
   return <Outlet />;
 }
 
 export function AdminRoute() {
   const { isAdmin, loading } = useAuth();
   if (loading) return <Spinner />;
-  if (!isAdmin) return <Navigate to={paths.dashboard} replace />;
+  if (!isAdmin) return <Navigate to={paths.home} replace />;
   return <Outlet />;
 }

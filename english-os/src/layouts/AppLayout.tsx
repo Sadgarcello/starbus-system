@@ -10,6 +10,7 @@ import { cn } from '@/utils/cn';
 type NavItem = { to: string; label: string; short: string };
 
 const teacherPrimary: NavItem[] = [
+  { to: paths.home, label: 'Profile', short: 'Profile' },
   { to: paths.dashboard, label: 'Dashboard', short: 'Home' },
   { to: paths.teacher, label: 'Studio', short: 'Studio' },
   { to: paths.attendance, label: 'Attendance', short: 'Attend' },
@@ -26,6 +27,7 @@ const teacherMore: NavItem[] = [
 ];
 
 const studentPrimary: NavItem[] = [
+  { to: paths.home, label: 'Profile', short: 'Profile' },
   { to: paths.dashboard, label: 'Today', short: 'Today' },
   { to: paths.progress, label: 'Progress', short: 'Progress' },
   { to: paths.speaking, label: 'Speaking', short: 'Speak' },
@@ -50,7 +52,7 @@ function DesktopNavLink({
   return (
     <NavLink
       to={link.to}
-      end={link.to === paths.dashboard}
+      end={link.to === paths.home}
       className={({ isActive }) =>
         cn(
           'inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition',
@@ -80,7 +82,7 @@ function MobileTab({
   return (
     <NavLink
       to={link.to}
-      end={link.to === paths.dashboard}
+      end={link.to === paths.home}
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Spinner } from '@/components/ui/Spinner';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
@@ -9,6 +9,7 @@ import { paths } from './paths';
 const LoginPage = lazy(() => import('@/pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/Register/RegisterPage'));
 const PendingPage = lazy(() => import('@/pages/Pending/PendingPage'));
+const WelcomePage = lazy(() => import('@/pages/Welcome/WelcomePage'));
 const DashboardPage = lazy(() => import('@/pages/Dashboard/DashboardPage'));
 const TeacherPage = lazy(() => import('@/pages/Teacher/TeacherPage'));
 const StudentPage = lazy(() => import('@/pages/Student/StudentPage'));
@@ -47,7 +48,7 @@ const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/', element: <Navigate to={paths.dashboard} replace /> },
+          { path: paths.home, element: <S><WelcomePage /></S> },
           { path: paths.dashboard, element: <S><DashboardPage /></S> },
           { path: '/assignments/:id', element: <S><AssignmentPage /></S> },
           { path: paths.speaking, element: <S><SpeakingPage /></S> },

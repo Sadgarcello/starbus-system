@@ -26,7 +26,7 @@ export default function LoginPage() {
   });
 
   if (!loading && isAuthenticated) {
-    if (isActive) return <Navigate to={paths.dashboard} replace />;
+    if (isActive) return <Navigate to={paths.home} replace />;
     if (isPending || isRejected || isLocked || !isActive) {
       return <Navigate to={paths.pending} replace />;
     }
@@ -42,7 +42,7 @@ export default function LoginPage() {
     try {
       await signIn(values.email, values.password);
       // ProtectedRoute sends pending/locked/rejected to /pending
-      navigate(paths.dashboard, { replace: true });
+      navigate(paths.home, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

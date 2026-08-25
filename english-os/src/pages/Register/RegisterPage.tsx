@@ -26,7 +26,7 @@ export default function RegisterPage() {
     defaultValues: { name: '', email: '', password: '' },
   });
 
-  if (isAuthenticated && isActive) return <Navigate to={paths.dashboard} replace />;
+  if (isAuthenticated && isActive) return <Navigate to={paths.home} replace />;
   if (isAuthenticated && (isPending || isRejected || isLocked || !isActive)) {
     return <Navigate to={paths.pending} replace />;
   }

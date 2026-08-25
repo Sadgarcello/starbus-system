@@ -2,6 +2,7 @@ export const paths = {
   login: '/login',
   register: '/register',
   pending: '/pending',
+  home: '/',
   dashboard: '/dashboard',
   student: (id: string) => `/student/${id}`,
   speaking: '/speaking',

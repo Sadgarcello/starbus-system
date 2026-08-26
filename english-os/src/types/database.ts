@@ -309,6 +309,29 @@ export type NotificationType =
   | 'submission_assignment'
   | 'submission_listening';
 
+export type NotificationTestScenario =
+  | 'registration'
+  | 'content_writing'
+  | 'content_speaking'
+  | 'content_reading'
+  | 'assignment'
+  | 'submission_writing'
+  | 'submission_assignment'
+  | 'submission_listening';
+
+export interface NotificationTestResult {
+  scenario: NotificationTestScenario;
+  type: NotificationType;
+  audience: string;
+  sent_count: number;
+}
+
+export interface PushDispatchStatus {
+  push_configured: boolean;
+  has_functions_url: boolean;
+  has_dispatch_secret: boolean;
+}
+
 export interface AppNotification {
   id: string;
   user_id: string;

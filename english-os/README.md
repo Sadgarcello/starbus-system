@@ -73,6 +73,7 @@ npm run dev
 14. `0012_social_profiles.sql`
 15. **`0013_mvp_hardening.sql`** ← signup hardening, progress freeze, streaks, XP on review
 16. **`0014_notifications_push.sql`** ← in-app notifications + Web Push subscriptions + event triggers
+17. **`0015_notification_test.sql`** ← admin notification test tools in Settings
 
 ## Web Push (lock-screen alerts)
 
@@ -133,6 +134,20 @@ Khawaja Club can notify users **even when the app is closed** (Android PWA; iPho
 3. Open the app → tap **Enable notifications** on Profile or Settings → **Allow**.
 
 In-app inbox: header **bell** → `/notifications`.
+
+### Admin: test notifications
+
+After migration **0015**, admins see **Notification testing** in **Settings**. Each test uses the same database + push pipeline as real alerts. Titles are prefixed with **TEST** and the body says *no action needed*.
+
+| Test button | Who receives it |
+|-------------|-----------------|
+| New join request | Admins |
+| Writing / Speaking / Reading / Assignment | Active students |
+| Writing / Assignment / Listening submission | Teachers + admins |
+
+**Run all tests** sends every scenario at once (confirm dialog first).
+
+Lock-screen push for tests works automatically once the Edge Function setup above is complete.
 
 ## How accounts work
 

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
+import { NotificationTestPanel } from '@/components/notifications/NotificationTestPanel';
 import { PushEnableBanner } from '@/components/notifications/PushEnableBanner';
 import { InterestsEditor } from '@/components/student/InterestsEditor';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { avatarService } from '@/services/avatarService';
 
 export default function SettingsPage() {
-  const { profile, student, refresh } = useAuth();
+  const { profile, student, refresh, isAdmin } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,8 @@ export default function SettingsPage() {
       <h1 className="page-title">Settings</h1>
 
       <PushEnableBanner />
+
+      {isAdmin && <NotificationTestPanel />}
 
       <Card>
         <CardHeader title="Profile photo" subtitle="Shown on your student profile" />

@@ -77,42 +77,38 @@ npm run dev
 
 ## Web Push (lock-screen alerts)
 
-Khawaja Club can notify users **even when the app is closed** (Android PWA; iPhone requires **Add to Home Screen** on iOS 16.4+).
+Khawaja Club can notify users **even when the app is closed** (Android PWA; iPhone requires **Add to Home Screen** on iOS 16.4+). Push is sent by a **Vercel API route** (`/api/send-push`) — no Supabase CLI or Edge Function required.
 
-### One-time Supabase setup
+### One-time setup
 
-1. Run migration **`0014_notifications_push.sql`** in the SQL Editor.
+1. Run migrations **`0014_notifications_push.sql`** and **`0015_notification_test.sql`** in the Supabase SQL Editor.
 2. Generate VAPID keys (keep private key secret):
    ```bash
    npx web-push generate-vapid-keys
    ```
-3. Deploy the Edge Function:
-   ```bash
-   supabase functions deploy send-push --no-verify-jwt
-   ```
-4. Set Edge Function secrets (Dashboard → Edge Functions → send-push → Secrets):
-   - `VAPID_PUBLIC_KEY` — from step 2
-   - `VAPID_PRIVATE_KEY` — from step 2
-   - `VAPID_SUBJECT` — e.g. `mailto:admin@yourdomain.com`
-   - `PUSH_DISPATCH_SECRET` — long random string (same value in step 5)
-   - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are usually injected automatically
-5. Connect the database to the function (SQL Editor — replace placeholders):
-   ```sql
-   insert into private.push_dispatch_config (id, functions_base_url, dispatch_secret)
-   values (
-     1,
-     'https://YOUR_PROJECT_REF.supabase.co/functions/v1',
-     'YOUR_PUSH_DISPATCH_SECRET'
-   )
-   on conflict (id) do update set
-     functions_base_url = excluded.functions_base_url,
-     dispatch_secret = excluded.dispatch_secret,
-     updated_at = now();
-   ```
-6. Add to frontend env (`.env` locally, Vercel production):
-   ```
-   VITE_VAPID_PUBLIC_KEY=<public key from step 2>
-   ```
+3. **Vercel → Project → Settings → Environment Variables** (Production):
+
+   | Name | Value |
+   |------|--------|
+   | `VITE_VAPID_PUBLIC_KEY` | public key from step 2 |
+   | `VAPID_PUBLIC_KEY` | same public key |
+   | `VAPID_PRIVATE_KEY` | private key from step 2 |
+   | `VAPID_SUBJECT` | `mailto:admin@khawajaclub.test` |
+   | `PUSH_DISPATCH_SECRET` | long random string (save for step 4) |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → **service_role** (server only) |
+   | `VITE_SUPABASE_URL` | already set |
+
+4. **Redeploy** production on Vercel (env vars apply after rebuild).
+5. **Supabase SQL Editor** — run `supabase/scripts/setup-push-vercel.sql` (replace `YOUR_PUSH_DISPATCH_SECRET` with the same string from step 3).
+
+Direct notifications only — **not email**. The `mailto:` subject is a Web Push technical ID.
+
+<details>
+<summary>Alternative: Supabase Edge Function (optional)</summary>
+
+Deploy `supabase/functions/send-push` and set `functions_base_url` to `https://YOUR_PROJECT_REF.supabase.co/functions/v1` instead of the Vercel `/api` URL.
+
+</details>
 
 ### What triggers notifications
 
@@ -147,7 +143,7 @@ After migration **0015**, admins see **Notification testing** in **Settings**. E
 
 **Run all tests** sends every scenario at once (confirm dialog first).
 
-Lock-screen push for tests works automatically once the Edge Function setup above is complete.
+Lock-screen push for tests works automatically once the Vercel + SQL setup above is complete.
 
 ## How accounts work
 

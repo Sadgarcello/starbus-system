@@ -174,8 +174,8 @@ function PushStatusLine({
   return (
     <p className="text-xs text-ink-muted">
       Phone push: not configured yet — in-app bell and browser popups still work. Lock-screen alerts
-      will work after you deploy the <code className="text-[11px]">send-push</code> Edge Function
-      (see README).
+      will work after Vercel env vars + <code className="text-[11px]">push_dispatch_config</code>{' '}
+      SQL are set (see README).
     </p>
   );
 }

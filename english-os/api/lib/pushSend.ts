@@ -82,3 +82,25 @@ export async function sendPushToSubscriptions(
 
   return { sent, stale_removed: staleIds.length, failed, errors, staleIds };
 }
+
+/** Validate a user access token via Supabase Auth HTTP API (reliable on Vercel). */
+export async function verifySupabaseAccessToken(
+  supabaseUrl: string,
+  apiKey: string,
+  accessToken: string,
+): Promise<{ id: string; email?: string } | null> {
+  try {
+    const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey: apiKey,
+      },
+    });
+    if (!res.ok) return null;
+    const user = (await res.json()) as { id?: string; email?: string };
+    if (!user?.id) return null;
+    return { id: user.id, email: user.email };
+  } catch {
+    return null;
+  }
+}

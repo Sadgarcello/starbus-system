@@ -76,21 +76,26 @@ export const notificationService = {
     hint?: string;
     subscription_count?: number;
   }> {
-    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-    const session = refreshData.session ?? (await supabase.auth.getSession()).data.session;
-    if (refreshError && !session?.access_token) {
-      throw new Error('Session expired — sign out and sign in again.');
-    }
-    if (!session?.access_token) {
-      throw new Error('Not signed in');
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    let accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      accessToken = refreshed.session?.access_token;
+      if (!accessToken) {
+        throw new Error(
+          refreshError?.message || sessionError?.message || 'Not signed in — sign out and sign in again.',
+        );
+      }
     }
 
     const res = await fetch('/api/push-this-device', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ access_token: accessToken }),
     });
 
     const body = (await res.json()) as Record<string, unknown>;

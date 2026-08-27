@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend.js';
+import { getPushEnv, sendPushToSubscriptions, verifySupabaseAccessToken } from './lib/pushSend.js';
 
 /** Admin-only: push directly to the caller's registered devices (bypasses pg_net). */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -15,31 +15,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'missing_auth' });
-  }
-
   const env = getPushEnv();
   if (!env.ok) {
     return res.status(500).json({ error: env.error });
   }
 
-  const token = authHeader.slice('Bearer '.length).trim();
+  const authHeader = req.headers.authorization;
+  const bodyToken =
+    typeof req.body === 'object' && req.body && 'access_token' in req.body
+      ? String((req.body as { access_token?: string }).access_token ?? '')
+      : '';
+
+  const token = (
+    authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : bodyToken
+  ).trim();
+
   if (!token) {
     return res.status(401).json({ error: 'missing_auth' });
   }
 
-  const admin = createClient(env.supabaseUrl, env.serviceRoleKey);
+  const apiKey =
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    env.serviceRoleKey;
 
-  const {
-    data: { user },
-    error: userError,
-  } = await admin.auth.getUser(token);
+  const user = await verifySupabaseAccessToken(env.supabaseUrl, apiKey, token);
 
-  if (userError || !user) {
-    return res.status(401).json({ error: 'invalid_auth', detail: userError?.message });
+  if (!user) {
+    return res.status(401).json({
+      error: 'invalid_auth',
+      detail: 'Token rejected — sign out and sign in again, then retry.',
+    });
   }
+
+  const admin = createClient(env.supabaseUrl, env.serviceRoleKey);
 
   const { data: profile } = await admin
     .from('profiles')

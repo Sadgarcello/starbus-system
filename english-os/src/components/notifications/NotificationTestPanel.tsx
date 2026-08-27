@@ -12,7 +12,7 @@ export function NotificationTestPanel() {
   const push = usePushRegistration(profile?.id, Boolean(profile));
   const [pushStatus, setPushStatus] = useState<PushDispatchStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [running, setRunning] = useState<NotificationTestScenario | 'all' | null>(null);
+  const [running, setRunning] = useState<NotificationTestScenario | 'all' | 'device' | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
@@ -40,6 +40,30 @@ export function NotificationTestPanel() {
       }
     } catch (e) {
       setFeedbackError((e as Error).message || 'Test failed');
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function pushThisDevice() {
+    setRunning('device');
+    setFeedback(null);
+    setFeedbackError(null);
+    try {
+      const result = await notificationService.pushThisDevice();
+      if (result.skipped === 'no_subscriptions') {
+        setFeedbackError(result.hint ?? 'No device registered for push on this account.');
+      } else if (result.sent > 0) {
+        setFeedback(
+          `Push sent to ${result.sent} device(s). Close the app and check your lock screen / notification shade.`,
+        );
+      } else {
+        setFeedbackError(
+          `Push failed (${result.failed} error(s)). ${(result.errors ?? []).join(' · ') || 'Re-enable phone alerts on Notifications page.'}`,
+        );
+      }
+    } catch (e) {
+      setFeedbackError((e as Error).message || 'Direct push test failed');
     } finally {
       setRunning(null);
     }
@@ -114,6 +138,16 @@ export function NotificationTestPanel() {
 
         <Button
           className="w-full"
+          loading={running === 'device'}
+          disabled={running !== null}
+          onClick={() => void pushThisDevice()}
+        >
+          Push THIS phone now (lock-screen test)
+        </Button>
+
+        <Button
+          className="w-full"
+          variant="secondary"
           loading={running === 'all'}
           disabled={running !== null}
           onClick={() => void runAll()}
@@ -209,7 +243,8 @@ function PushStatusLine({
   if (status.push_configured) {
     return (
       <p className="text-xs font-semibold text-emerald-700">
-        Phone push: configured — lock-screen alerts will fire for users who enabled notifications.
+        Phone push: configured
+        {status.functions_base_url ? ` → ${status.functions_base_url}` : ''}
       </p>
     );
   }

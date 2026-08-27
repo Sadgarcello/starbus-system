@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useAuth } from '@/context/AuthContext';
+import { notificationService } from '@/services/notificationService';
 import type { AppNotification } from '@/types';
 import { cn } from '@/utils/cn';
 
@@ -71,6 +72,25 @@ export default function NotificationsPage() {
             </div>
           )}
           {push.error && <p className="text-xs text-danger">{push.error}</p>}
+          {profile?.role === 'admin' && push.isRegistered && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-2"
+              onClick={() => void notificationService.pushThisDevice().then(
+                (r) => {
+                  if (r.sent > 0) {
+                    alert('Push sent — close the app and check your lock screen.');
+                  } else {
+                    alert(r.errors?.join('\n') ?? 'Push failed. Try Register this device again.');
+                  }
+                },
+                (e) => alert((e as Error).message),
+              )}
+            >
+              Test lock-screen push now
+            </Button>
+          )}
         </div>
       </Card>
 

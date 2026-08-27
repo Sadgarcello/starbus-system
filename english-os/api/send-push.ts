@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import webpush from 'web-push';
+import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend';
 
 interface PushPayload {
   notification_id?: string;
@@ -32,21 +32,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  const dispatchSecret = process.env.PUSH_DISPATCH_SECRET;
-  const headerSecret = req.headers['x-push-dispatch-secret'];
+  const dispatchSecret = process.env.PUSH_DISPATCH_SECRET?.trim();
+  const headerSecret = String(req.headers['x-push-dispatch-secret'] ?? '').trim();
 
   if (!dispatchSecret || headerSecret !== dispatchSecret) {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const vapidPublic = process.env.VAPID_PUBLIC_KEY ?? process.env.VITE_VAPID_PUBLIC_KEY;
-  const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
-  const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@khawajaclub.app';
-
-  if (!supabaseUrl || !serviceRoleKey || !vapidPublic || !vapidPrivate) {
-    return res.status(500).json({ error: 'missing_env' });
+  const env = getPushEnv();
+  if (!env.ok) {
+    return res.status(500).json({ error: env.error });
   }
 
   const payload = req.body as PushPayload;
@@ -54,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'notification_id_required' });
   }
 
-  const admin = createClient(supabaseUrl, serviceRoleKey);
+  const admin = createClient(env.supabaseUrl, env.serviceRoleKey);
 
   const { data: notification, error: notifError } = await admin
     .from('notifications')
@@ -83,45 +78,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const subs = (subscriptions ?? []) as SubscriptionRow[];
   if (subs.length === 0) {
-    return res.status(200).json({ sent: 0, skipped: 'no_subscriptions' });
+    return res.status(200).json({ sent: 0, skipped: 'no_subscriptions', failed: 0, errors: [] });
   }
 
-  webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
-
-  const pushBody = JSON.stringify({
-    title: row.title,
-    body: row.body,
-    url: row.link_path ?? '/',
-    tag: row.id,
-  });
-
-  let sent = 0;
-  const staleIds: string[] = [];
-
-  await Promise.all(
-    subs.map(async (sub) => {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          pushBody,
-          { TTL: 60 * 60 * 24 },
-        );
-        sent += 1;
-      } catch (err) {
-        const status = (err as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) {
-          staleIds.push(sub.id);
-        }
-      }
-    }),
+  const result = await sendPushToSubscriptions(
+    subs,
+    {
+      title: row.title,
+      body: row.body,
+      url: row.link_path ?? '/',
+      tag: row.id,
+    },
+    {
+      subject: env.vapidSubject,
+      publicKey: env.vapidPublic,
+      privateKey: env.vapidPrivate,
+    },
   );
 
-  if (staleIds.length > 0) {
-    await admin.from('push_subscriptions').delete().in('id', staleIds);
+  if (result.staleIds.length > 0) {
+    await admin.from('push_subscriptions').delete().in('id', result.staleIds);
   }
 
-  return res.status(200).json({ sent, stale_removed: staleIds.length });
+  return res.status(200).json({
+    sent: result.sent,
+    failed: result.failed,
+    stale_removed: result.stale_removed,
+    errors: result.errors,
+  });
 }

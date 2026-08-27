@@ -17,6 +17,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'khawaja-club',
     data: { url: data.url || '/' },
     renotify: true,
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));

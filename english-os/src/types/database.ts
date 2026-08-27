@@ -324,12 +324,14 @@ export interface NotificationTestResult {
   type: NotificationType;
   audience: string;
   sent_count: number;
+  notification_ids?: string[];
 }
 
 export interface PushDispatchStatus {
   push_configured: boolean;
   has_functions_url: boolean;
   has_dispatch_secret: boolean;
+  functions_base_url?: string | null;
 }
 
 export interface AppNotification {

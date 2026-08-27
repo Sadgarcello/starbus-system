@@ -66,4 +66,42 @@ export const notificationService = {
       results: payload.results ?? [],
     };
   },
+
+  /** Direct push to this admin's registered devices — bypasses Supabase pg_net. */
+  async pushThisDevice(): Promise<{
+    sent: number;
+    failed: number;
+    errors?: string[];
+    skipped?: string;
+    hint?: string;
+    subscription_count?: number;
+  }> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Not signed in');
+    }
+
+    const res = await fetch('/api/push-this-device', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const body = (await res.json()) as Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error(String(body.error ?? 'Push test failed'));
+    }
+    return body as {
+      sent: number;
+      failed: number;
+      errors?: string[];
+      skipped?: string;
+      hint?: string;
+      subscription_count?: number;
+    };
+  },
 };

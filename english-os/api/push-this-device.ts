@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend';
+import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend.js';
 
 /** Admin-only: push directly to the caller's registered devices (bypasses pg_net). */
 export default async function handler(req: VercelRequest, res: VercelResponse) {

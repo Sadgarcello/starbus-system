@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend';
+import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend.js';
 
 interface PushPayload {
   notification_id?: string;

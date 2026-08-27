@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ensureServiceWorker,
+  hasPushSubscription,
   isPushSupported,
   pushPermission,
   subscribeToPush,
@@ -9,13 +10,24 @@ import {
 
 export function usePushRegistration(userId: string | undefined, enabled = true) {
   const [permission, setPermission] = useState(() => pushPermission());
+  const [subscribed, setSubscribed] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setPermission(pushPermission());
+    if (!userId) {
+      setSubscribed(false);
+      return;
+    }
+    setSubscribed(await hasPushSubscription());
+  }, [userId]);
 
   useEffect(() => {
     if (!enabled || !userId) return;
     void ensureServiceWorker();
-  }, [enabled, userId]);
+    void refresh();
+  }, [enabled, userId, refresh]);
 
   async function enable() {
     if (!userId) return;
@@ -23,13 +35,15 @@ export function usePushRegistration(userId: string | undefined, enabled = true) 
     setError(null);
     try {
       const result = await subscribeToPush(userId);
-      setPermission(pushPermission());
-      if (result === 'denied') {
-        setError('Notifications blocked. Enable them in your browser or phone settings.');
-      } else if (result === 'error') {
-        setError('Could not enable push. Check VITE_VAPID_PUBLIC_KEY is set.');
-      } else if (result === 'unsupported') {
-        setError('Push notifications are not supported on this device.');
+      await refresh();
+      if (!result.ok) {
+        if (result.reason === 'denied') {
+          setError('Notifications blocked. Open Android Settings → Apps → Chrome → Notifications → Allow.');
+        } else if (result.reason === 'unsupported') {
+          setError('Push is not supported in this browser. Use Chrome on Android.');
+        } else {
+          setError(result.message ?? 'Could not register this device for push.');
+        }
       }
     } catch (e) {
       setError((e as Error).message || 'Failed to enable notifications');
@@ -43,7 +57,7 @@ export function usePushRegistration(userId: string | undefined, enabled = true) 
     setError(null);
     try {
       await unsubscribeFromPush();
-      setPermission(pushPermission());
+      await refresh();
     } catch (e) {
       setError((e as Error).message || 'Failed to disable notifications');
     } finally {
@@ -51,13 +65,20 @@ export function usePushRegistration(userId: string | undefined, enabled = true) 
     }
   }
 
+  const permissionGranted = permission === 'granted';
+  const isRegistered = permissionGranted && subscribed;
+
   return {
     supported: isPushSupported(),
     permission,
+    subscribed,
     subscribing,
     error,
     enable,
     disable,
-    isEnabled: permission === 'granted',
+    refresh,
+    permissionGranted,
+    isRegistered,
+    isEnabled: isRegistered,
   };
 }

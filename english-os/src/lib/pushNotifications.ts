@@ -1,7 +1,8 @@
 import { isSupabaseConfigured } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 
-const SW_PATH = '/sw.js';
+const SW_SCRIPT = '/sw.js';
+const SW_SCOPE = '/';
 
 function urlBase64ToUint8Array(base64: string): BufferSource {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4);
@@ -32,41 +33,66 @@ export function pushPermission(): NotificationPermission | 'unsupported' {
 async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const existing = await navigator.serviceWorker.getRegistration(SW_PATH);
+    const existing = await navigator.serviceWorker.getRegistration(SW_SCOPE);
     if (existing) return existing;
-    return await navigator.serviceWorker.register(SW_PATH, { scope: '/' });
+    return await navigator.serviceWorker.register(SW_SCRIPT, { scope: SW_SCOPE });
   } catch {
     return null;
   }
 }
 
-export async function subscribeToPush(userId: string): Promise<'granted' | 'denied' | 'unsupported' | 'error'> {
-  if (!isPushSupported()) return 'unsupported';
+/** True when this browser has a row in push_subscriptions for the logged-in user. */
+export async function hasPushSubscription(): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('push_subscriptions')
+    .select('*', { count: 'exact', head: true });
+  if (error) return false;
+  return (count ?? 0) > 0;
+}
+
+export type PushSubscribeResult =
+  | { ok: true }
+  | { ok: false; reason: 'unsupported' | 'denied' | 'no_vapid' | 'no_sw' | 'save_failed'; message?: string };
+
+export async function subscribeToPush(userId: string): Promise<PushSubscribeResult> {
+  if (!isPushSupported()) {
+    return { ok: false, reason: 'unsupported' };
+  }
 
   const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
-  if (!vapidPublicKey) return 'error';
+  if (!vapidPublicKey) {
+    return { ok: false, reason: 'no_vapid', message: 'VITE_VAPID_PUBLIC_KEY is missing.' };
+  }
 
   let permission = Notification.permission;
   if (permission === 'default') {
     permission = await Notification.requestPermission();
   }
-  if (permission !== 'granted') return 'denied';
+  if (permission !== 'granted') {
+    return { ok: false, reason: 'denied' };
+  }
 
   const registration = await getServiceWorkerRegistration();
-  if (!registration) return 'error';
+  if (!registration) {
+    return { ok: false, reason: 'no_sw', message: 'Could not register the service worker.' };
+  }
 
   await navigator.serviceWorker.ready;
 
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-    });
+  const existing = await registration.pushManager.getSubscription();
+  if (existing) {
+    await existing.unsubscribe();
   }
 
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+  });
+
   const json = subscription.toJSON();
-  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return 'error';
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
+    return { ok: false, reason: 'save_failed', message: 'Push subscription was incomplete.' };
+  }
 
   const { error } = await supabase.from('push_subscriptions').upsert(
     {
@@ -80,13 +106,16 @@ export async function subscribeToPush(userId: string): Promise<'granted' | 'deni
     { onConflict: 'endpoint' },
   );
 
-  if (error) return 'error';
-  return 'granted';
+  if (error) {
+    return { ok: false, reason: 'save_failed', message: error.message };
+  }
+
+  return { ok: true };
 }
 
 export async function unsubscribeFromPush(): Promise<void> {
   if (!('serviceWorker' in navigator)) return;
-  const registration = await navigator.serviceWorker.getRegistration(SW_PATH);
+  const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE);
   const subscription = await registration?.pushManager.getSubscription();
   if (!subscription) return;
 

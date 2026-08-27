@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { NOTIFICATION_TEST_SCENARIOS } from '@/lib/notificationTestScenarios';
+import { usePushRegistration } from '@/hooks/usePushRegistration';
+import { useAuth } from '@/context/AuthContext';
 import { notificationService } from '@/services/notificationService';
 import type { NotificationTestScenario, PushDispatchStatus } from '@/types';
 
 export function NotificationTestPanel() {
+  const { profile } = useAuth();
+  const push = usePushRegistration(profile?.id, Boolean(profile));
   const [pushStatus, setPushStatus] = useState<PushDispatchStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [running, setRunning] = useState<NotificationTestScenario | 'all' | null>(null);
@@ -80,6 +84,7 @@ export function NotificationTestPanel() {
         </div>
 
         <PushStatusLine status={pushStatus} error={statusError} />
+        <DeviceStatusLine push={push} />
 
         <ul className="space-y-2">
           {NOTIFICATION_TEST_SCENARIOS.map((scenario) => (
@@ -135,6 +140,44 @@ export function NotificationTestPanel() {
         )}
       </div>
     </Card>
+  );
+}
+
+function DeviceStatusLine({
+  push,
+}: {
+  push: ReturnType<typeof usePushRegistration>;
+}) {
+  if (!push.supported) {
+    return (
+      <p className="text-xs text-ink-subtle">
+        This browser cannot receive lock-screen push. Run tests from Chrome on your Android phone.
+      </p>
+    );
+  }
+
+  if (push.isRegistered) {
+    return (
+      <p className="text-xs font-semibold text-emerald-700">
+        This device: registered — lock-screen tests will hit this phone when the app is closed.
+      </p>
+    );
+  }
+
+  if (push.permissionGranted) {
+    return (
+      <p className="text-xs text-amber-900">
+        This device: not registered — tap <strong>Register this device</strong> on Notifications, then
+        send a test again.
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-xs text-ink-subtle">
+      This device: not set up — open <strong>Notifications</strong> on your Android phone, enable alerts,
+      then send a test from there (not from PC).
+    </p>
   );
 }
 

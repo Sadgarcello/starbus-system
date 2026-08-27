@@ -7,7 +7,7 @@ export function PushEnableBanner() {
   const { profile, isActive } = useAuth();
   const push = usePushRegistration(profile?.id, isActive);
 
-  if (!isActive || !push.supported || push.isEnabled) return null;
+  if (!isActive || !push.supported || push.isRegistered) return null;
 
   return (
     <div className="rounded-md border border-club/40 bg-club-soft/60 px-4 py-3">

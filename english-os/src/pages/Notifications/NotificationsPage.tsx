@@ -42,11 +42,21 @@ export default function NotificationsPage() {
               Push is not supported in this browser. Install Khawaja Club to your home screen (Safari
               on iPhone, Chrome on Android) for best results.
             </p>
-          ) : push.isEnabled ? (
+          ) : push.isRegistered ? (
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-semibold text-ink">Phone alerts are on.</p>
+              <p className="text-sm font-semibold text-ink">This device is registered for lock-screen alerts.</p>
               <Button variant="secondary" size="sm" loading={push.subscribing} onClick={() => void push.disable()}>
                 Turn off
+              </Button>
+            </div>
+          ) : push.permissionGranted ? (
+            <div className="space-y-2">
+              <p className="text-sm text-amber-900">
+                Notifications are allowed, but <strong>this phone is not registered yet</strong> (common after
+                an update). Tap below to register.
+              </p>
+              <Button loading={push.subscribing} onClick={() => void push.enable()}>
+                Register this device
               </Button>
             </div>
           ) : (

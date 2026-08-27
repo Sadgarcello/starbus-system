@@ -1,27 +1,41 @@
-/* Khawaja Club — Web Push service worker */
+/* Khawaja Club — Web Push service worker v2 */
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'Khawaja Club', body: '', url: '/', tag: 'khawaja-club' };
-  try {
-    if (event.data) {
-      data = { ...data, ...event.data.json() };
-    }
-  } catch {
-    /* use defaults */
-  }
+  event.waitUntil(
+    (async () => {
+      let data = {
+        title: 'Khawaja Club',
+        body: 'You have a new update from Khawaja Club.',
+        url: '/',
+        tag: `khawaja-${Date.now()}`,
+      };
 
-  const options = {
-    body: data.body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: data.tag || 'khawaja-club',
-    data: { url: data.url || '/' },
-    renotify: true,
-    vibrate: [200, 100, 200],
-    requireInteraction: false,
-  };
+      try {
+        if (event.data) {
+          const parsed = event.data.json();
+          data = {
+            ...data,
+            ...parsed,
+            tag: parsed.tag ? `${parsed.tag}-${Date.now()}` : data.tag,
+          };
+        }
+      } catch {
+        /* use defaults */
+      }
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+      await self.registration.showNotification(data.title, {
+        body: data.body || data.title,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: data.tag,
+        data: { url: data.url || '/' },
+        renotify: true,
+        vibrate: [300, 100, 300, 100, 300],
+        silent: false,
+        requireInteraction: true,
+      });
+    })(),
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {

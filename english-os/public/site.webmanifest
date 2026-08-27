@@ -11,6 +11,7 @@
   "theme_color": "#111111",
   "lang": "en",
   "categories": ["education", "productivity"],
+  "permissions": [{ "name": "notifications" }],
   "icons": [
     {
       "src": "/icon-192.png",

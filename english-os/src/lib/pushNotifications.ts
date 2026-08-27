@@ -34,8 +34,16 @@ async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration
   if (!('serviceWorker' in navigator)) return null;
   try {
     const existing = await navigator.serviceWorker.getRegistration(SW_SCOPE);
-    if (existing) return existing;
-    return await navigator.serviceWorker.register(SW_SCRIPT, { scope: SW_SCOPE });
+    if (existing) {
+      void existing.update();
+      return existing;
+    }
+    const reg = await navigator.serviceWorker.register(SW_SCRIPT, {
+      scope: SW_SCOPE,
+      updateViaCache: 'none',
+    });
+    void reg.update();
+    return reg;
   } catch {
     return null;
   }
@@ -127,4 +135,28 @@ export async function unsubscribeFromPush(): Promise<void> {
 export async function ensureServiceWorker(): Promise<void> {
   if (!isPushSupported()) return;
   await getServiceWorkerRegistration();
+}
+
+/** Show a notification immediately via the service worker (no server push). */
+export async function showLocalNotification(
+  title: string,
+  body: string,
+): Promise<'ok' | 'denied' | 'unsupported'> {
+  if (!isPushSupported()) return 'unsupported';
+  if (Notification.permission !== 'granted') return 'denied';
+
+  const registration = await getServiceWorkerRegistration();
+  if (!registration) return 'unsupported';
+
+  await registration.showNotification(title, {
+    body,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: `local-${Date.now()}`,
+    renotify: true,
+    requireInteraction: true,
+    data: { url: '/notifications' },
+  } as NotificationOptions);
+
+  return 'ok';
 }

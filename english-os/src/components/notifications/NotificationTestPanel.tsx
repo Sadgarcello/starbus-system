@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { NOTIFICATION_TEST_SCENARIOS } from '@/lib/notificationTestScenarios';
+import { showLocalNotification } from '@/lib/pushNotifications';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useAuth } from '@/context/AuthContext';
 import { notificationService } from '@/services/notificationService';
@@ -12,7 +13,7 @@ export function NotificationTestPanel() {
   const push = usePushRegistration(profile?.id, Boolean(profile));
   const [pushStatus, setPushStatus] = useState<PushDispatchStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [running, setRunning] = useState<NotificationTestScenario | 'all' | 'device' | null>(null);
+  const [running, setRunning] = useState<NotificationTestScenario | 'all' | 'device' | 'local' | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
@@ -55,7 +56,7 @@ export function NotificationTestPanel() {
         setFeedbackError(result.hint ?? 'No device registered for push on this account.');
       } else if (result.sent > 0) {
         setFeedback(
-          `Push sent to ${result.sent} device(s). Close the app and check your lock screen / notification shade.`,
+          `Push sent to ${result.sent} device(s). Swipe Chrome away from recents, lock your phone, wait 10s, then pull down the notification shade — many Android phones hide web alerts from the lock screen unless Khawaja Club is on your Home Screen.`,
         );
       } else {
         setFeedbackError(
@@ -64,6 +65,31 @@ export function NotificationTestPanel() {
       }
     } catch (e) {
       setFeedbackError((e as Error).message || 'Direct push test failed');
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function showLocal() {
+    setRunning('local');
+    setFeedback(null);
+    setFeedbackError(null);
+    try {
+      const result = await showLocalNotification(
+        '🧪 Khawaja Club — instant test',
+        'If you see this banner, your phone CAN show Khawaja alerts. Lock the phone to check the lock screen.',
+      );
+      if (result === 'ok') {
+        setFeedback(
+          'Instant notification fired on this device. Lock your phone now — if it appears, display works and server push should too (after closing Chrome).',
+        );
+      } else if (result === 'denied') {
+        setFeedbackError('Notifications blocked — allow Khawaja Club in Chrome site settings.');
+      } else {
+        setFeedbackError('Could not show a local notification on this browser.');
+      }
+    } catch (e) {
+      setFeedbackError((e as Error).message || 'Local notification failed');
     } finally {
       setRunning(null);
     }
@@ -135,6 +161,16 @@ export function NotificationTestPanel() {
             </li>
           ))}
         </ul>
+
+        <Button
+          variant="secondary"
+          className="w-full"
+          loading={running === 'local'}
+          disabled={running !== null}
+          onClick={() => void showLocal()}
+        >
+          Instant notification on THIS phone (no server)
+        </Button>
 
         <Button
           className="w-full"

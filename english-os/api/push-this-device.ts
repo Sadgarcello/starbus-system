@@ -25,26 +25,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: env.error });
   }
 
-  const anonKey =
-    process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
-  if (!anonKey) {
-    return res.status(500).json({ error: 'missing_anon_key' });
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) {
+    return res.status(401).json({ error: 'missing_auth' });
   }
 
-  const userClient = createClient(env.supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  const admin = createClient(env.supabaseUrl, env.serviceRoleKey);
 
   const {
     data: { user },
     error: userError,
-  } = await userClient.auth.getUser();
+  } = await admin.auth.getUser(token);
 
   if (userError || !user) {
-    return res.status(401).json({ error: 'invalid_auth' });
+    return res.status(401).json({ error: 'invalid_auth', detail: userError?.message });
   }
-
-  const admin = createClient(env.supabaseUrl, env.serviceRoleKey);
 
   const { data: profile } = await admin
     .from('profiles')

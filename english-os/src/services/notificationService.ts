@@ -76,9 +76,11 @@ export const notificationService = {
     hint?: string;
     subscription_count?: number;
   }> {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    const session = refreshData.session ?? (await supabase.auth.getSession()).data.session;
+    if (refreshError && !session?.access_token) {
+      throw new Error('Session expired — sign out and sign in again.');
+    }
     if (!session?.access_token) {
       throw new Error('Not signed in');
     }
@@ -93,7 +95,8 @@ export const notificationService = {
 
     const body = (await res.json()) as Record<string, unknown>;
     if (!res.ok) {
-      throw new Error(String(body.error ?? 'Push test failed'));
+      const detail = body.detail ? ` (${String(body.detail)})` : '';
+      throw new Error(`${String(body.error ?? 'Push test failed')}${detail}`);
     }
     return body as {
       sent: number;

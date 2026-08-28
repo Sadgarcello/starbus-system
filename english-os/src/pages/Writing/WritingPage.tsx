@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
@@ -385,6 +386,21 @@ function StudentSubmitPanel({
               >
                 {mine.data ? 'Update submission' : 'Submit for assessment'}
               </Button>
+            )}
+
+            {mine.data?.id && (
+              <AiFeedbackPanel
+                sourceType="writing"
+                sourceId={mine.data.id}
+                disabled={!mine.data.body_text?.trim() || mine.data.body_text.trim().length < 20}
+                disabledReason={
+                  !mine.data.body_text?.trim()
+                    ? 'Paste at least 20 characters of typed writing, then submit, to use AI feedback.'
+                    : mine.data.body_text.trim().length < 20
+                      ? 'Write at least 20 characters before requesting AI feedback.'
+                      : undefined
+                }
+              />
             )}
           </>
         )}

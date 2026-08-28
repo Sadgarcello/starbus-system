@@ -157,6 +157,31 @@ export interface ListeningPickWithStudent extends ListeningPick {
   } | null;
 }
 
+export type AiTextSourceType = 'writing' | 'listening';
+
+export interface AiTextCorrection {
+  original: string;
+  correction: string;
+  explanation: string;
+}
+
+export interface AiTextEvaluation {
+  id: string;
+  student_id: string;
+  source_type: AiTextSourceType;
+  source_id: string;
+  input_snapshot: string;
+  overall_score: number;
+  estimated_cefr: string;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  corrections: AiTextCorrection[];
+  coach_note: string;
+  ai_model: string;
+  created_at: string;
+}
+
 /** Public classmate card — no email */
 export interface SocialProfile {
   student_id: string;

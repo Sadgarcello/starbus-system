@@ -56,4 +56,8 @@ export const queryKeys = {
     inbox: ['notifications', 'inbox'] as const,
     unread: ['notifications', 'unread'] as const,
   },
+  aiCoach: {
+    evaluation: (sourceType: string, sourceId: string) =>
+      ['aiCoach', 'evaluation', sourceType, sourceId] as const,
+  },
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
+import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -91,6 +92,7 @@ export default function ListeningPage() {
             <PickCard
               key={pick.id}
               pick={pick}
+              isOwnPick={Boolean(student) && pick.student_id === student?.id}
               canDelete={
                 isTeacher || (Boolean(student) && pick.student_id === student?.id)
               }
@@ -227,11 +229,13 @@ function SubmitPickForm({
 
 function PickCard({
   pick,
+  isOwnPick,
   canDelete,
   deleting,
   onDelete,
 }: {
   pick: ListeningPickWithStudent;
+  isOwnPick: boolean;
   canDelete: boolean;
   deleting: boolean;
   onDelete: () => void;
@@ -285,6 +289,19 @@ function PickCard({
         <Block label="What they understood" text={pick.what_understood} />
         <Block label="Opinion" text={pick.opinion} />
       </div>
+
+      {isOwnPick && (
+        <div className="mt-4">
+          <AiFeedbackPanel
+            sourceType="listening"
+            sourceId={pick.id}
+            disabled={
+              `${pick.what_understood} ${pick.opinion}`.trim().length < 20
+            }
+            disabledReason="Write at least 20 characters in your explanation fields to use AI feedback."
+          />
+        </div>
+      )}
     </Card>
   );
 }

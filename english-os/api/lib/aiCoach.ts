@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
-/** Models to try in order — legacy 2.0/1.5 ids return 404 for new API keys (2026). */
+/** Static fallbacks if models.list fails. */
 export const GEMINI_MODELS = [
   'gemini-flash-latest',
   'gemini-3.6-flash',
   'gemini-3.7-flash',
   'gemini-flash-lite-latest',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash-lite',
 ] as const;
 
 export const GEMINI_MODEL = GEMINI_MODELS[0];
@@ -49,6 +51,72 @@ export interface EvaluateTextInput {
   taskContext: string;
   studentText: string;
   student: StudentCoachContext;
+}
+
+let cachedModelIds: string[] | null = null;
+let cacheExpiresAt = 0;
+const MODEL_CACHE_MS = 10 * 60 * 1000;
+
+function scoreModelPreference(name: string): number {
+  if (name.includes('flash-latest')) return 100;
+  if (name.includes('3.7-flash')) return 95;
+  if (name.includes('3.6-flash')) return 90;
+  if (name.includes('2.5-flash')) return 85;
+  if (name.includes('flash-lite')) return 75;
+  if (name.includes('flash') && !name.includes('thinking')) return 80;
+  if (name.includes('pro-latest')) return 60;
+  if (name.includes('pro')) return 50;
+  return 10;
+}
+
+function isUsableModel(name: string): boolean {
+  const lower = name.toLowerCase();
+  if (lower.includes('embedding')) return false;
+  if (lower.includes('imagen')) return false;
+  if (lower.includes('aqa')) return false;
+  if (lower.includes('tts')) return false;
+  if (lower.includes('robotics')) return false;
+  if (lower.includes('thinking')) return false;
+  if (lower.includes('preview-tts')) return false;
+  return true;
+}
+
+/** Ask Google which models this API key can use for generateContent. */
+export async function discoverGeminiModels(apiKey: string): Promise<string[]> {
+  if (cachedModelIds && Date.now() < cacheExpiresAt) {
+    return cachedModelIds;
+  }
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100',
+      { headers: { 'x-goog-api-key': apiKey } },
+    );
+
+    if (!res.ok) {
+      return [...GEMINI_MODELS];
+    }
+
+    const data = (await res.json()) as {
+      models?: Array<{ name?: string; supportedGenerationMethods?: string[] }>;
+    };
+
+    const discovered = (data.models ?? [])
+      .filter((m) => (m.supportedGenerationMethods ?? []).includes('generateContent'))
+      .map((m) => (m.name ?? '').replace(/^models\//, ''))
+      .filter((name) => name.length > 0 && isUsableModel(name))
+      .sort((a, b) => scoreModelPreference(b) - scoreModelPreference(a));
+
+    if (discovered.length > 0) {
+      cachedModelIds = discovered;
+      cacheExpiresAt = Date.now() + MODEL_CACHE_MS;
+      return discovered;
+    }
+  } catch {
+    /* use static fallbacks */
+  }
+
+  return [...GEMINI_MODELS];
 }
 
 function buildSystemPrompt(): string {
@@ -130,7 +198,7 @@ async function callGeminiModel(
   systemText: string,
   userText: string,
 ): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25_000);
@@ -138,7 +206,10 @@ async function callGeminiModel(
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
       signal: controller.signal,
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemText }] },
@@ -153,7 +224,7 @@ async function callGeminiModel(
 
     if (!res.ok) {
       const errBody = await res.text();
-      throw new Error(`gemini_http_${res.status}: ${errBody.slice(0, 240)}`);
+      throw new Error(`gemini_http_${res.status}: ${errBody.slice(0, 280)}`);
     }
 
     const data = (await res.json()) as {
@@ -188,13 +259,16 @@ function parseAndValidate(rawJson: string): AiCoachResponse {
 
 export function humanizeGeminiError(message: string): string {
   if (message.includes('API_KEY_INVALID') || message.includes('gemini_http_400')) {
-    return 'Gemini API key is invalid. Re-enter GEMINI_API_KEY on Vercel and redeploy.';
+    return 'Gemini API key is invalid. Create a new key at aistudio.google.com/apikey, add it as GEMINI_API_KEY on Vercel, then redeploy.';
   }
   if (message.includes('gemini_http_403') || message.includes('PERMISSION_DENIED')) {
-    return 'Gemini API access denied. Check your API key at Google AI Studio.';
+    return 'Gemini API access denied. Create a new key at Google AI Studio and restrict it to the Gemini API.';
+  }
+  if (message.includes('no_models_available')) {
+    return 'No Gemini model available for your API key. Create a fresh key at aistudio.google.com/apikey and update Vercel.';
   }
   if (message.includes('gemini_http_404') || message.includes('NOT_FOUND')) {
-    return 'AI model unavailable. Try again in a few minutes.';
+    return 'AI model unavailable for your API key. Create a new key at aistudio.google.com/apikey, update GEMINI_API_KEY on Vercel, redeploy.';
   }
   if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
     return 'Khawaja AI is busy — wait a minute and try again.';
@@ -216,15 +290,20 @@ export async function evaluateStudentText(
   const userText = buildUserPrompt(input);
 
   const envModel = process.env.GEMINI_MODEL?.trim();
-  const modelsToTry = envModel
-    ? [envModel, ...GEMINI_MODELS.filter((m) => m !== envModel)]
-    : [...GEMINI_MODELS];
+  const discovered = await discoverGeminiModels(apiKey);
+  const modelsToTry = [
+    ...(envModel ? [envModel] : []),
+    ...discovered,
+    ...GEMINI_MODELS,
+  ].filter((m, i, arr) => arr.indexOf(m) === i);
 
   let lastError: Error | null = null;
+  let modelsTried = 0;
 
   for (const model of modelsToTry) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
+        modelsTried += 1;
         const retryNote =
           attempt === 1
             ? '\n\nIMPORTANT: Return ONLY valid JSON. overall_score must be integer. estimated_cefr uppercase A1-C2.'
@@ -242,6 +321,10 @@ export async function evaluateStudentText(
         throw e;
       }
     }
+  }
+
+  if (modelsTried > 0) {
+    throw new Error(`no_models_available: tried ${modelsToTry.slice(0, 6).join(', ')}`);
   }
 
   throw lastError ?? new Error('evaluation_failed');

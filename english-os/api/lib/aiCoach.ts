@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
-export const GEMINI_MODEL = 'gemini-2.0-flash';
+/** Models to try in order (free-tier friendly). */
+export const GEMINI_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-001',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+] as const;
+
+export const GEMINI_MODEL = GEMINI_MODELS[0];
 
 const cefrSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
@@ -11,12 +19,15 @@ const correctionSchema = z.object({
 });
 
 export const aiCoachResponseSchema = z.object({
-  overall_score: z.number().int().min(0).max(10),
-  estimated_cefr: cefrSchema,
+  overall_score: z.preprocess(
+    (v) => Math.round(Number(v)),
+    z.number().int().min(0).max(10),
+  ),
+  estimated_cefr: z.preprocess((v) => String(v).trim().toUpperCase(), cefrSchema),
   summary: z.string().min(1).max(600),
-  strengths: z.array(z.string()).min(1).max(4),
-  improvements: z.array(z.string()).min(1).max(4),
-  corrections: z.array(correctionSchema).max(5),
+  strengths: z.array(z.string()).max(4).default([]),
+  improvements: z.array(z.string()).max(4).default([]),
+  corrections: z.array(correctionSchema).max(5).default([]),
   coach_note: z.string().min(1).max(400),
 });
 
@@ -47,10 +58,12 @@ Rules:
 - Give SHORT feedback only (summary max 2 sentences).
 - Scores are practice estimates — never claim official TOEFL, IELTS, or exam scores.
 - Return valid JSON matching the required schema exactly.
-- corrections: list the most important mistakes only (max 5).
+- overall_score must be an integer 0-10.
+- estimated_cefr must be exactly one of: A1, A2, B1, B2, C1, C2 (uppercase).
+- corrections: list the most important mistakes only (max 5; use [] if none).
+- strengths and improvements: at least one item each.
 - coach_note: one casual, warm line — you may include a light, school-appropriate joke referencing the student's name or interests when natural. Never mock, insult, or be sarcastic in a hurtful way.
-- Be encouraging. Compare gently to their recent scores when provided.
-- estimated_cefr is an approximate level only (A1–C2).`;
+- Be encouraging. Compare gently to their recent scores when provided.`;
 }
 
 function buildUserPrompt(input: EvaluateTextInput): string {
@@ -88,27 +101,36 @@ ${input.studentText}
 
 Respond with JSON only:
 {
-  "overall_score": 0-10 integer,
-  "estimated_cefr": "A1"|"A2"|"B1"|"B2"|"C1"|"C2",
+  "overall_score": 7,
+  "estimated_cefr": "B1",
   "summary": "1-2 sentences",
   "strengths": ["...", "..."],
   "improvements": ["...", "..."],
   "corrections": [{"original":"...","correction":"...","explanation":"..."}],
-  "coach_note": "friendly personalized line, optional light joke"
+  "coach_note": "friendly personalized line"
 }`;
 }
 
 function normalizeResponse(raw: AiCoachResponse): AiCoachResponse {
+  const strengths = raw.strengths.length > 0 ? raw.strengths : ['You communicated a clear idea.'];
+  const improvements =
+    raw.improvements.length > 0 ? raw.improvements : ['Keep practicing — small steps add up.'];
+
   return {
     ...raw,
     corrections: raw.corrections.slice(0, 5),
-    strengths: raw.strengths.slice(0, 4),
-    improvements: raw.improvements.slice(0, 4),
+    strengths: strengths.slice(0, 4),
+    improvements: improvements.slice(0, 4),
   };
 }
 
-async function callGemini(apiKey: string, systemText: string, userText: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+async function callGeminiModel(
+  apiKey: string,
+  model: string,
+  systemText: string,
+  userText: string,
+): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25_000);
@@ -131,7 +153,7 @@ async function callGemini(apiKey: string, systemText: string, userText: string):
 
     if (!res.ok) {
       const errBody = await res.text();
-      throw new Error(`gemini_http_${res.status}: ${errBody.slice(0, 200)}`);
+      throw new Error(`gemini_http_${res.status}: ${errBody.slice(0, 240)}`);
     }
 
     const data = (await res.json()) as {
@@ -140,6 +162,11 @@ async function callGemini(apiKey: string, systemText: string, userText: string):
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('gemini_empty_response');
     return text;
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') {
+      throw new Error('gemini_timeout');
+    }
+    throw e;
   } finally {
     clearTimeout(timeout);
   }
@@ -152,32 +179,63 @@ function parseAndValidate(rawJson: string): AiCoachResponse {
   } catch {
     throw new Error('invalid_json');
   }
-  return normalizeResponse(aiCoachResponseSchema.parse(parsed));
+  const result = aiCoachResponseSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`invalid_schema: ${result.error.issues[0]?.message ?? 'bad shape'}`);
+  }
+  return normalizeResponse(result.data);
+}
+
+export function humanizeGeminiError(message: string): string {
+  if (message.includes('API_KEY_INVALID') || message.includes('gemini_http_400')) {
+    return 'Gemini API key is invalid. Re-enter GEMINI_API_KEY on Vercel and redeploy.';
+  }
+  if (message.includes('gemini_http_403') || message.includes('PERMISSION_DENIED')) {
+    return 'Gemini API access denied. Check your API key at Google AI Studio.';
+  }
+  if (message.includes('gemini_http_404') || message.includes('NOT_FOUND')) {
+    return 'AI model unavailable. Try again in a few minutes.';
+  }
+  if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
+    return 'Khawaja AI is busy — wait a minute and try again.';
+  }
+  if (message.includes('gemini_timeout')) {
+    return 'AI took too long — please try again.';
+  }
+  if (message.includes('invalid_json') || message.includes('invalid_schema')) {
+    return 'AI returned an unexpected format — tap Re-check to try again.';
+  }
+  return 'Could not evaluate your text. Please try again.';
 }
 
 export async function evaluateStudentText(
   apiKey: string,
   input: EvaluateTextInput,
-): Promise<AiCoachResponse> {
+): Promise<AiCoachResponse & { modelUsed: string }> {
   const systemText = buildSystemPrompt();
   const userText = buildUserPrompt(input);
 
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const retryNote =
-        attempt === 1
-          ? '\n\nIMPORTANT: Your previous reply was invalid. Return ONLY valid JSON matching the schema.'
-          : '';
-      const raw = await callGemini(apiKey, systemText, userText + retryNote);
-      return parseAndValidate(raw);
-    } catch (e) {
-      lastError = e as Error;
-      if ((e as Error).message === 'invalid_json' || (e as Error).name === 'ZodError') {
-        continue;
+  for (const model of GEMINI_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const retryNote =
+          attempt === 1
+            ? '\n\nIMPORTANT: Return ONLY valid JSON. overall_score must be integer. estimated_cefr uppercase A1-C2.'
+            : '';
+        const raw = await callGeminiModel(apiKey, model, systemText, userText + retryNote);
+        const parsed = parseAndValidate(raw);
+        return { ...parsed, modelUsed: model };
+      } catch (e) {
+        lastError = e as Error;
+        const msg = lastError.message ?? '';
+        const retryableParse = msg === 'invalid_json' || msg.startsWith('invalid_schema');
+        const modelMissing = msg.includes('404') || msg.includes('NOT_FOUND');
+        if (retryableParse) continue;
+        if (modelMissing) break;
+        throw e;
       }
-      throw e;
     }
   }
 

@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   evaluateStudentText,
-  GEMINI_MODEL,
   getGeminiApiKey,
+  humanizeGeminiError,
   type StudentCoachContext,
 } from './lib/aiCoach.js';
 import { getPushEnv, verifySupabaseAccessToken } from './lib/pushSend.js';
@@ -317,9 +317,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const isRateLimit = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED');
     return res.status(isRateLimit ? 503 : 502).json({
       error: isRateLimit ? 'ai_busy' : 'evaluation_failed',
-      detail: isRateLimit
-        ? 'Khawaja AI is busy — wait a minute and try again.'
-        : 'Could not evaluate your text. Please try again.',
+      detail: humanizeGeminiError(msg),
     });
   }
 
@@ -335,7 +333,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     improvements: aiResult.improvements,
     corrections: aiResult.corrections,
     coach_note: aiResult.coach_note,
-    ai_model: GEMINI_MODEL,
+    ai_model: aiResult.modelUsed,
   };
 
   if (force) {

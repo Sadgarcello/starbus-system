@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-/** Models to try in order (free-tier friendly). */
+/** Models to try in order — legacy 2.0/1.5 ids return 404 for new API keys (2026). */
 export const GEMINI_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-001',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
+  'gemini-flash-latest',
+  'gemini-3.6-flash',
+  'gemini-3.7-flash',
+  'gemini-flash-lite-latest',
 ] as const;
 
 export const GEMINI_MODEL = GEMINI_MODELS[0];
@@ -215,9 +215,14 @@ export async function evaluateStudentText(
   const systemText = buildSystemPrompt();
   const userText = buildUserPrompt(input);
 
+  const envModel = process.env.GEMINI_MODEL?.trim();
+  const modelsToTry = envModel
+    ? [envModel, ...GEMINI_MODELS.filter((m) => m !== envModel)]
+    : [...GEMINI_MODELS];
+
   let lastError: Error | null = null;
 
-  for (const model of GEMINI_MODELS) {
+  for (const model of modelsToTry) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const retryNote =

@@ -12,6 +12,8 @@ export interface SelectionContext {
   mode: ReadingPracticeMode;
   profile: ReadingPracticeProfile;
   recentQuestionIds: string[];
+  /** Never repeat these within the current session */
+  sessionQuestionIds: string[];
   candidates: QuestionCandidate[];
   /** If academic session has active passage, prefer its remaining questions */
   activePassageId?: string | null;
@@ -78,7 +80,8 @@ export function scoreCandidate(
     : 10;
 
   const cefrMatch = cefrProximity(ctx.profile, c.cefrLevel) * 10;
-  const freshness = ctx.recentQuestionIds.includes(c.questionId) ? 0 : 10;
+  const freshness =
+    ctx.sessionQuestionIds.includes(c.questionId) || ctx.recentQuestionIds.includes(c.questionId) ? 0 : 10;
 
   let spaced = 5;
   if (ctx.recentQuestionIds.slice(0, 3).includes(c.questionId)) {
@@ -94,7 +97,8 @@ function cefrProximity(_profile: ReadingPracticeProfile, _cefr: string): number 
 }
 
 export function selectQuestion(ctx: SelectionContext): QuestionCandidate | null {
-  let pool = ctx.candidates.filter((c) => !ctx.recentQuestionIds.includes(c.questionId));
+  const exclude = new Set([...ctx.recentQuestionIds, ...ctx.sessionQuestionIds]);
+  let pool = ctx.candidates.filter((c) => !exclude.has(c.questionId));
 
   if (ctx.activePassageId) {
     const passageQs = pool.filter((c) => c.passageId === ctx.activePassageId);
@@ -102,8 +106,10 @@ export function selectQuestion(ctx: SelectionContext): QuestionCandidate | null 
   }
 
   if (pool.length === 0) {
-    pool = ctx.candidates;
+    pool = ctx.candidates.filter((c) => !ctx.sessionQuestionIds.includes(c.questionId));
   }
+
+  if (pool.length === 0) return null;
 
   const targetType =
     ctx.mode === 'ADAPTIVE' ? pickTaskType(ctx.mode, ctx.profile) : pickTaskType(ctx.mode, ctx.profile);

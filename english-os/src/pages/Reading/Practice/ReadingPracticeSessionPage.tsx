@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -20,6 +20,8 @@ const TYPE_LABEL: Record<ReadingQuestionType, string> = {
   ACADEMIC: 'Academic Passage',
 };
 
+type Phase = 'idle' | 'booting' | 'submitting' | 'advancing' | 'finishing';
+
 export default function ReadingPracticeSessionPage() {
   const { student } = useAuth();
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function ReadingPracticeSessionPage() {
   const mode = (params.get('mode') ?? 'ADAPTIVE') as ReadingPracticeMode;
   const length = Number(params.get('length') ?? 10);
 
-  const [loading, setLoading] = useState(true);
+  const [phase, setPhase] = useState<Phase>('booting');
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [question, setQuestion] = useState<StudentQuestionPayload | null>(null);
@@ -41,79 +43,112 @@ export default function ReadingPracticeSessionPage() {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [summary, setSummary] = useState<SessionResultsSummary | null>(null);
   const startedAt = useRef<number>(Date.now());
+  const sessionIdRef = useRef<string | null>(null);
 
   const targetLength = useMemo(() => Math.min(20, Math.max(1, length || 10)), [length]);
-
-  const boot = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await readingPracticeService.start(mode, targetLength);
-      setSessionId(res.sessionId);
-      setQuestion(res.question);
-      startedAt.current = Date.now();
-    } catch (e) {
-      const msg = (e as Error).message;
-      if (msg === 'toefl_only' || msg.includes('TOEFL')) setError(msg);
-      else if (msg.includes('No active questions') || msg === 'no_questions')
-        setError(msg);
-      else if (msg.includes('migration') || msg.includes('0021'))
-        setError(msg);
-      else setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [mode, targetLength]);
+  const busy = phase !== 'idle' && phase !== 'booting';
 
   useEffect(() => {
-    if (student?.exam_track === 'toefl') void boot();
-    else setLoading(false);
-  }, [student?.exam_track, boot]);
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (student?.exam_track !== 'toefl') {
+      setPhase('idle');
+      return;
+    }
+
+    let cancelled = false;
+
+    async function startSession() {
+      setPhase('booting');
+      setError(null);
+      setSummary(null);
+      setFeedback(null);
+      setAnsweredCount(0);
+
+      try {
+        const res = await readingPracticeService.start(mode, targetLength);
+        if (cancelled) return;
+        setSessionId(res.sessionId);
+        setQuestion(res.question);
+        startedAt.current = Date.now();
+        setPhase('idle');
+      } catch (e) {
+        if (cancelled) return;
+        const msg = (e as Error).message;
+        setError(msg);
+        setPhase('idle');
+      }
+    }
+
+    void startSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [student?.id, student?.exam_track, mode, targetLength]);
 
   async function submitCurrent() {
-    if (!sessionId || !question || feedback) return;
+    if (phase !== 'idle' || !sessionId || !question || feedback) return;
+
     const responseTimeMs = Date.now() - startedAt.current;
     const payload =
       question.questionType === 'COMPLETE_WORDS' ? answer : (mcq ?? '');
+    const activeSessionId = sessionId;
+    const activeQuestionId = question.questionId;
 
+    setPhase('submitting');
     try {
       const result = await readingPracticeService.submit(
-        sessionId,
-        question.questionId,
+        activeSessionId,
+        activeQuestionId,
         question.questionType,
         payload,
         responseTimeMs,
       );
+      if (sessionIdRef.current !== activeSessionId) return;
       setFeedback(result);
       setAnsweredCount((c) => c + 1);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setPhase('idle');
     }
   }
 
   async function nextQuestion() {
-    if (!sessionId) return;
+    if (phase !== 'idle' || !sessionId) return;
+
     if (answeredCount >= targetLength) {
+      setPhase('finishing');
+      const activeSessionId = sessionId;
       try {
-        const s = await readingPracticeService.finish(sessionId);
+        const s = await readingPracticeService.finish(activeSessionId);
+        if (sessionIdRef.current !== activeSessionId) return;
         setSummary(s);
       } catch (e) {
         setError((e as Error).message);
+      } finally {
+        setPhase('idle');
       }
       return;
     }
-    setLoading(true);
-    setFeedback(null);
-    setAnswer('');
-    setMcq(null);
+
+    const activeSessionId = sessionId;
+    setPhase('advancing');
     try {
-      const q = await readingPracticeService.next(sessionId);
+      const q = await readingPracticeService.next(activeSessionId);
+      if (sessionIdRef.current !== activeSessionId) return;
       setQuestion(q);
+      setFeedback(null);
+      setAnswer('');
+      setMcq(null);
       startedAt.current = Date.now();
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setLoading(false);
+      setPhase('idle');
     }
   }
 
@@ -128,13 +163,28 @@ export default function ReadingPracticeSessionPage() {
     );
   }
 
-  if (loading && !question) return <Spinner />;
+  if (phase === 'booting' && !question) return <Spinner />;
 
   if (error && !question) {
     return (
       <Card className="space-y-3 p-6 text-sm text-danger">
         <p>{error}</p>
-        <Button variant="secondary" onClick={() => void boot()}>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setError(null);
+            setPhase('booting');
+            void readingPracticeService.start(mode, targetLength).then((res) => {
+              setSessionId(res.sessionId);
+              setQuestion(res.question);
+              startedAt.current = Date.now();
+              setPhase('idle');
+            }).catch((e) => {
+              setError((e as Error).message);
+              setPhase('idle');
+            });
+          }}
+        >
           Retry
         </Button>
       </Card>
@@ -193,23 +243,35 @@ export default function ReadingPracticeSessionPage() {
             {TYPE_LABEL[question.questionType]}
           </p>
           <p className="text-sm text-ink-muted">
-            Question {answeredCount + 1} of {targetLength}
+            Question {Math.min(answeredCount + 1, targetLength)} of {targetLength}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate(paths.readingPractice)}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(paths.readingPractice)} disabled={busy}>
           Exit
         </Button>
       </div>
 
-      <Card className="p-5">
+      {error && (
+        <Card className="border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+          {error}
+        </Card>
+      )}
+
+      <Card key={question.questionId} className="relative p-5">
+        {busy && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-paper/70">
+            <Spinner />
+          </div>
+        )}
+
         {question.questionType === 'COMPLETE_WORDS' && (
           <CompleteWordsView question={question} />
         )}
         {question.questionType === 'DAILY_LIFE' && (
-          <DailyLifeView question={question} mcq={mcq} setMcq={setMcq} disabled={!!feedback} />
+          <DailyLifeView question={question} mcq={mcq} setMcq={setMcq} disabled={!!feedback || busy} />
         )}
         {question.questionType === 'ACADEMIC' && (
-          <AcademicView question={question} mcq={mcq} setMcq={setMcq} disabled={!!feedback} />
+          <AcademicView question={question} mcq={mcq} setMcq={setMcq} disabled={!!feedback || busy} />
         )}
 
         {question.questionType === 'COMPLETE_WORDS' && !feedback && (
@@ -220,6 +282,7 @@ export default function ReadingPracticeSessionPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Type the complete word"
               autoComplete="off"
+              disabled={busy}
             />
           </div>
         )}
@@ -245,14 +308,21 @@ export default function ReadingPracticeSessionPage() {
             <Button
               onClick={() => void submitCurrent()}
               disabled={
-                question.questionType === 'COMPLETE_WORDS' ? !answer.trim() : mcq === null
+                busy ||
+                (question.questionType === 'COMPLETE_WORDS' ? !answer.trim() : mcq === null)
               }
             >
-              Submit
+              {phase === 'submitting' ? 'Checking…' : 'Submit'}
             </Button>
           ) : (
-            <Button onClick={() => void nextQuestion()}>
-              {answeredCount >= targetLength ? 'See results' : 'Next question'}
+            <Button onClick={() => void nextQuestion()} disabled={busy}>
+              {phase === 'finishing'
+                ? 'Loading results…'
+                : phase === 'advancing'
+                  ? 'Loading…'
+                  : answeredCount >= targetLength
+                    ? 'See results'
+                    : 'Next question'}
             </Button>
           )}
         </div>
@@ -350,10 +420,11 @@ function McqBlock({
           >
             <input
               type="radio"
-              name="mcq"
+              name={`mcq-${questionText}`}
               checked={mcq === o.key}
               onChange={() => setMcq(o.key)}
               className="mt-1"
+              disabled={disabled}
             />
             <span>
               <strong>{o.key}.</strong> {o.label}

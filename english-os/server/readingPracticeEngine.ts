@@ -135,6 +135,38 @@ async function loadCandidates(admin: SupabaseClient): Promise<QuestionCandidate[
   return out;
 }
 
+async function loadSessionQuestionIds(
+  admin: SupabaseClient,
+  sessionId: string,
+): Promise<string[]> {
+  const { data } = await admin
+    .from('reading_attempts')
+    .select('question_id')
+    .eq('session_id', sessionId);
+  return (data ?? []).map((r) => r.question_id as string);
+}
+
+async function resolveActivePassageId(
+  admin: SupabaseClient,
+  sessionId: string,
+  currentPassageId: string | null,
+  candidates: QuestionCandidate[],
+  sessionQuestionIds: string[],
+): Promise<string | null> {
+  if (!currentPassageId) return null;
+
+  const remaining = candidates.filter(
+    (c) => c.passageId === currentPassageId && !sessionQuestionIds.includes(c.questionId),
+  );
+  if (remaining.length > 0) return currentPassageId;
+
+  await admin
+    .from('reading_practice_sessions')
+    .update({ current_passage_id: null })
+    .eq('id', sessionId);
+  return null;
+}
+
 export async function buildStudentPayload(
   admin: SupabaseClient,
   selected: QuestionCandidate,
@@ -274,15 +306,28 @@ export async function getNextQuestion(
   const profile = await ensureReadingProfile(admin, studentId, (student?.level as string) ?? 'A1');
 
   const recentQuestionIds = await loadRecentQuestionIds(admin, studentId);
+  const sessionQuestionIds = await loadSessionQuestionIds(admin, sessionId);
   const candidates = await loadCandidates(admin);
   if (candidates.length === 0) throw new Error('no_questions');
+
+  const activePassageId = await resolveActivePassageId(
+    admin,
+    sessionId,
+    session.current_passage_id as string | null,
+    candidates,
+    sessionQuestionIds,
+  );
+  if (activePassageId !== session.current_passage_id) {
+    session.current_passage_id = activePassageId;
+  }
 
   const selected = selectQuestion({
     mode: session.mode as ReadingPracticeMode,
     profile,
     recentQuestionIds,
+    sessionQuestionIds,
     candidates,
-    activePassageId: session.current_passage_id as string | null,
+    activePassageId,
   });
   if (!selected) throw new Error('no_eligible_question');
 
@@ -318,6 +363,13 @@ export async function submitAnswer(
   answer: string,
   responseTimeMs?: number,
 ): Promise<{ correct: boolean; explanation: string | null; reveal?: string }> {
+  const { data: priorAttempt } = await admin
+    .from('reading_attempts')
+    .select('correct')
+    .eq('session_id', sessionId)
+    .eq('question_id', questionId)
+    .maybeSingle();
+
   let correct = false;
   let explanation: string | null = null;
   let skill: ReadingSkill | null = null;
@@ -332,7 +384,9 @@ export async function submitAnswer(
       .eq('id', questionId)
       .single();
     if (!q) throw new Error('question_not_found');
-    correct = answersMatch(answer, q.target_word as string);
+    correct = priorAttempt
+      ? (priorAttempt.correct as boolean)
+      : answersMatch(answer, q.target_word as string);
     explanation = q.explanation as string | null;
     skill = 'VOCABULARY';
     difficulty = Number(q.difficulty);
@@ -345,7 +399,9 @@ export async function submitAnswer(
       .eq('id', questionId)
       .single();
     if (!q) throw new Error('question_not_found');
-    correct = checkMcqAnswer(answer, q.correct_option as string);
+    correct = priorAttempt
+      ? (priorAttempt.correct as boolean)
+      : checkMcqAnswer(answer, q.correct_option as string);
     explanation = q.explanation as string | null;
     skill = q.skill as ReadingSkill;
     difficulty = Number(q.difficulty);
@@ -357,12 +413,22 @@ export async function submitAnswer(
       .eq('id', questionId)
       .single();
     if (!q) throw new Error('question_not_found');
-    correct = checkMcqAnswer(answer, q.correct_option as string);
+    correct = priorAttempt
+      ? (priorAttempt.correct as boolean)
+      : checkMcqAnswer(answer, q.correct_option as string);
     explanation = q.explanation as string | null;
     skill = q.skill as ReadingSkill;
     difficulty = Number(q.difficulty);
     const passage = q.academic_passages as { cefr_level: string } | null;
     cefrLevel = passage?.cefr_level ?? 'B1';
+  }
+
+  if (priorAttempt) {
+    return {
+      correct,
+      explanation,
+      reveal: questionType === 'COMPLETE_WORDS' ? targetWord ?? undefined : undefined,
+    };
   }
 
   await admin.from('reading_attempts').insert({

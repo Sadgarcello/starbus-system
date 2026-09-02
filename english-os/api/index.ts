@@ -4,10 +4,20 @@ import { handlePushThisDevice } from '../server/pushThisDeviceRoute.js';
 import { handleReadingPractice } from '../server/readingPracticeRoute.js';
 import { handleSendPush } from '../server/sendPushRoute.js';
 
+/** Resolve route segment from query (vercel.json rewrite) or request path. */
+function resolveApiSlug(req: VercelRequest): string {
+  const slugParam = req.query.slug;
+  if (slugParam != null && slugParam !== '') {
+    return Array.isArray(slugParam) ? slugParam.join('/') : String(slugParam);
+  }
+
+  const pathOnly = (req.url ?? '').split('?')[0] ?? '';
+  return pathOnly.replace(/^\/api\/?/, '').replace(/\/$/, '');
+}
+
 /** Single serverless entry — routes /api/* (Hobby plan function limit). */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const slugParam = req.query.slug;
-  const slug = Array.isArray(slugParam) ? slugParam.join('/') : String(slugParam ?? '');
+  const slug = resolveApiSlug(req);
 
   switch (slug) {
     case 'reading-practice':

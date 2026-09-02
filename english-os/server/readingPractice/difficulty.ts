@@ -1,5 +1,5 @@
-import type { CefrLevel } from './types';
-import { CEFR_STARTING_DIFFICULTY, RECENT_WINDOW } from './types';
+import type { CefrLevel } from './types.js';
+import { CEFR_STARTING_DIFFICULTY, RECENT_WINDOW } from './types.js';
 
 export function clampDifficulty(value: number): number {
   return Math.min(10, Math.max(1, Math.round(value * 10) / 10));

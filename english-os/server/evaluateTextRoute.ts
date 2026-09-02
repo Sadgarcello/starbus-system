@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   evaluateStudentText,
@@ -31,7 +31,7 @@ function startOfUtcDay(): string {
 }
 
 async function loadStudentContext(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   studentId: string,
 ): Promise<StudentCoachContext | null> {
   const { data: studentRow } = await admin
@@ -78,7 +78,7 @@ async function loadStudentContext(
 }
 
 async function loadWritingSource(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   sourceId: string,
 ): Promise<SourcePayload | null> {
   const { data: submission } = await admin
@@ -110,7 +110,7 @@ async function loadWritingSource(
 }
 
 async function loadListeningSource(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   sourceId: string,
 ): Promise<SourcePayload | null> {
   const { data: pick } = await admin

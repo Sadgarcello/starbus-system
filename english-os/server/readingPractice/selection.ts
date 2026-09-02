@@ -4,9 +4,9 @@ import type {
   ReadingPracticeProfile,
   ReadingQuestionType,
   ReadingSkill,
-} from './types';
-import { TASK_DISTRIBUTION } from './types';
-import { difficultyForType } from './difficulty';
+} from './types.js';
+import { TASK_DISTRIBUTION } from './types.js';
+import { difficultyForType } from './difficulty.js';
 
 export interface SelectionContext {
   mode: ReadingPracticeMode;

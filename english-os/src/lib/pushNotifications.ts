@@ -49,13 +49,36 @@ async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration
   }
 }
 
-/** True when this browser has a row in push_subscriptions for the logged-in user. */
-export async function hasPushSubscription(): Promise<boolean> {
-  const { count, error } = await supabase
+/** Current browser push endpoint, if subscribed locally. */
+export async function getLocalPushEndpoint(): Promise<string | null> {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE);
+    const subscription = await registration?.pushManager.getSubscription();
+    return subscription?.endpoint ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** True when THIS browser is registered (local subscription + saved row). */
+export async function isThisDeviceRegistered(): Promise<boolean> {
+  const endpoint = await getLocalPushEndpoint();
+  if (!endpoint) return false;
+
+  const { data, error } = await supabase
     .from('push_subscriptions')
-    .select('*', { count: 'exact', head: true });
+    .select('id')
+    .eq('endpoint', endpoint)
+    .maybeSingle();
+
   if (error) return false;
-  return (count ?? 0) > 0;
+  return Boolean(data);
+}
+
+/** @deprecated Use isThisDeviceRegistered — counts any device on the account. */
+export async function hasPushSubscription(): Promise<boolean> {
+  return isThisDeviceRegistered();
 }
 
 export type PushSubscribeResult =

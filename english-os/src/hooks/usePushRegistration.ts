@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getPushDeniedMessage, getPushUnsupportedMessage } from '@/lib/deviceContext';
 import {
   ensureServiceWorker,
-  hasPushSubscription,
   isPushSupported,
+  isThisDeviceRegistered,
   pushPermission,
   subscribeToPush,
   unsubscribeFromPush,
@@ -20,7 +21,7 @@ export function usePushRegistration(userId: string | undefined, enabled = true) 
       setSubscribed(false);
       return;
     }
-    setSubscribed(await hasPushSubscription());
+    setSubscribed(await isThisDeviceRegistered());
   }, [userId]);
 
   useEffect(() => {
@@ -38,9 +39,9 @@ export function usePushRegistration(userId: string | undefined, enabled = true) 
       await refresh();
       if (!result.ok) {
         if (result.reason === 'denied') {
-          setError('Notifications blocked. Open Android Settings → Apps → Chrome → Notifications → Allow.');
+          setError(getPushDeniedMessage());
         } else if (result.reason === 'unsupported') {
-          setError('Push is not supported in this browser. Use Chrome on Android.');
+          setError(getPushUnsupportedMessage());
         } else {
           setError(result.message ?? 'Could not register this device for push.');
         }

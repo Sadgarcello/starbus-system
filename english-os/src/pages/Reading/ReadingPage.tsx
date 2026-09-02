@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Avatar } from '@/components/common/Avatar';
+import { ExamTrackLogo } from '@/components/exam/ExamTrackLogo';
 import { BookCover } from '@/components/reading/BookCover';
+import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -15,7 +18,8 @@ import {
   useVoteReadingBook,
 } from '@/hooks/useReading';
 import { readingProgressPercent } from '@/services/readingService';
-import type { ReadingBook, ReadingBookVoter } from '@/types';
+import { paths } from '@/routes/paths';
+import type { ExamTrack, ReadingBook, ReadingBookVoter } from '@/types';
 
 export default function ReadingPage() {
   const { isTeacher, isStudent, student, profile } = useAuth();
@@ -57,14 +61,41 @@ export default function ReadingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-subtle">Skill module</p>
-        <h1 className="page-title">Reading</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Novels and books with cover art and page progress. Students vote which one to start first.
-          Declared pages finished count toward Reading % only for students who attended that day.
-        </p>
-      </div>
+      <SkillModuleHeader
+        skill="reading"
+        title="Reading"
+        examTrack={student?.exam_track as ExamTrack | null | undefined}
+        isTeacher={isTeacher}
+      />
+
+      {isStudent && student?.exam_track === 'toefl' && (
+        <Card className="overflow-hidden border-club/40 bg-gradient-to-r from-club-soft/80 to-paper">
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <ExamTrackLogo track="toefl" variant="badge" className="h-5 max-w-[72px]" />
+                <p className="text-xs font-bold uppercase tracking-wide text-ink-subtle">
+                  TOEFL Reading Practice
+                </p>
+              </div>
+              <p className="font-display text-xl text-ink">Take actual test</p>
+              <p className="mt-1 text-sm text-ink-muted">
+                Adaptive Complete the Words, Daily Life, and Academic passages — powered by your
+                practice profile, not AI.
+              </p>
+            </div>
+            <Link to={`${paths.readingPractice}/session?mode=ADAPTIVE&length=10`} className="shrink-0">
+              <Button className="w-full sm:w-auto">Take actual test</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      {isTeacher && (
+        <Link to={paths.readingPracticeAdmin} className="inline-block text-xs font-bold uppercase text-ink-subtle hover:text-ink">
+          Manage reading practice content →
+        </Link>
+      )}
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
       {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}

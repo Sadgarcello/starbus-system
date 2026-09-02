@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { NOTIFICATION_TEST_SCENARIOS } from '@/lib/notificationTestScenarios';
+import {
+  getDeviceLabel,
+  getNotificationSetupCopy,
+  isMobileDevice,
+} from '@/lib/deviceContext';
 import { showLocalNotification } from '@/lib/pushNotifications';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useAuth } from '@/context/AuthContext';
@@ -56,7 +61,7 @@ export function NotificationTestPanel() {
         setFeedbackError(result.hint ?? 'No device registered for push on this account.');
       } else if (result.sent > 0) {
         setFeedback(
-          `Push sent to ${result.sent} device(s). Swipe Chrome away from recents, lock your phone, wait 10s, then pull down the notification shade — many Android phones hide web alerts from the lock screen unless Khawaja Club is on your Home Screen.`,
+          `Push sent to ${result.sent} device(s). ${getNotificationSetupCopy().testHint}`,
         );
       } else {
         setFeedbackError(
@@ -77,11 +82,11 @@ export function NotificationTestPanel() {
     try {
       const result = await showLocalNotification(
         '🧪 Khawaja Club — instant test',
-        'If you see this banner, your phone CAN show Khawaja alerts. Lock the phone to check the lock screen.',
+        `If you see this banner, ${getDeviceLabel()} can show Khawaja alerts.`,
       );
       if (result === 'ok') {
         setFeedback(
-          'Instant notification fired on this device. Lock your phone now — if it appears, display works and server push should too (after closing Chrome).',
+          `Instant notification fired on ${getDeviceLabel()}. ${getNotificationSetupCopy().testHint}`,
         );
       } else if (result === 'denied') {
         setFeedbackError('Notifications blocked — allow Khawaja Club in Chrome site settings.');
@@ -218,18 +223,16 @@ function DeviceStatusLine({
 }: {
   push: ReturnType<typeof usePushRegistration>;
 }) {
+  const copy = getNotificationSetupCopy();
+
   if (!push.supported) {
-    return (
-      <p className="text-xs text-ink-subtle">
-        This browser cannot receive lock-screen push. Run tests from Chrome on your Android phone.
-      </p>
-    );
+    return <p className="text-xs text-ink-subtle">{copy.unsupportedMessage}</p>;
   }
 
   if (push.isRegistered) {
     return (
       <p className="text-xs font-semibold text-emerald-700">
-        This device: registered — lock-screen tests will hit this phone when the app is closed.
+        {getDeviceLabel()}: registered — server push tests will hit this device.
       </p>
     );
   }
@@ -237,16 +240,17 @@ function DeviceStatusLine({
   if (push.permissionGranted) {
     return (
       <p className="text-xs text-amber-900">
-        This device: not registered — tap <strong>Register this device</strong> on Notifications, then
-        send a test again.
+        {getDeviceLabel()}: not registered — tap <strong>Register this device</strong> on
+        Notifications, then send a test again.
       </p>
     );
   }
 
   return (
     <p className="text-xs text-ink-subtle">
-      This device: not set up — open <strong>Notifications</strong> on your Android phone, enable alerts,
-      then send a test from there (not from PC).
+      {getDeviceLabel()}: not set up — open <strong>Notifications</strong>
+      {isMobileDevice() ? '' : ' on the device you want alerts on'}, enable alerts, then run a test
+      from that same device.
     </p>
   );
 }

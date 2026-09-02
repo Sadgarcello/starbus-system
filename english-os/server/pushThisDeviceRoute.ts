@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPushEnv, sendPushToSubscriptions, verifySupabaseAccessToken } from './lib/pushSend.js';
+import { getPushEnv, sendPushToSubscriptions, verifySupabaseAccessToken } from './pushSend.js';
 
 /** Admin-only: push directly to the caller's registered devices (bypasses pg_net). */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function handlePushThisDevice(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type');
 

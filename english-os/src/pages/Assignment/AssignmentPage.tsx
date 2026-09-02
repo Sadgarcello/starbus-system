@@ -34,7 +34,7 @@ export default function AssignmentPage() {
     return (
       <Card className="p-6">
         <p className="text-sm text-danger">Assignment not found.</p>
-        <Button className="mt-3" variant="secondary" onClick={() => navigate(paths.dashboard)}>
+        <Button className="mt-3" variant="secondary" onClick={() => navigate(isStudent ? paths.home : paths.dashboard)}>
           Back
         </Button>
       </Card>

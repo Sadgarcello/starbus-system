@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
+import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
 import { SkillGauge } from '@/components/student/SkillGauge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -19,7 +20,9 @@ import {
   useSpeakingVotes,
   useVoteSpeakingFormat,
 } from '@/hooks/useSpeaking';
+import { getSkillTrackStyle } from '@/lib/examTrackContent';
 import { speakingService } from '@/services/speakingService';
+import type { ExamTrack } from '@/types';
 import type {
   SpeakingDaySessionWithFormat,
   SpeakingFormat,
@@ -80,14 +83,16 @@ export default function SpeakingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-subtle">Skill module</p>
-        <h1 className="page-title">Speaking</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Suggestions for class. Choose one format per day — each student practice adds 7%. Fifteen
-          practices unlock the next level.
-        </p>
-      </div>
+      <SkillModuleHeader
+        skill="speaking"
+        title="Speaking"
+        examTrack={student?.exam_track as ExamTrack | null | undefined}
+        isTeacher={isTeacher}
+      />
+
+      {isStudent && student?.exam_track && (
+        <SpeakingTips track={student.exam_track as ExamTrack} />
+      )}
 
       {bannerNotice && (
         <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{bannerNotice}</p>
@@ -507,5 +512,22 @@ function StudentSpeakingBanner({
         {err && <p className="mt-2 text-sm text-danger">{err}</p>}
       </Card>
     </div>
+  );
+}
+
+function SpeakingTips({ track }: { track: ExamTrack }) {
+  const tips = getSkillTrackStyle('speaking', track).studentTips ?? [];
+  if (tips.length === 0) return null;
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {tips.map((tip) => (
+        <li
+          key={tip}
+          className="rounded-md border border-paper-line bg-paper-soft/80 px-3 py-2 text-sm text-ink-muted"
+        >
+          {tip}
+        </li>
+      ))}
+    </ul>
   );
 }

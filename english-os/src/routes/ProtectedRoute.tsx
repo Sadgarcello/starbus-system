@@ -36,3 +36,11 @@ export function AdminRoute() {
   if (!isAdmin) return <Navigate to={paths.home} replace />;
   return <Outlet />;
 }
+
+/** Dashboard, progress, and teacher attendance — not for students. */
+export function NonStudentRoute() {
+  const { isStudent, loading } = useAuth();
+  if (loading) return <Spinner />;
+  if (isStudent) return <Navigate to={paths.home} replace />;
+  return <Outlet />;
+}

@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Avatar } from '@/components/common/Avatar';
 import { NotificationTestPanel } from '@/components/notifications/NotificationTestPanel';
 import { PushEnableBanner } from '@/components/notifications/PushEnableBanner';
 import { InterestsEditor } from '@/components/student/InterestsEditor';
+import { ExamTrackBadge } from '@/components/exam/ExamTrackBadge';
+import { ExamTrackSelector } from '@/components/exam/ExamTrackSelector';
+import type { ExamTrack } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
@@ -73,6 +76,16 @@ export default function SettingsPage() {
 
       {student && <InterestsEditor studentId={student.id} />}
 
+      {student && (
+        <ExamTrackSelector
+          studentId={student.id}
+          currentTrack={student.exam_track ?? null}
+          onSaved={() => void refresh()}
+          collapsible
+          required={!student.exam_track}
+        />
+      )}
+
       <Card>
         <CardHeader title="Account" />
         <div className="divide-y divide-paper-line text-sm">
@@ -85,6 +98,16 @@ export default function SettingsPage() {
               <Row label="Level" value={student.level} />
               <Row label="XP" value={String(student.xp)} />
               <Row label="Streak" value={String(student.streak)} />
+              <Row
+                label="Exam track"
+                value={
+                  student.exam_track ? (
+                    <ExamTrackBadge track={student.exam_track as ExamTrack} />
+                  ) : (
+                    'Not selected — choose above'
+                  )
+                }
+              />
             </>
           )}
         </div>
@@ -93,7 +116,7 @@ export default function SettingsPage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 px-4 py-3">
       <span className="text-ink-subtle">{label}</span>

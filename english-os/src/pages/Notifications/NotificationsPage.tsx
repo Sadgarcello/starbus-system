@@ -2,6 +2,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
+import {
+  getDeviceKind,
+  getDeviceLabel,
+  getNotificationSetupCopy,
+  isStandalonePwa,
+} from '@/lib/deviceContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +19,8 @@ export default function NotificationsPage() {
   const { profile } = useAuth();
   const { inbox, unreadCount, markRead, markAllRead } = useNotifications(profile?.id);
   const push = usePushRegistration(profile?.id, Boolean(profile));
+  const copy = getNotificationSetupCopy();
+  const needsIosInstall = getDeviceKind() === 'ios' && !isStandalonePwa();
 
   if (inbox.isLoading) return <Spinner />;
 
@@ -33,41 +41,42 @@ export default function NotificationsPage() {
       </div>
 
       <Card>
-        <CardHeader
-          title="Phone alerts"
-          subtitle="Get pop-ups on your lock screen even when Khawaja Club is closed"
-        />
+        <CardHeader title={copy.alertsTitle} subtitle={copy.alertsSubtitle} />
         <div className="space-y-3 px-4 py-4">
+          <p className="text-xs text-ink-subtle">
+            Device: <span className="font-medium text-ink-muted">{getDeviceLabel()}</span>
+          </p>
+
           {!push.supported ? (
-            <p className="text-sm text-ink-subtle">
-              Push is not supported in this browser. Install Khawaja Club to your home screen (Safari
-              on iPhone, Chrome on Android) for best results.
-            </p>
+            <p className="text-sm text-ink-subtle">{copy.unsupportedMessage}</p>
+          ) : needsIosInstall && copy.setupSteps ? (
+            <div className="space-y-2">
+              <p className="text-sm text-ink-muted">{copy.setupHint}</p>
+              <ol className="list-inside list-decimal space-y-1 text-sm text-ink-muted">
+                {copy.setupSteps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
           ) : push.isRegistered ? (
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-semibold text-ink">This device is registered for lock-screen alerts.</p>
+              <p className="text-sm font-semibold text-ink">{copy.registeredMessage}</p>
               <Button variant="secondary" size="sm" loading={push.subscribing} onClick={() => void push.disable()}>
-                Turn off
+                Turn off on this device
               </Button>
             </div>
           ) : push.permissionGranted ? (
             <div className="space-y-2">
-              <p className="text-sm text-amber-900">
-                Notifications are allowed, but <strong>this phone is not registered yet</strong> (common after
-                an update). Tap below to register.
-              </p>
+              <p className="text-sm text-amber-900">{copy.needsRegistrationMessage}</p>
               <Button loading={push.subscribing} onClick={() => void push.enable()}>
                 Register this device
               </Button>
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm text-ink-subtle">
-                Tap below and choose <strong>Allow</strong> when asked. On iPhone, add Khawaja Club
-                to your Home Screen first.
-              </p>
+              <p className="text-sm text-ink-subtle">{copy.setupHint}</p>
               <Button loading={push.subscribing} onClick={() => void push.enable()}>
-                Enable phone alerts
+                {copy.enableLabel}
               </Button>
             </div>
           )}
@@ -77,18 +86,20 @@ export default function NotificationsPage() {
               variant="secondary"
               size="sm"
               className="mt-2"
-              onClick={() => void notificationService.pushThisDevice().then(
-                (r) => {
-                  if (r.sent > 0) {
-                    alert('Push sent — close the app and check your lock screen.');
-                  } else {
-                    alert(r.errors?.join('\n') ?? 'Push failed. Try Register this device again.');
-                  }
-                },
-                (e) => alert((e as Error).message),
-              )}
+              onClick={() =>
+                void notificationService.pushThisDevice().then(
+                  (r) => {
+                    if (r.sent > 0) {
+                      alert(`Push sent — ${copy.testHint}`);
+                    } else {
+                      alert(r.errors?.join('\n') ?? 'Push failed. Try Register this device again.');
+                    }
+                  },
+                  (e) => alert((e as Error).message),
+                )
+              }
             >
-              Test lock-screen push now
+              Test alert on this device
             </Button>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
+import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +16,8 @@ import {
   useWritingTasks,
 } from '@/hooks/useWriting';
 import { writingService } from '@/services/writingService';
-import type { WritingSubmissionWithStudent, WritingTask } from '@/types';
+import { getSkillTrackStyle } from '@/lib/examTrackContent';
+import type { ExamTrack, WritingSubmissionWithStudent, WritingTask } from '@/types';
 
 export default function WritingPage() {
   const { isTeacher, isStudent, student, profile } = useAuth();
@@ -45,14 +47,12 @@ export default function WritingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-subtle">Skill module</p>
-        <h1 className="page-title">Writing</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          End-of-class assignments. Paste typed work or upload a photo of handwritten work for later
-          assessment.
-        </p>
-      </div>
+      <SkillModuleHeader
+        skill="writing"
+        title="Writing"
+        examTrack={student?.exam_track as ExamTrack | null | undefined}
+        isTeacher={isTeacher}
+      />
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
       {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
@@ -109,6 +109,7 @@ export default function WritingPage() {
                   task={selected}
                   studentId={student.id}
                   userId={profile.id}
+                  examTrack={student.exam_track as ExamTrack | null | undefined}
                   onNotice={setNotice}
                   onError={setError}
                 />
@@ -272,17 +273,22 @@ function StudentSubmitPanel({
   task,
   studentId,
   userId,
+  examTrack,
   onNotice,
   onError,
 }: {
   task: WritingTask;
   studentId: string;
   userId: string;
+  examTrack?: ExamTrack | null;
   onNotice: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
   const mine = useMyWritingSubmission(task.id, studentId);
   const submit = useSubmitWriting();
+  const writingStyle = getSkillTrackStyle('writing', examTrack, false);
+  const textPlaceholder =
+    writingStyle.formHints?.placeholder ?? 'Write or paste your work here…';
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -336,7 +342,7 @@ function StudentSubmitPanel({
                 onChange={(e) => setText(e.target.value)}
                 rows={8}
                 disabled={closed || reviewed}
-                placeholder="Write or paste your work here…"
+                placeholder={textPlaceholder}
                 className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-ink disabled:opacity-60"
               />
             </label>

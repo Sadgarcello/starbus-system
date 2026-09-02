@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { useAuth } from '@/context/AuthContext';
 import { useAiEvaluation, useEvaluateText } from '@/hooks/useAiCoach';
+import { AI_COACH_LOCKED_MESSAGE, canUseAiCoach } from '@/lib/aiCoachAccess';
 import type { AiTextEvaluation, AiTextSourceType } from '@/types';
 
 interface AiFeedbackPanelProps {
@@ -12,6 +14,49 @@ interface AiFeedbackPanelProps {
 }
 
 export function AiFeedbackPanel({
+  sourceType,
+  sourceId,
+  disabled = false,
+  disabledReason,
+}: AiFeedbackPanelProps) {
+  const { session, role } = useAuth();
+  const userId = session?.user?.id;
+  const hasAccess = canUseAiCoach(userId, role);
+
+  if (!hasAccess) {
+    return <AiFeedbackLockedPanel />;
+  }
+
+  return (
+    <AiFeedbackPanelInner
+      sourceType={sourceType}
+      sourceId={sourceId}
+      disabled={disabled}
+      disabledReason={disabledReason}
+    />
+  );
+}
+
+function AiFeedbackLockedPanel() {
+  return (
+    <Card className="border-paper-line">
+      <CardHeader
+        title="Khawaja AI Coach"
+        subtitle="Practice evaluation — not an official TOEFL, IELTS, or exam score"
+      />
+      <div className="px-4 pb-4">
+        <div className="rounded-md border border-paper-line bg-paper-soft/60 px-3 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+            Not available yet
+          </p>
+          <p className="mt-1 text-sm text-ink-muted">{AI_COACH_LOCKED_MESSAGE}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function AiFeedbackPanelInner({
   sourceType,
   sourceId,
   disabled = false,

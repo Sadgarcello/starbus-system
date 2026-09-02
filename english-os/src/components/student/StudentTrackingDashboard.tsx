@@ -14,6 +14,9 @@ import {
   computeSkillCompletions,
   type ActivityFeedKind,
 } from '@/lib/studentProgress';
+import { formatAppTime } from '@/lib/formatAppTime';
+import { ExamTrackBadge } from '@/components/exam/ExamTrackBadge';
+import type { ExamTrack } from '@/types';
 import { queryKeys } from '@/lib/queryKeys';
 import { studentService } from '@/services/studentService';
 import { paths } from '@/routes/paths';
@@ -92,6 +95,14 @@ export function StudentTrackingDashboard({
             <p className="mt-1 text-xs text-ink-subtle">
               {s.xp} XP · streak {s.streak}
             </p>
+            <p className="mt-1 text-xs text-ink-subtle">
+              App time: {formatAppTime(s.app_time_seconds ?? 0)}
+            </p>
+            {s.exam_track && (
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 xl:justify-center">
+                <ExamTrackBadge track={s.exam_track as ExamTrack} />
+              </div>
+            )}
             {s.profile?.email && (
               <p className="mt-1 truncate text-xs text-ink-subtle">{s.profile.email}</p>
             )}
@@ -140,17 +151,7 @@ export function StudentTrackingDashboard({
         </Card>
 
         <Card>
-          <CardHeader
-            title="Recent activities"
-            action={
-              <Link
-                to={paths.dashboard}
-                className="text-xs font-bold uppercase tracking-wide text-ink-subtle hover:text-ink"
-              >
-                Today
-              </Link>
-            }
-          />
+          <CardHeader title="Recent activities" />
           <div className="max-h-[18rem] divide-y divide-paper-line overflow-y-auto sm:max-h-[20rem]">
             {feed.length === 0 ? (
               <p className="p-4 text-sm text-ink-subtle">No activity yet.</p>

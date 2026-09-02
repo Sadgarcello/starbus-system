@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPushEnv, sendPushToSubscriptions } from './lib/pushSend.js';
+import { getPushEnv, sendPushToSubscriptions } from './pushSend.js';
 
 interface PushPayload {
   notification_id?: string;
@@ -21,7 +21,7 @@ interface SubscriptionRow {
   auth: string;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function handleSendPush(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'content-type, x-push-dispatch-secret');

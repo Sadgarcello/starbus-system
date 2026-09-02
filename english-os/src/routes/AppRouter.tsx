@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Spinner } from '@/components/ui/Spinner';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { AdminRoute, AuthenticatedRoute, ProtectedRoute, TeacherRoute } from './ProtectedRoute';
+import { AdminRoute, AuthenticatedRoute, NonStudentRoute, ProtectedRoute, TeacherRoute } from './ProtectedRoute';
 import { paths } from './paths';
 
 const LoginPage = lazy(() => import('@/pages/Login/LoginPage'));
@@ -16,6 +16,9 @@ const StudentPage = lazy(() => import('@/pages/Student/StudentPage'));
 const AssignmentPage = lazy(() => import('@/pages/Assignment/AssignmentPage'));
 const SpeakingPage = lazy(() => import('@/pages/Speaking/SpeakingPage'));
 const ReadingPage = lazy(() => import('@/pages/Reading/ReadingPage'));
+const ReadingPracticeHubPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeHubPage'));
+const ReadingPracticeSessionPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeSessionPage'));
+const ReadingPracticeAdminPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeAdminPage'));
 const WritingPage = lazy(() => import('@/pages/Writing/WritingPage'));
 const ListeningPage = lazy(() => import('@/pages/Listening/ListeningPage'));
 const AnalyticsPage = lazy(() => import('@/pages/Analytics/AnalyticsPage'));
@@ -50,18 +53,26 @@ const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: paths.home, element: <S><WelcomePage /></S> },
-          { path: paths.dashboard, element: <S><DashboardPage /></S> },
+          {
+            element: <NonStudentRoute />,
+            children: [
+              { path: paths.dashboard, element: <S><DashboardPage /></S> },
+              { path: paths.progress, element: <S><ProgressPage /></S> },
+              { path: paths.attendance, element: <S><AttendancePage /></S> },
+            ],
+          },
           { path: '/assignments/:id', element: <S><AssignmentPage /></S> },
           { path: paths.speaking, element: <S><SpeakingPage /></S> },
           { path: paths.reading, element: <S><ReadingPage /></S> },
+          { path: paths.readingPractice, element: <S><ReadingPracticeHubPage /></S> },
+          { path: `${paths.readingPractice}/session`, element: <S><ReadingPracticeSessionPage /></S> },
+          { path: paths.readingPracticeAdmin, element: <S><ReadingPracticeAdminPage /></S> },
           { path: paths.writing, element: <S><WritingPage /></S> },
           { path: paths.listening, element: <S><ListeningPage /></S> },
           { path: paths.analytics, element: <S><AnalyticsPage /></S> },
-          { path: paths.progress, element: <S><ProgressPage /></S> },
           { path: paths.social, element: <S><SocialPage /></S> },
           { path: paths.settings, element: <S><SettingsPage /></S> },
           { path: paths.notifications, element: <S><NotificationsPage /></S> },
-          { path: paths.attendance, element: <S><AttendancePage /></S> },
           {
             element: <TeacherRoute />,
             children: [

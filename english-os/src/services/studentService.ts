@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { CreateStudentValues } from '@/lib/validation';
-import type { Student, StudentWithProfile } from '@/types';
+import type { ExamTrack, Student, StudentWithProfile } from '@/types';
 
 export const studentService = {
   async listForTeacher(teacherId: string): Promise<StudentWithProfile[]> {
@@ -91,6 +91,21 @@ export const studentService = {
     const { error } = await supabase
       .from('students')
       .update({ teacher_id: teacherId })
+      .eq('id', studentId);
+    if (error) throw error;
+  },
+
+  async recordAppTime(seconds: number): Promise<void> {
+    const { error } = await supabase.rpc('record_student_app_time', {
+      p_seconds: Math.min(300, Math.max(1, Math.floor(seconds))),
+    });
+    if (error) throw error;
+  },
+
+  async updateExamTrack(studentId: string, examTrack: ExamTrack): Promise<void> {
+    const { error } = await supabase
+      .from('students')
+      .update({ exam_track: examTrack })
       .eq('id', studentId);
     if (error) throw error;
   },

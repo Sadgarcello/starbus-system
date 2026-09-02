@@ -7,6 +7,8 @@ export const paths = {
   student: (id: string) => `/student/${id}`,
   speaking: '/speaking',
   reading: '/reading',
+  readingPractice: '/reading/practice',
+  readingPracticeAdmin: '/reading/practice/admin',
   listening: '/listening',
   writing: '/writing',
   analytics: '/analytics',

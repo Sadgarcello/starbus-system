@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/common/Avatar';
 import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
+import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -10,14 +11,8 @@ import {
   useListeningPicks,
   useSubmitListeningPick,
 } from '@/hooks/useListening';
-import type { ListeningPickWithStudent } from '@/types';
-
-const RULES = [
-  '2–5 minutes',
-  'Clean language',
-  'English audio',
-  'Interesting topic',
-];
+import { getListeningRules, getSkillTrackStyle } from '@/lib/examTrackContent';
+import type { ExamTrack, ListeningPickWithStudent } from '@/types';
 
 export default function ListeningPage() {
   const { isStudent, isTeacher, student } = useAuth();
@@ -25,6 +20,7 @@ export default function ListeningPage() {
   const remove = useDeleteListeningPick();
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const listeningRules = getListeningRules(student?.exam_track as ExamTrack | null | undefined);
 
   if (picks.isLoading) return <Spinner />;
 
@@ -41,13 +37,12 @@ export default function ListeningPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-subtle">Skill module</p>
-        <h1 className="page-title">Listening</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Student Picks — each week one student chooses the clip and explains it.
-        </p>
-      </div>
+      <SkillModuleHeader
+        skill="listening"
+        title="Listening"
+        examTrack={student?.exam_track as ExamTrack | null | undefined}
+        isTeacher={isTeacher}
+      />
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
       {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
@@ -59,7 +54,7 @@ export default function ListeningPage() {
           their opinion.
         </p>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-          {RULES.map((rule) => (
+          {listeningRules.map((rule) => (
             <li
               key={rule}
               className="rounded-md border border-paper-line bg-paper-soft/80 px-3 py-2 text-sm font-semibold text-ink"
@@ -73,6 +68,7 @@ export default function ListeningPage() {
       {isStudent && student && (
         <SubmitPickForm
           studentId={student.id}
+          examTrack={student.exam_track as ExamTrack | null | undefined}
           onNotice={setNotice}
           onError={setError}
         />
@@ -116,14 +112,17 @@ export default function ListeningPage() {
 
 function SubmitPickForm({
   studentId,
+  examTrack,
   onNotice,
   onError,
 }: {
   studentId: string;
+  examTrack?: ExamTrack | null;
   onNotice: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
   const submit = useSubmitListeningPick();
+  const formHints = getSkillTrackStyle('listening', examTrack, false).formHints ?? {};
   const [clipName, setClipName] = useState('');
   const [topic, setTopic] = useState('');
   const [url, setUrl] = useState('');
@@ -207,6 +206,7 @@ function SubmitPickForm({
             onChange={(e) => setWhatUnderstood(e.target.value)}
             required
             rows={4}
+            placeholder={formHints.whatUnderstood ?? undefined}
             className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
           />
         </Field>
@@ -216,6 +216,7 @@ function SubmitPickForm({
             onChange={(e) => setOpinion(e.target.value)}
             required
             rows={3}
+            placeholder={formHints.opinion ?? undefined}
             className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
           />
         </Field>

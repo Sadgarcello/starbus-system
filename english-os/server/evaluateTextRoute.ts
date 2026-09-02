@@ -5,8 +5,13 @@ import {
   getGeminiApiKey,
   humanizeGeminiError,
   type StudentCoachContext,
-} from './lib/aiCoach.js';
-import { getPushEnv, verifySupabaseAccessToken } from './lib/pushSend.js';
+} from './aiCoach.js';
+import { getSupabaseServerEnv } from './serverEnv.js';
+import { verifySupabaseAccessToken } from './pushSend.js';
+import {
+  AI_COACH_LOCKED_MESSAGE,
+  canStudentUseAiCoach,
+} from './aiCoachAccess.js';
 
 const MAX_INPUT_CHARS = 5000;
 const MIN_WRITING_CHARS = 20;
@@ -31,7 +36,7 @@ async function loadStudentContext(
 ): Promise<StudentCoachContext | null> {
   const { data: studentRow } = await admin
     .from('students')
-    .select('id, level, profile:profiles!students_user_id_fkey(name)')
+    .select('id, level, exam_track, profile:profiles!students_user_id_fkey(name)')
     .eq('id', studentId)
     .maybeSingle();
 
@@ -62,6 +67,7 @@ async function loadStudentContext(
   return {
     name: profile?.name?.trim() || 'Student',
     level: studentRow.level || 'A1',
+    examTrack: (studentRow.exam_track as string | null) ?? null,
     hobbies,
     recentEvaluations: (recentRows ?? []).map((r) => ({
       overall_score: r.overall_score as number,
@@ -162,7 +168,7 @@ function mapEvaluationRow(row: Record<string, unknown>) {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function handleEvaluateText(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type');
 
@@ -176,10 +182,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const geminiKey = getGeminiApiKey();
   if (!geminiKey) {
-    return res.status(500).json({ error: 'missing_gemini_key' });
+    return res.status(500).json({
+      error: 'missing_gemini_key',
+      detail:
+        'GEMINI_API_KEY is missing or invalid on Vercel. Add your key from aistudio.google.com/apikey, then redeploy.',
+    });
   }
 
-  const env = getPushEnv();
+  const env = getSupabaseServerEnv();
   if (!env.ok) {
     return res.status(500).json({ error: env.error });
   }
@@ -196,12 +206,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'missing_auth' });
   }
 
-  const apiKey =
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    env.serviceRoleKey;
-
-  const user = await verifySupabaseAccessToken(env.supabaseUrl, apiKey, token);
+  const user = await verifySupabaseAccessToken(env.supabaseUrl, env.anonKey, token);
   if (!user) {
     return res.status(401).json({ error: 'invalid_auth' });
   }
@@ -243,6 +248,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const callerStudentId = studentRow.id as string;
+
+  if (!canStudentUseAiCoach(user.id)) {
+    return res.status(403).json({
+      error: 'ai_coach_locked',
+      detail: AI_COACH_LOCKED_MESSAGE,
+    });
+  }
 
   if (!force) {
     const { data: existing } = await admin

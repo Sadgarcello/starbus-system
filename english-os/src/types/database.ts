@@ -4,6 +4,8 @@ export type AccountStatus = 'pending' | 'active' | 'rejected';
 
 export type ActivityType = 'speaking' | 'reading' | 'writing' | 'listening';
 
+export type ExamTrack = 'toefl' | 'ielts' | 'linguaskill';
+
 export type AssignmentStatus = 'assigned' | 'submitted' | 'reviewed' | 'returned';
 
 export interface Profile {
@@ -33,6 +35,10 @@ export interface Student {
   speaking_progress?: number;
   /** 0–100; set from book pages finished, only for students who attended that day */
   reading_progress?: number;
+  /** Total seconds with the app open (active tab). */
+  app_time_seconds?: number;
+  /** TOEFL, IELTS, or Linguaskill — null until student chooses. */
+  exam_track?: ExamTrack | null;
   created_at: string;
 }
 
@@ -193,6 +199,7 @@ export interface SocialProfile {
   speaking_progress: number;
   reading_progress: number;
   joined_date: string;
+  exam_track?: ExamTrack | null;
 }
 
 export interface Course {

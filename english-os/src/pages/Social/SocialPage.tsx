@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Avatar } from '@/components/common/Avatar';
+import { ExamTrackLogo } from '@/components/exam/ExamTrackLogo';
 import { SkillGauge } from '@/components/student/SkillGauge';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
 import { useSocialProfiles } from '@/hooks/useSocial';
 import { paths } from '@/routes/paths';
-import type { SocialProfile } from '@/types';
+import type { ExamTrack, SocialProfile } from '@/types';
 
 export default function SocialPage() {
   const { isTeacher } = useAuth();
@@ -67,7 +68,16 @@ function SocialCard({
           className="ring-4 ring-paper shadow-md"
         />
         <h2 className="mt-4 truncate font-display text-2xl text-ink">{profile.name}</h2>
-        <p className="mt-1 text-sm font-semibold text-ink-muted">Level {profile.level}</p>
+        {profile.exam_track && (
+          <div className="mt-2 flex justify-center">
+            <ExamTrackLogo
+              track={profile.exam_track as ExamTrack}
+              variant="badge"
+              className="h-4 max-w-[64px] object-contain"
+            />
+          </div>
+        )}
+        <p className="mt-2 text-sm font-semibold text-ink-muted">Level {profile.level}</p>
         <p className="mt-0.5 text-xs text-ink-subtle">
           {profile.xp} XP · streak {profile.streak}
         </p>

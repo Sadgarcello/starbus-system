@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/common/Logo';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
+import { useAppTimeTracker } from '@/hooks/useAppTimeTracker';
 import { usePendingMembers } from '@/hooks/useMembership';
 import { ensureServiceWorker } from '@/lib/pushNotifications';
 import { requestNotificationPermission } from '@/lib/browserNotify';
@@ -31,18 +32,36 @@ const teacherMore: NavItem[] = [
 
 const studentPrimary: NavItem[] = [
   { to: paths.home, label: 'Profile', short: 'Profile' },
-  { to: paths.dashboard, label: 'Today', short: 'Today' },
-  { to: paths.progress, label: 'Progress', short: 'Progress' },
   { to: paths.speaking, label: 'Speaking', short: 'Speak' },
   { to: paths.writing, label: 'Writing', short: 'Write' },
-  { to: paths.attendance, label: 'Attendance', short: 'Attend' },
+  { to: paths.reading, label: 'Reading', short: 'Read' },
+  { to: paths.listening, label: 'Listening', short: 'Listen' },
 ];
 
 const studentMore: NavItem[] = [
-  { to: paths.reading, label: 'Reading', short: 'Read' },
-  { to: paths.listening, label: 'Listening', short: 'Listen' },
   { to: paths.social, label: 'Social', short: 'Social' },
   { to: paths.settings, label: 'Settings', short: 'Settings' },
+];
+
+const studentMobilePrimary: NavItem[] = [
+  ...studentPrimary,
+  { to: paths.social, label: 'Social', short: 'Social' },
+];
+
+const teacherMobilePrimary: NavItem[] = [
+  { to: paths.home, label: 'Profile', short: 'Profile' },
+  { to: paths.dashboard, label: 'Dashboard', short: 'Home' },
+  { to: paths.teacher, label: 'Studio', short: 'Studio' },
+  { to: paths.speaking, label: 'Speaking', short: 'Speak' },
+  { to: paths.writing, label: 'Writing', short: 'Write' },
+  { to: paths.social, label: 'Social', short: 'Social' },
+];
+
+const teacherMobileMore: NavItem[] = [
+  { to: paths.attendance, label: 'Attendance', short: 'Attend' },
+  { to: paths.reading, label: 'Reading', short: 'Read' },
+  { to: paths.listening, label: 'Listening', short: 'Listen' },
+  { to: paths.analytics, label: 'Analytics', short: 'Stats' },
 ];
 
 function DesktopNavLink({
@@ -104,13 +123,55 @@ function MobileTab({
   );
 }
 
+function SettingsNavIcon() {
+  return (
+    <NavLink
+      to={paths.settings}
+      aria-label="Settings"
+      className={({ isActive }) =>
+        cn(
+          'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-white/20 bg-white/5 text-paper transition hover:bg-white/10 md:hidden',
+          isActive && 'bg-white/15 text-club',
+        )
+      }
+    >
+      <GearIcon />
+    </NavLink>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export function AppLayout() {
-  const { profile, isTeacher, isAdmin, isActive, signOut } = useAuth();
+  const { profile, isTeacher, isAdmin, isActive, isStudent, student, signOut, refresh } = useAuth();
   const pending = usePendingMembers(isAdmin);
   const pendingCount = pending.data?.length ?? 0;
   const navigate = useNavigate();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const syncAppTime = useCallback(() => {
+    void refresh();
+  }, [refresh]);
+
+  useAppTimeTracker(student?.id, isActive && isStudent, syncAppTime);
 
   useEffect(() => {
     if (isActive) void ensureServiceWorker();
@@ -125,6 +186,12 @@ export function AppLayout() {
     ...(isTeacher ? teacherMore : studentMore),
     ...(isAdmin ? [{ to: paths.approvals, label: 'Approvals', short: 'Approvals' }] : []),
   ];
+  const mobilePrimary = isTeacher ? teacherMobilePrimary : studentMobilePrimary;
+  const mobileMore = [
+    ...(isTeacher ? teacherMobileMore : []),
+    ...(isAdmin ? [{ to: paths.approvals, label: 'Approvals', short: 'Approvals' }] : []),
+  ];
+  const showMobileMore = mobileMore.length > 0;
 
   useEffect(() => {
     setMoreOpen(false);
@@ -148,6 +215,7 @@ export function AppLayout() {
               {profile?.name || profile?.email} · {profile?.role}
             </span>
             <NotificationBell />
+            <SettingsNavIcon />
             <Button
               variant="secondary"
               size="sm"
@@ -177,10 +245,10 @@ export function AppLayout() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink bg-ink text-paper safe-pb md:hidden">
-        {moreOpen && (
+        {moreOpen && showMobileMore && (
           <div className="border-b border-white/10 px-2 py-2">
             <div className="mx-auto grid max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3">
-              {more.map((link) => (
+              {mobileMore.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -204,26 +272,28 @@ export function AppLayout() {
           </div>
         )}
         <div className="mx-auto flex max-w-6xl items-stretch px-1 py-1">
-          {primary.map((link) => (
+          {mobilePrimary.map((link) => (
             <MobileTab key={link.to} link={link} />
           ))}
-          <button
-            type="button"
-            aria-expanded={moreOpen}
-            aria-label="More navigation"
-            onClick={() => setMoreOpen((o) => !o)}
-            className={cn(
-              'relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-md text-[10px] font-semibold uppercase tracking-wide',
-              moreOpen ? 'text-club' : 'text-paper/70',
-            )}
-          >
-            More
-            {isAdmin && pendingCount > 0 && (
-              <span className="absolute right-1 top-1 rounded-full bg-club px-1 text-[9px] font-bold leading-4 text-ink">
-                {pendingCount > 9 ? '9+' : pendingCount}
-              </span>
-            )}
-          </button>
+          {showMobileMore && (
+            <button
+              type="button"
+              aria-expanded={moreOpen}
+              aria-label="More navigation"
+              onClick={() => setMoreOpen((o) => !o)}
+              className={cn(
+                'relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-md text-[10px] font-semibold uppercase tracking-wide',
+                moreOpen ? 'text-club' : 'text-paper/70',
+              )}
+            >
+              More
+              {isAdmin && pendingCount > 0 && (
+                <span className="absolute right-1 top-1 rounded-full bg-club px-1 text-[9px] font-bold leading-4 text-ink">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </nav>
     </div>

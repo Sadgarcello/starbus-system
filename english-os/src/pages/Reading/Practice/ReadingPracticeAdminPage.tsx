@@ -28,7 +28,9 @@ export default function ReadingPracticeAdminPage() {
         ← Practice hub
       </Link>
       <h1 className="page-title">Reading Practice — Admin</h1>
-      <p className="text-sm text-ink-muted">Manually add TOEFL-style reading content. No AI generation.</p>
+      <p className="text-sm text-ink-muted">
+        Passage-only mode — paste full text; words are masked automatically. No target word field.
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {(['complete_words', 'daily_life', 'academic'] as Tab[]).map((t) => (

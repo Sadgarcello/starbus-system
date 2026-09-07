@@ -5,7 +5,7 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { buildCompleteWordsTask, splitPassageSentences } from '@/lib/readingPractice/completeWords';
+import { buildCompleteWordsTask, countPassageWords, splitPassageSentences, TARGET_PASSAGE_WORD_MAX, TARGET_PASSAGE_WORD_MIN } from '@/lib/readingPractice/completeWords';
 import { paths } from '@/routes/paths';
 
 type Tab = 'complete_words' | 'daily_life' | 'academic';
@@ -87,17 +87,27 @@ function CompleteWordsForm({
   const [explanation, setExplanation] = useState('');
   const [preview, setPreview] = useState<{ passage: string; blankCount: number } | null>(null);
 
+  function validatePassage(trimmed: string): string | null {
+    if (!trimmed) return 'Passage text is required.';
+    if (splitPassageSentences(trimmed).length < 2) {
+      return 'Add at least two sentences. The first sentence stays intact; masking starts in sentence two.';
+    }
+    const words = countPassageWords(trimmed);
+    if (words < TARGET_PASSAGE_WORD_MIN || words > TARGET_PASSAGE_WORD_MAX) {
+      return `Passage is ${words} words. TOEFL passages are usually ${TARGET_PASSAGE_WORD_MIN}–${TARGET_PASSAGE_WORD_MAX} words — it will still save, but aim for that range.`;
+    }
+    return null;
+  }
+
   function runPreview() {
     onError('');
     const trimmed = passage.trim();
-    if (!trimmed) {
-      onError('Passage text is required.');
+    const issue = validatePassage(trimmed);
+    if (issue?.includes('required') || issue?.includes('two sentences')) {
+      onError(issue);
       return;
     }
-    if (splitPassageSentences(trimmed).length < 2) {
-      onError('Add at least two sentences. The first sentence stays intact; masking starts after it.');
-      return;
-    }
+    if (issue) onError(issue);
     const task = buildCompleteWordsTask(trimmed);
     if (task.blanks.length === 0) {
       onError('No words matched the masking rules. Add longer content words after the first sentence.');
@@ -109,14 +119,12 @@ function CompleteWordsForm({
   async function save(active: boolean) {
     onError('');
     const trimmed = passage.trim();
-    if (!trimmed) {
-      onError('Passage text is required.');
+    const issue = validatePassage(trimmed);
+    if (issue?.includes('required') || issue?.includes('two sentences')) {
+      onError(issue);
       return;
     }
-    if (splitPassageSentences(trimmed).length < 2) {
-      onError('Add at least two sentences.');
-      return;
-    }
+    if (issue) onError(issue);
     const task = buildCompleteWordsTask(trimmed);
     if (task.blanks.length === 0) {
       onError('No maskable words found. Check the passage has content words after sentence one.');
@@ -150,7 +158,7 @@ function CompleteWordsForm({
     <Card>
       <CardHeader
         title="Complete the Words"
-        subtitle="Paste the full passage. After the first sentence, the system hides the second half of every second eligible word."
+        subtitle="70–100 word passage. First sentence stays intact, then up to 10 words are masked (offi_____ style), then the rest stays normal."
       />
       <div className="space-y-3 px-4 pb-4">
         <Field label="Passage text" value={passage} onChange={setPassage} multiline />
@@ -162,9 +170,9 @@ function CompleteWordsForm({
         {preview && (
           <div className="rounded-md bg-paper-soft p-3 text-sm">
             <p className="text-xs font-bold uppercase text-ink-subtle">
-              Student preview · {preview.blankCount} blanks
+              Student preview · {preview.blankCount} of 10 blanks
             </p>
-            <p className="mt-1 whitespace-pre-wrap font-display text-lg leading-relaxed">{preview.passage}</p>
+            <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed text-ink">{preview.passage}</p>
           </div>
         )}
         <div className="flex flex-wrap gap-2">

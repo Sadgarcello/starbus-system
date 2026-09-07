@@ -394,7 +394,7 @@ function CompleteWordsView({
 
   return (
     <>
-      <p className="whitespace-pre-wrap font-display text-lg leading-relaxed text-ink">{passage}</p>
+      <p className="whitespace-pre-wrap text-base leading-relaxed text-ink">{passage}</p>
       {blanks.length > 0 && (
         <div className="mt-5 space-y-3 border-t border-paper-line pt-4">
           <p className="text-xs font-bold uppercase text-ink-subtle">
@@ -402,7 +402,7 @@ function CompleteWordsView({
           </p>
           {blanks.map((blank) => (
             <label key={blank.id} className="block text-sm">
-              <span className="font-mono text-ink-muted">{blank.maskedDisplay}</span>
+              <span className="font-mono text-sm text-ink">{blank.maskedDisplay}</span>
               <Input
                 className="mt-1"
                 value={blankAnswers[blank.id] ?? ''}

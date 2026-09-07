@@ -4,6 +4,7 @@ import {
   blankAnswerMatches,
   buildCompleteWordsTask,
   checkMcqAnswer,
+  DEFAULT_MASK_BLANK_COUNT,
   gradeCompleteWordsAnswer,
   isEligibleMaskWord,
   isTrivialWord,
@@ -22,16 +23,47 @@ describe('Complete the Words', () => {
     'The rapid development of technology has changed communication. ' +
     'Scientists observed significant resistance to the new treatment in clinical trials.';
 
+  const etsPassage =
+    'The implementation of the new environmental policy required careful planning and cooperation from local communities. ' +
+    'Government officials first examined the potential effects of the policy before introducing it to the public. ' +
+    'They also consulted environmental experts and local organizations to identify possible problems. ' +
+    'Although some residents were initially concerned about the changes, most eventually supported the policy after learning about its long-term benefits.';
+
   it('leaves the first sentence untouched', () => {
     const task = buildCompleteWordsTask(passage);
     expect(task.displayPassage).toContain('The rapid development of technology has changed communication.');
     expect(task.displayPassage).not.toMatch(/The r a p i d/);
+    expect(task.displayPassage).not.toMatch(/o f f i/);
   });
 
-  it('masks every second eligible word after sentence one', () => {
+  it('masks without spaces between letters', () => {
+    const { maskedWord } = maskWordSecondHalf('officials');
+    expect(maskedWord).toBe('offi_____');
+    expect(maskedWord).not.toContain(' ');
+  });
+
+  it('caps at 10 masked words total', () => {
+    const task = buildCompleteWordsTask(etsPassage);
+    expect(task.blanks.length).toBeLessThanOrEqual(DEFAULT_MASK_BLANK_COUNT);
+  });
+
+  it('leaves later sentences intact after 10 blanks', () => {
+    const longPassage =
+      etsPassage +
+      ' Additional sentence one with many content words here today. ' +
+      'Additional sentence two with many content words here today again.';
+    const task = buildCompleteWordsTask(longPassage);
+    expect(task.blanks.length).toBe(DEFAULT_MASK_BLANK_COUNT);
+    expect(task.displayPassage).toContain(
+      'Although some residents were initially concerned about the changes',
+    );
+  });
+
+  it('masks every second eligible word after sentence one until cap', () => {
     const task = buildCompleteWordsTask(passage);
     expect(task.blanks.length).toBeGreaterThan(0);
     expect(task.displayPassage).toContain('_');
+    expect(task.displayPassage).not.toMatch(/[a-z] [a-z] _/);
   });
 
   it('hides the second half of a word', () => {

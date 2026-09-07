@@ -6,6 +6,12 @@ const TRIVIAL_WORDS = new Set([
 
 const MIN_MASK_WORD_LENGTH = 4;
 
+/** TOEFL Complete the Words: exactly this many blanks per passage (ETS sample). */
+export const DEFAULT_MASK_BLANK_COUNT = 10;
+
+export const TARGET_PASSAGE_WORD_MIN = 70;
+export const TARGET_PASSAGE_WORD_MAX = 100;
+
 export function normalizeAnswer(answer: string): string {
   return answer.trim().toLowerCase();
 }
@@ -40,12 +46,15 @@ export interface CompleteWordsBlankPayload {
   maskedDisplay: string;
 }
 
-/** Split passage into sentences (keeps terminal punctuation on each sentence). */
 export function splitPassageSentences(passage: string): string[] {
   const trimmed = passage.trim();
   if (!trimmed) return [];
   const parts = trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
   return (parts ?? [trimmed]).map((s) => s.trim()).filter(Boolean);
+}
+
+export function countPassageWords(passage: string): number {
+  return passage.trim().match(/\b[A-Za-z']+\b/g)?.length ?? 0;
 }
 
 export function isEligibleMaskWord(word: string): boolean {
@@ -55,7 +64,7 @@ export function isEligibleMaskWord(word: string): boolean {
   return true;
 }
 
-/** Hide the second half of a word's letters; non-letters stay visible. */
+/** Hide the second half of a word's letters; non-letters stay visible. No spacing between letters. */
 export function maskWordSecondHalf(word: string): {
   maskedWord: string;
   visiblePrefix: string;
@@ -94,19 +103,17 @@ export function maskWordSecondHalf(word: string): {
   };
 }
 
-/** TOEFL-style spaced letters for student display. */
-export function spaceWordLetters(word: string): string {
-  return word
-    .split('')
-    .join(' ')
-    .replace(/ ([',.-]) /g, '$1');
-}
-
 /**
- * After the first sentence, remove the second half of every second eligible word.
- * Teachers supply full passage text; blanks are computed automatically.
+ * ETS-style Complete the Words:
+ * - First sentence fully intact
+ * - In later sentences, every second word may be masked (if eligible)
+ * - Stop after 10 masked words; remaining sentences stay intact
+ * - Masked form: offi_____ (no spaces between letters)
  */
-export function buildCompleteWordsTask(passage: string): CompleteWordsTask {
+export function buildCompleteWordsTask(
+  passage: string,
+  maxBlanks: number = DEFAULT_MASK_BLANK_COUNT,
+): CompleteWordsTask {
   const sentences = splitPassageSentences(passage);
   const blanks: CompleteWordsBlank[] = [];
   const displaySentences: string[] = [];
@@ -120,6 +127,7 @@ export function buildCompleteWordsTask(passage: string): CompleteWordsTask {
       wordIndex++;
 
       if (sentenceIndex === 0) return word;
+      if (blanks.length >= maxBlanks) return word;
       if (wordIndex % 2 !== 0) return word;
       if (!isEligibleMaskWord(word)) return word;
 
@@ -128,10 +136,10 @@ export function buildCompleteWordsTask(passage: string): CompleteWordsTask {
         id: blankId,
         expectedWord: word,
         visiblePrefix,
-        maskedDisplay: spaceWordLetters(maskedWord),
+        maskedDisplay: maskedWord,
       });
       blankId++;
-      return spaceWordLetters(maskedWord);
+      return maskedWord;
     });
 
     displaySentences.push(display);

@@ -17,6 +17,8 @@ export interface SelectionContext {
   candidates: QuestionCandidate[];
   /** If academic session has active passage, prefer its remaining questions */
   activePassageId?: string | null;
+  /** Full-test mode: lock selection to this section type */
+  forcedQuestionType?: ReadingQuestionType;
 }
 
 export interface ScoredCandidate extends QuestionCandidate {
@@ -111,8 +113,7 @@ export function selectQuestion(ctx: SelectionContext): QuestionCandidate | null 
 
   if (pool.length === 0) return null;
 
-  const targetType =
-    ctx.mode === 'ADAPTIVE' ? pickTaskType(ctx.mode, ctx.profile) : pickTaskType(ctx.mode, ctx.profile);
+  const targetType = ctx.forcedQuestionType ?? pickTaskType(ctx.mode, ctx.profile);
 
   const typed = pool.filter((c) => c.questionType === targetType);
   const searchPool = typed.length > 0 ? typed : pool;

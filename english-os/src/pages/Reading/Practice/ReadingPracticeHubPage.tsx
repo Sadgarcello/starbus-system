@@ -9,8 +9,8 @@ import type { ReadingPracticeMode } from '@/lib/readingPractice/types';
 const MODES: { mode: ReadingPracticeMode; title: string; description: string }[] = [
   {
     mode: 'ADAPTIVE',
-    title: 'Adaptive Reading Practice',
-    description: 'Recommended — the engine picks tasks based on your weaknesses.',
+    title: 'Full reading practice',
+    description: 'Complete the Words, Daily Life, then Academic — in order, like the real test.',
   },
   {
     mode: 'COMPLETE_WORDS',

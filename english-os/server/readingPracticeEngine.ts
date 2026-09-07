@@ -1,5 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { maskTargetWord, answersMatch, checkMcqAnswer } from './readingPractice/completeWords.js';
+import {
+  buildCompleteWordsTask,
+  gradeCompleteWordsAnswer,
+  parseCompleteWordsSubmission,
+  toStudentBlanks,
+  checkMcqAnswer,
+} from './readingPractice/completeWords.js';
 import {
   adjustDifficulty,
   cefrToStartingDifficulty,
@@ -7,6 +13,7 @@ import {
   updateSkillScore,
 } from './readingPractice/difficulty.js';
 import { selectQuestion, summarizeSkills } from './readingPractice/selection.js';
+import { buildSectionMeta } from './readingPractice/sectionPlan.js';
 import type {
   QuestionCandidate,
   ReadingPracticeMode,
@@ -175,21 +182,19 @@ export async function buildStudentPayload(
   if (selected.questionType === 'COMPLETE_WORDS') {
     const { data: q } = await admin
       .from('complete_words_questions')
-      .select('id, sentence, target_word, difficulty, category')
+      .select('id, sentence, difficulty, category')
       .eq('id', selected.questionId)
       .single();
     if (!q) throw new Error('question_not_found');
-    const displaySentence = maskTargetWord(
-      q.sentence as string,
-      q.target_word as string,
-      Number(q.difficulty),
-    );
+    const task = buildCompleteWordsTask(q.sentence as string);
     return {
       questionType: 'COMPLETE_WORDS',
       questionId: q.id as string,
       skill: 'VOCABULARY',
       difficulty: Number(q.difficulty),
-      displaySentence,
+      displayPassage: task.displayPassage,
+      displaySentence: task.displayPassage,
+      blanks: toStudentBlanks(task.blanks),
     };
   }
 
@@ -310,24 +315,42 @@ export async function getNextQuestion(
   const candidates = await loadCandidates(admin);
   if (candidates.length === 0) throw new Error('no_questions');
 
-  const activePassageId = await resolveActivePassageId(
-    admin,
-    sessionId,
-    session.current_passage_id as string | null,
-    candidates,
-    sessionQuestionIds,
-  );
-  if (activePassageId !== session.current_passage_id) {
-    session.current_passage_id = activePassageId;
+  const mode = session.mode as ReadingPracticeMode;
+  const targetLength = Number(session.target_length ?? DEFAULT_SESSION_LENGTH);
+  const questionIndex = Number(session.questions_answered ?? 0);
+  const sectionMeta = buildSectionMeta(mode, targetLength, questionIndex);
+  const forcedQuestionType = sectionMeta?.sectionType;
+
+  if (forcedQuestionType !== 'ACADEMIC' && session.current_passage_id) {
+    await admin
+      .from('reading_practice_sessions')
+      .update({ current_passage_id: null })
+      .eq('id', sessionId);
+    session.current_passage_id = null;
+  }
+
+  let activePassageId: string | null = null;
+  if (mode === 'ACADEMIC' || forcedQuestionType === 'ACADEMIC') {
+    activePassageId = await resolveActivePassageId(
+      admin,
+      sessionId,
+      session.current_passage_id as string | null,
+      candidates,
+      sessionQuestionIds,
+    );
+    if (activePassageId !== session.current_passage_id) {
+      session.current_passage_id = activePassageId;
+    }
   }
 
   const selected = selectQuestion({
-    mode: session.mode as ReadingPracticeMode,
+    mode,
     profile,
     recentQuestionIds,
     sessionQuestionIds,
     candidates,
     activePassageId,
+    forcedQuestionType,
   });
   if (!selected) throw new Error('no_eligible_question');
 
@@ -350,6 +373,9 @@ export async function getNextQuestion(
     selected,
     session.current_passage_id as string | null,
   );
+  if (sectionMeta) {
+    payload.sectionMeta = sectionMeta;
+  }
 
   return { payload, session };
 }
@@ -375,7 +401,7 @@ export async function submitAnswer(
   let skill: ReadingSkill | null = null;
   let difficulty = 4;
   let cefrLevel = 'B1';
-  let targetWord: string | null = null;
+  let blankResults: { id: number; correct: boolean; expectedWord: string }[] | undefined;
 
   if (questionType === 'COMPLETE_WORDS') {
     const { data: q } = await admin
@@ -384,14 +410,15 @@ export async function submitAnswer(
       .eq('id', questionId)
       .single();
     if (!q) throw new Error('question_not_found');
-    correct = priorAttempt
-      ? (priorAttempt.correct as boolean)
-      : answersMatch(answer, q.target_word as string);
+    const task = buildCompleteWordsTask(q.sentence as string);
+    const submitted = parseCompleteWordsSubmission(answer);
+    const graded = gradeCompleteWordsAnswer(task.blanks, submitted);
+    blankResults = graded.results;
+    correct = priorAttempt ? (priorAttempt.correct as boolean) : graded.correct;
     explanation = q.explanation as string | null;
     skill = 'VOCABULARY';
     difficulty = Number(q.difficulty);
     cefrLevel = q.cefr_level as string;
-    targetWord = q.target_word as string;
   } else if (questionType === 'DAILY_LIFE') {
     const { data: q } = await admin
       .from('daily_life_questions')
@@ -427,7 +454,11 @@ export async function submitAnswer(
     return {
       correct,
       explanation,
-      reveal: questionType === 'COMPLETE_WORDS' ? targetWord ?? undefined : undefined,
+      reveal:
+        questionType === 'COMPLETE_WORDS' && blankResults
+          ? blankResults.map((r) => r.expectedWord).join(', ')
+          : undefined,
+      blankResults,
     };
   }
 
@@ -457,8 +488,8 @@ export async function submitAnswer(
 
   await updateProfileAfterAttempt(admin, studentId, questionType, skill, difficulty, correct);
 
-  if (questionType === 'COMPLETE_WORDS' && targetWord) {
-    await updateWordPerformance(admin, studentId, questionId, targetWord, correct);
+  if (questionType === 'COMPLETE_WORDS' && blankResults) {
+    await updateWordPerformance(admin, studentId, questionId, '__passage__', correct);
   }
 
   const { data: session } = await admin
@@ -481,7 +512,11 @@ export async function submitAnswer(
   return {
     correct,
     explanation,
-    reveal: questionType === 'COMPLETE_WORDS' ? targetWord ?? undefined : undefined,
+    reveal:
+      questionType === 'COMPLETE_WORDS' && blankResults
+        ? blankResults.map((r) => r.expectedWord).join(', ')
+        : undefined,
+    blankResults,
   };
 }
 

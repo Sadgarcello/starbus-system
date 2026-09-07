@@ -93,10 +93,20 @@ export default function ReadingSectionIntroPage() {
         </div>
 
         <p className="text-base leading-relaxed text-ink-muted">
-          This practice session includes <strong className="text-ink">{length} questions</strong> in{' '}
-          <strong className="text-ink">{mode === 'ADAPTIVE' ? 'adaptive' : mode.replace(/_/g, ' ').toLowerCase()}</strong>{' '}
-          mode. Take your time and read each question carefully. Click <strong className="text-ink">Begin</strong> when
-          you are ready to start.
+          This practice session includes <strong className="text-ink">{length} questions</strong>{' '}
+          {mode === 'ADAPTIVE' ? (
+            <>
+              in three sections you will complete <strong className="text-ink">in order</strong>:
+              Complete the Words, then Read in Daily Life, then Read an Academic Passage.
+            </>
+          ) : (
+            <>
+              focused on{' '}
+              <strong className="text-ink">{mode.replace(/_/g, ' ').toLowerCase()}</strong>.
+            </>
+          )}{' '}
+          Take your time and read each question carefully. Click{' '}
+          <strong className="text-ink">Begin</strong> when you are ready to start.
         </p>
 
         <div className="flex justify-center pt-2 lg:hidden">

@@ -1,3 +1,5 @@
+import type { SectionMeta } from './sectionPlan.js';
+
 export type ReadingQuestionType = 'COMPLETE_WORDS' | 'DAILY_LIFE' | 'ACADEMIC';
 export type ReadingSkill =
   | 'VOCABULARY'
@@ -9,6 +11,8 @@ export type ReadingSkill =
   | 'PURPOSE'
   | 'REFERENCE'
   | 'RELATIONSHIP';
+
+export type { SectionMeta };
 
 export type ReadingPracticeMode = 'ADAPTIVE' | 'COMPLETE_WORDS' | 'DAILY_LIFE' | 'ACADEMIC';
 
@@ -38,7 +42,6 @@ export interface ReadingPracticeProfile {
 export interface CompleteWordsQuestion {
   id: string;
   sentence: string;
-  target_word: string;
   cefr_level: string;
   difficulty: number;
   category: string | null;
@@ -115,8 +118,10 @@ export interface StudentQuestionPayload {
   questionId: string;
   skill: ReadingSkill | null;
   difficulty: number;
-  /** Complete words */
+  /** Complete words — full passage with auto-masked blanks */
   displaySentence?: string;
+  displayPassage?: string;
+  blanks?: { id: number; visiblePrefix: string; maskedDisplay: string }[];
   /** Daily life / academic */
   title?: string;
   content?: string;
@@ -127,6 +132,7 @@ export interface StudentQuestionPayload {
   options?: { key: 'A' | 'B' | 'C' | 'D'; label: string }[];
   questionIndex?: number;
   questionsInPassage?: number;
+  sectionMeta?: SectionMeta;
 }
 
 export interface SessionResultsSummary {

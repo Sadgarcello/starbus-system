@@ -5,7 +5,7 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { validateTargetWordInSentence, maskTargetWord } from '@/lib/readingPractice/completeWords';
+import { buildCompleteWordsTask, splitPassageSentences } from '@/lib/readingPractice/completeWords';
 import { paths } from '@/routes/paths';
 
 type Tab = 'complete_words' | 'daily_life' | 'academic';
@@ -79,33 +79,45 @@ function CompleteWordsForm({
   onDone: (m: string) => void;
   onError: (e: string) => void;
 }) {
-  const [sentence, setSentence] = useState('');
-  const [targetWord, setTargetWord] = useState('');
+  const [passage, setPassage] = useState('');
   const [cefr, setCefr] = useState('B2');
   const [difficulty, setDifficulty] = useState('6');
   const [explanation, setExplanation] = useState('');
-  const [preview, setPreview] = useState('');
+  const [preview, setPreview] = useState<{ passage: string; blankCount: number } | null>(null);
 
   function runPreview() {
-    try {
-      if (!validateTargetWordInSentence(sentence, targetWord)) {
-        onError('Target word must appear in the sentence.');
-        return;
-      }
-      setPreview(maskTargetWord(sentence, targetWord, Number(difficulty)));
-    } catch {
-      onError('Could not preview — check sentence and target word.');
+    onError('');
+    const trimmed = passage.trim();
+    if (!trimmed) {
+      onError('Passage text is required.');
+      return;
     }
+    if (splitPassageSentences(trimmed).length < 2) {
+      onError('Add at least two sentences. The first sentence stays intact; masking starts after it.');
+      return;
+    }
+    const task = buildCompleteWordsTask(trimmed);
+    if (task.blanks.length === 0) {
+      onError('No words matched the masking rules. Add longer content words after the first sentence.');
+      return;
+    }
+    setPreview({ passage: task.displayPassage, blankCount: task.blanks.length });
   }
 
   async function save(active: boolean) {
     onError('');
-    if (!sentence.trim() || !targetWord.trim()) {
-      onError('Sentence and target word are required.');
+    const trimmed = passage.trim();
+    if (!trimmed) {
+      onError('Passage text is required.');
       return;
     }
-    if (!validateTargetWordInSentence(sentence, targetWord)) {
-      onError('Target word must appear in the sentence.');
+    if (splitPassageSentences(trimmed).length < 2) {
+      onError('Add at least two sentences.');
+      return;
+    }
+    const task = buildCompleteWordsTask(trimmed);
+    if (task.blanks.length === 0) {
+      onError('No maskable words found. Check the passage has content words after sentence one.');
       return;
     }
     const d = Number(difficulty);
@@ -114,8 +126,7 @@ function CompleteWordsForm({
       return;
     }
     const { error } = await supabase.from('complete_words_questions').insert({
-      sentence: sentence.trim(),
-      target_word: targetWord.trim(),
+      sentence: trimmed,
       cefr_level: cefr,
       difficulty: d,
       category: 'academic',
@@ -126,15 +137,21 @@ function CompleteWordsForm({
       onError(error.message);
       return;
     }
-    onDone(active ? 'Published Complete the Words question.' : 'Saved as draft (inactive).');
+    onDone(
+      active
+        ? `Published passage with ${task.blanks.length} auto-masked words.`
+        : 'Saved as draft (inactive).',
+    );
   }
 
   return (
     <Card>
-      <CardHeader title="Complete the Words" subtitle="Target word is set manually by teacher." />
+      <CardHeader
+        title="Complete the Words"
+        subtitle="Paste the full passage. After the first sentence, the system hides the second half of every second eligible word."
+      />
       <div className="space-y-3 px-4 pb-4">
-        <Field label="Sentence" value={sentence} onChange={setSentence} multiline />
-        <Field label="Target word" value={targetWord} onChange={setTargetWord} />
+        <Field label="Passage text" value={passage} onChange={setPassage} multiline />
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="CEFR" value={cefr} onChange={setCefr} />
           <Field label="Difficulty (1–10)" value={difficulty} onChange={setDifficulty} />
@@ -142,13 +159,15 @@ function CompleteWordsForm({
         <Field label="Explanation (optional)" value={explanation} onChange={setExplanation} multiline />
         {preview && (
           <div className="rounded-md bg-paper-soft p-3 text-sm">
-            <p className="text-xs font-bold uppercase text-ink-subtle">Student preview</p>
-            <p className="mt-1 font-display text-lg">{preview}</p>
+            <p className="text-xs font-bold uppercase text-ink-subtle">
+              Student preview · {preview.blankCount} blanks
+            </p>
+            <p className="mt-1 whitespace-pre-wrap font-display text-lg leading-relaxed">{preview.passage}</p>
           </div>
         )}
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={runPreview}>
-            Preview
+            Preview masking
           </Button>
           <Button variant="secondary" size="sm" onClick={() => void save(false)}>
             Save draft
@@ -253,7 +272,7 @@ function AcademicForm({
   onError: (e: string) => void;
 }) {
   const [title, setTitle] = useState('');
-  const [passage, setPassage] = useState('');
+  const [passageText, setPassageText] = useState('');
   const [question, setQuestion] = useState('');
   const [a, setA] = useState('');
   const [b, setB] = useState('');
@@ -263,16 +282,16 @@ function AcademicForm({
   const [skill, setSkill] = useState('MAIN_IDEA');
 
   async function save() {
-    if (!title || !passage || !question || !a || !b || !c || !d) {
+    if (!title || !passageText || !question || !a || !b || !c || !d) {
       onError('Passage and first question are required.');
       return;
     }
-    const wc = passage.trim().split(/\s+/).length;
+    const wc = passageText.trim().split(/\s+/).length;
     const { data: p, error: pErr } = await supabase
       .from('academic_passages')
       .insert({
         title,
-        passage_text: passage,
+        passage_text: passageText,
         cefr_level: 'B2',
         difficulty: 6,
         topic: 'general',
@@ -309,7 +328,7 @@ function AcademicForm({
       <CardHeader title="Academic Passage" subtitle="Add passage and first question; add more questions in DB or extend UI later." />
       <div className="space-y-3 px-4 pb-4">
         <Field label="Title" value={title} onChange={setTitle} />
-        <Field label="Passage" value={passage} onChange={setPassage} multiline />
+        <Field label="Passage" value={passageText} onChange={setPassageText} multiline />
         <Field label="Question" value={question} onChange={setQuestion} />
         <Field label="A" value={a} onChange={setA} />
         <Field label="B" value={b} onChange={setB} />
@@ -320,7 +339,7 @@ function AcademicForm({
           <select
             className="mt-1 w-full rounded-md border border-paper-line px-3 py-2 text-sm"
             value={correct}
-            onChange={(e) => setCorrect(e.target.value as 'A' | 'B' | 'C' | 'D')}
+            onChange={(e) => setCorrect(e.target.value as 'A' | 'B' | 'C' | 'D'>)}
           >
             {(['A', 'B', 'C', 'D'] as const).map((k) => (
               <option key={k} value={k}>

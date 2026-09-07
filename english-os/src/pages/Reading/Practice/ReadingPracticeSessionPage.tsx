@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
 import type {
@@ -13,6 +12,8 @@ import type {
 } from '@/lib/readingPractice/types';
 import type { SectionMeta } from '@/lib/readingPractice/sectionPlan';
 import { SECTION_LABELS } from '@/lib/readingPractice/sectionPlan';
+import { CompleteWordsInlinePassage } from '@/components/readingPractice/CompleteWordsInlinePassage';
+import { missingLetterCountFromMasked } from '@/lib/readingPractice/completeWords';
 import { readingPracticeService } from '@/services/readingPracticeService';
 import { paths } from '@/routes/paths';
 import { isExamPrepComplete } from '@/lib/readingExam/examPrepStorage';
@@ -122,7 +123,8 @@ export default function ReadingPracticeSessionPage() {
       const blanks = question.blanks ?? [];
       const answers: Record<string, string> = {};
       for (const blank of blanks) {
-        answers[String(blank.id)] = blankAnswers[blank.id] ?? '';
+        const suffix = blankAnswers[blank.id] ?? '';
+        answers[String(blank.id)] = blank.visiblePrefix + suffix;
       }
       payload = JSON.stringify(answers);
     }
@@ -318,7 +320,7 @@ export default function ReadingPracticeSessionPage() {
         )}
 
         {question.questionType === 'COMPLETE_WORDS' && (
-          <CompleteWordsView
+          <CompleteWordsInlinePassage
             question={question}
             blankAnswers={blankAnswers}
             setBlankAnswers={setBlankAnswers}
@@ -355,11 +357,18 @@ export default function ReadingPracticeSessionPage() {
               disabled={
                 busy ||
                 (question.questionType === 'COMPLETE_WORDS'
-                  ? !(question.blanks ?? []).every((b) => (blankAnswers[b.id] ?? '').trim())
+                  ? !(question.blanks ?? []).every((b) => {
+                      const typed = blankAnswers[b.id] ?? '';
+                      return typed.length === missingLetterCountFromMasked(b.maskedDisplay);
+                    })
                   : mcq === null)
               }
             >
-              {phase === 'submitting' ? 'Checking…' : 'Submit'}
+              {phase === 'submitting'
+                ? 'Checking…'
+                : question.questionType === 'COMPLETE_WORDS'
+                  ? 'Continue'
+                  : 'Submit'}
             </Button>
           ) : (
             <Button onClick={() => void nextQuestion()} disabled={busy}>
@@ -369,59 +378,14 @@ export default function ReadingPracticeSessionPage() {
                   ? 'Loading…'
                   : answeredCount >= targetLength
                     ? 'See results'
-                    : 'Next question'}
+                    : question.questionType === 'COMPLETE_WORDS'
+                      ? 'Continue'
+                      : 'Next question'}
             </Button>
           )}
         </div>
       </Card>
     </div>
-  );
-}
-
-function CompleteWordsView({
-  question,
-  blankAnswers,
-  setBlankAnswers,
-  disabled,
-}: {
-  question: StudentQuestionPayload;
-  blankAnswers: Record<number, string>;
-  setBlankAnswers: Dispatch<SetStateAction<Record<number, string>>>;
-  disabled: boolean;
-}) {
-  const passage = question.displayPassage ?? question.displaySentence ?? '';
-  const blanks = question.blanks ?? [];
-
-  return (
-    <>
-      <p className="whitespace-pre-wrap text-base leading-relaxed text-ink">{passage}</p>
-      {blanks.length > 0 && (
-        <div className="mt-5 space-y-3 border-t border-paper-line pt-4">
-          <p className="text-xs font-bold uppercase text-ink-subtle">
-            Complete the missing parts ({blanks.length} words)
-          </p>
-          {blanks.map((blank) => (
-            <label key={blank.id} className="block text-sm">
-              <span className="font-mono text-sm text-ink">{blank.maskedDisplay}</span>
-              <Input
-                className="mt-1"
-                value={blankAnswers[blank.id] ?? ''}
-                onChange={(e) =>
-                  setBlankAnswers((prev) => ({ ...prev, [blank.id]: e.target.value }))
-                }
-                placeholder={
-                  blank.visiblePrefix
-                    ? `Type missing letters after “${blank.visiblePrefix}”`
-                    : 'Type the complete word'
-                }
-                autoComplete="off"
-                disabled={disabled}
-              />
-            </label>
-          ))}
-        </div>
-      )}
-    </>
   );
 }
 

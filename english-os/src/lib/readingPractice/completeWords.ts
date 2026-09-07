@@ -45,6 +45,59 @@ export interface CompleteWordsBlankPayload {
   maskedDisplay: string;
 }
 
+export interface PassageSegmentText {
+  type: 'text';
+  text: string;
+}
+
+export interface PassageSegmentBlank {
+  type: 'blank';
+  id: number;
+  visiblePrefix: string;
+  missingLength: number;
+  blankIndex: number;
+}
+
+export type PassageSegment = PassageSegmentText | PassageSegmentBlank;
+
+export function missingLetterCountFromMasked(maskedDisplay: string): number {
+  return (maskedDisplay.match(/_/g) ?? []).length;
+}
+
+export function buildPassageSegments(
+  passage: string,
+  blanks: CompleteWordsBlankPayload[],
+): PassageSegment[] {
+  const segments: PassageSegment[] = [];
+  let cursor = 0;
+
+  for (let blankIndex = 0; blankIndex < blanks.length; blankIndex++) {
+    const blank = blanks[blankIndex]!;
+    const idx = passage.indexOf(blank.maskedDisplay, cursor);
+    if (idx === -1) continue;
+
+    if (idx > cursor) {
+      segments.push({ type: 'text', text: passage.slice(cursor, idx) });
+    }
+
+    segments.push({
+      type: 'blank',
+      id: blank.id,
+      visiblePrefix: blank.visiblePrefix,
+      missingLength: missingLetterCountFromMasked(blank.maskedDisplay),
+      blankIndex,
+    });
+
+    cursor = idx + blank.maskedDisplay.length;
+  }
+
+  if (cursor < passage.length) {
+    segments.push({ type: 'text', text: passage.slice(cursor) });
+  }
+
+  return segments;
+}
+
 export function splitPassageSentences(passage: string): string[] {
   const trimmed = passage.trim();
   if (!trimmed) return [];

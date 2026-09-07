@@ -3,6 +3,7 @@ import {
   answersMatch,
   blankAnswerMatches,
   buildCompleteWordsTask,
+  buildPassageSegments,
   checkMcqAnswer,
   DEFAULT_MASK_BLANK_COUNT,
   gradeCompleteWordsAnswer,
@@ -10,6 +11,7 @@ import {
   isTrivialWord,
   maskWordSecondHalf,
   splitPassageSentences,
+  toStudentBlanks,
 } from './completeWords';
 import { adjustDifficulty, cefrToStartingDifficulty, clampDifficulty } from './difficulty';
 import {
@@ -71,6 +73,14 @@ describe('Complete the Words', () => {
     expect(visiblePrefix).toBe('devel');
     expect(hiddenSuffix).toBe('opment');
     expect(maskedWord).toBe('devel______');
+  });
+
+  it('builds inline passage segments for blanks', () => {
+    const task = buildCompleteWordsTask(etsPassage);
+    const segments = buildPassageSegments(task.displayPassage, toStudentBlanks(task.blanks));
+    const blankSegments = segments.filter((s) => s.type === 'blank');
+    expect(blankSegments.length).toBe(task.blanks.length);
+    expect(segments.some((s) => s.type === 'text')).toBe(true);
   });
 
   it('grades all blanks in a passage', () => {

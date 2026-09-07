@@ -339,7 +339,7 @@ function AcademicForm({
           <select
             className="mt-1 w-full rounded-md border border-paper-line px-3 py-2 text-sm"
             value={correct}
-            onChange={(e) => setCorrect(e.target.value as 'A' | 'B' | 'C' | 'D'>)}
+            onChange={(e) => setCorrect(e.target.value as 'A' | 'B' | 'C' | 'D')}
           >
             {(['A', 'B', 'C', 'D'] as const).map((k) => (
               <option key={k} value={k}>

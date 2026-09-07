@@ -60,8 +60,10 @@ export interface PassageSegmentBlank {
 
 export type PassageSegment = PassageSegmentText | PassageSegmentBlank;
 
+export const MASK_PLACEHOLDER = '-';
+
 export function missingLetterCountFromMasked(maskedDisplay: string): number {
-  return (maskedDisplay.match(/_/g) ?? []).length;
+  return (maskedDisplay.match(/[-_]/g) ?? []).length;
 }
 
 export function buildPassageSegments(
@@ -142,7 +144,7 @@ export function maskWordSecondHalf(word: string): {
       maskedChars.push(ch);
       visiblePrefix += ch;
     } else {
-      maskedChars.push('_');
+      maskedChars.push(MASK_PLACEHOLDER);
       hiddenSuffix += ch;
     }
   }

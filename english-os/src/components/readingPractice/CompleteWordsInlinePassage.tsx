@@ -1,6 +1,26 @@
 import { useEffect, useMemo, useRef, type Dispatch, type KeyboardEvent, type SetStateAction } from 'react';
 import type { StudentQuestionPayload } from '@/lib/readingPractice/types';
-import { buildPassageSegments } from '@/lib/readingPractice/completeWords';
+import { buildPassageSegments, missingLetterCountFromMasked } from '@/lib/readingPractice/completeWords';
+
+function getBlankLetters(blankAnswers: Record<number, string>, blankId: number): string[] {
+  return (blankAnswers[blankId] ?? '').split('');
+}
+
+function setBlankLetter(
+  setBlankAnswers: Dispatch<SetStateAction<Record<number, string>>>,
+  blankId: number,
+  charIndex: number,
+  char: string,
+  maxLength: number,
+): void {
+  const nextChar = char.replace(/[^a-zA-Z']/g, '').slice(-1);
+  setBlankAnswers((prev) => {
+    const current = (prev[blankId] ?? '').split('');
+    while (current.length < maxLength) current.push('');
+    current[charIndex] = nextChar;
+    return { ...prev, [blankId]: current.join('').slice(0, maxLength) };
+  });
+}
 
 export function CompleteWordsInlinePassage({
   question,
@@ -18,40 +38,76 @@ export function CompleteWordsInlinePassage({
   const segments = useMemo(() => buildPassageSegments(passage, blanks), [passage, blanks]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => {
-    if (disabled || blanks.length === 0) return;
-    inputRefs.current[0]?.focus();
-  }, [question.questionId, disabled, blanks.length]);
+  const blankSlotOffsets = useMemo(() => {
+    const offsets = new Map<number, number>();
+    let offset = 0;
+    for (const segment of segments) {
+      if (segment.type === 'blank') {
+        offsets.set(segment.id, offset);
+        offset += segment.missingLength;
+      }
+    }
+    return offsets;
+  }, [segments]);
 
-  function focusBlank(index: number) {
-    if (index < 0 || index >= blanks.length) return;
-    inputRefs.current[index]?.focus();
+  const totalLetterSlots = useMemo(
+    () => blanks.reduce((sum, b) => sum + missingLetterCountFromMasked(b.maskedDisplay), 0),
+    [blanks],
+  );
+
+  useEffect(() => {
+    if (disabled || totalLetterSlots === 0) return;
+    inputRefs.current[0]?.focus();
+  }, [question.questionId, disabled, totalLetterSlots]);
+
+  function focusSlot(slotIndex: number) {
+    if (slotIndex < 0 || slotIndex >= totalLetterSlots) return;
+    inputRefs.current[slotIndex]?.focus();
+    inputRefs.current[slotIndex]?.select();
   }
 
-  function setBlankValue(id: number, blankIndex: number, raw: string, missingLength: number) {
-    const cleaned = raw.replace(/[^a-zA-Z']/g, '').slice(0, missingLength);
-    setBlankAnswers((prev) => ({ ...prev, [id]: cleaned }));
-    if (!disabled && cleaned.length >= missingLength) {
-      focusBlank(blankIndex + 1);
+  function handleLetterChange(
+    blankId: number,
+    charIndex: number,
+    slotIndex: number,
+    raw: string,
+    maxLength: number,
+  ) {
+    const nextChar = raw.replace(/[^a-zA-Z']/g, '').slice(-1);
+    setBlankLetter(setBlankAnswers, blankId, charIndex, raw, maxLength);
+    if (!disabled && nextChar) {
+      focusSlot(slotIndex + 1);
     }
   }
 
-  function handleBlankKeyDown(e: KeyboardEvent<HTMLInputElement>, blankIndex: number, id: number) {
-    const value = blankAnswers[id] ?? '';
+  function handleLetterKeyDown(
+    e: KeyboardEvent<HTMLInputElement>,
+    blankId: number,
+    charIndex: number,
+    slotIndex: number,
+    maxLength: number,
+  ) {
+    const letters = getBlankLetters(blankAnswers, blankId);
+    const current = letters[charIndex] ?? '';
 
     if (e.key === 'ArrowRight') {
       e.preventDefault();
-      focusBlank(blankIndex + 1);
+      focusSlot(slotIndex + 1);
       return;
     }
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      focusBlank(blankIndex - 1);
+      focusSlot(slotIndex - 1);
       return;
     }
-    if (e.key === 'Backspace' && value.length === 0) {
+    if (e.key === 'Backspace' && !current) {
       e.preventDefault();
-      focusBlank(blankIndex - 1);
+      if (charIndex > 0) {
+        setBlankLetter(setBlankAnswers, blankId, charIndex - 1, '', maxLength);
+        focusSlot(slotIndex - 1);
+      } else {
+        focusSlot(slotIndex - 1);
+      }
     }
   }
 
@@ -62,43 +118,66 @@ export function CompleteWordsInlinePassage({
       </p>
 
       <div className="rounded-md border border-paper-line bg-paper px-4 py-5 sm:px-6">
-        <p className="text-base leading-[2] text-ink">
+        <p className="text-base leading-[2.2] text-ink">
           {segments.map((segment, index) => {
             if (segment.type === 'text') {
               return <span key={`t-${index}`}>{segment.text}</span>;
             }
 
-            const value = blankAnswers[segment.id] ?? '';
-            const widthCh = Math.max(segment.missingLength, 2);
+            const startSlot = blankSlotOffsets.get(segment.id) ?? 0;
+            const letters = getBlankLetters(blankAnswers, segment.id);
 
             return (
-              <span key={`b-${segment.id}`} className="inline">
+              <span key={`b-${segment.id}`} className="inline align-baseline whitespace-nowrap">
                 <span className="font-medium">{segment.visiblePrefix}</span>
-                <input
-                  ref={(el) => {
-                    inputRefs.current[segment.blankIndex] = el;
-                  }}
-                  type="text"
-                  inputMode="text"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  aria-label={`Missing letters ${segment.blankIndex + 1} of ${blanks.length}`}
-                  disabled={disabled}
-                  value={value}
-                  maxLength={segment.missingLength}
-                  onChange={(e) =>
-                    setBlankValue(segment.id, segment.blankIndex, e.target.value, segment.missingLength)
-                  }
-                  onKeyDown={(e) => handleBlankKeyDown(e, segment.blankIndex, segment.id)}
-                  className={`mx-0 inline-block border-0 border-b-2 bg-club-soft/40 px-0.5 py-0 text-base font-medium text-ink outline-none transition-colors disabled:opacity-70 ${
-                    disabled
-                      ? 'border-paper-line'
-                      : 'border-dotted border-ink/50 focus:border-club focus:bg-club-soft/70'
-                  }`}
-                  style={{ width: `${widthCh}ch`, minWidth: `${widthCh}ch` }}
-                />
+                {Array.from({ length: segment.missingLength }, (_, charIndex) => {
+                  const slotIndex = startSlot + charIndex;
+                  const value = letters[charIndex] ?? '';
+
+                  return (
+                    <input
+                      key={charIndex}
+                      ref={(el) => {
+                        inputRefs.current[slotIndex] = el;
+                      }}
+                      type="text"
+                      inputMode="text"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      aria-label={`Letter ${charIndex + 1} of ${segment.missingLength} in blank ${segment.blankIndex + 1}`}
+                      disabled={disabled}
+                      value={value}
+                      maxLength={1}
+                      placeholder="-"
+                      onChange={(e) =>
+                        handleLetterChange(
+                          segment.id,
+                          charIndex,
+                          slotIndex,
+                          e.target.value,
+                          segment.missingLength,
+                        )
+                      }
+                      onKeyDown={(e) =>
+                        handleLetterKeyDown(
+                          e,
+                          segment.id,
+                          charIndex,
+                          slotIndex,
+                          segment.missingLength,
+                        )
+                      }
+                      className={`mx-0 inline-block border-0 border-b-2 bg-transparent px-0 py-0 text-center text-base font-medium leading-none outline-none transition-colors placeholder:text-ink/40 disabled:opacity-80 ${
+                        disabled
+                          ? 'border-paper-line text-ink'
+                          : 'border-dashed border-ink/45 text-ink focus:border-club focus:bg-club-soft/50'
+                      }`}
+                      style={{ width: '1.05ch', minWidth: '1.05ch', height: '1.35em' }}
+                    />
+                  );
+                })}
               </span>
             );
           })}
@@ -106,8 +185,8 @@ export function CompleteWordsInlinePassage({
 
         {!disabled && (
           <p className="mt-4 border-t border-paper-line pt-3 text-xs italic text-ink-subtle">
-            Click a blank to start typing. Focus moves to the next blank when filled. Use arrow keys
-            to move between blanks.
+            Each dash is one missing letter. Type in the dashes — focus moves automatically. Use
+            arrow keys to move between letters.
           </p>
         )}
       </div>

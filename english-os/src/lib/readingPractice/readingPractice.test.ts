@@ -40,8 +40,15 @@ describe('Complete the Words', () => {
 
   it('masks without spaces between letters', () => {
     const { maskedWord } = maskWordSecondHalf('officials');
-    expect(maskedWord).toBe('offi_____');
+    expect(maskedWord).toBe('offi-----');
     expect(maskedWord).not.toContain(' ');
+  });
+
+  it('uses one dash per missing letter', () => {
+    const { maskedWord, visiblePrefix, hiddenSuffix } = maskWordSecondHalf('water');
+    expect(visiblePrefix).toBe('wa');
+    expect(hiddenSuffix).toBe('ter');
+    expect(maskedWord).toBe('wa---');
   });
 
   it('caps at 10 masked words total', () => {
@@ -64,15 +71,15 @@ describe('Complete the Words', () => {
   it('masks every second eligible word after sentence one until cap', () => {
     const task = buildCompleteWordsTask(passage);
     expect(task.blanks.length).toBeGreaterThan(0);
-    expect(task.displayPassage).toContain('_');
-    expect(task.displayPassage).not.toMatch(/[a-z] [a-z] _/);
+    expect(task.displayPassage).toContain('-');
+    expect(task.displayPassage).not.toMatch(/[a-z] [a-z] -/);
   });
 
   it('hides the second half of a word', () => {
     const { maskedWord, visiblePrefix, hiddenSuffix } = maskWordSecondHalf('development');
     expect(visiblePrefix).toBe('devel');
     expect(hiddenSuffix).toBe('opment');
-    expect(maskedWord).toBe('devel______');
+    expect(maskedWord).toBe('devel------');
   });
 
   it('builds inline passage segments for blanks', () => {

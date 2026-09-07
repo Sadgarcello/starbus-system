@@ -107,8 +107,8 @@ export default function ReadingExamCheckPage() {
     <ExamShell
       onContinue={handleContinue}
       continueDisabled={continueDisabled}
-      showContinue={step !== 'mic_record' || mic.micPassed}
-      continueLabel={step === 'mic_record' && mic.micPassed ? 'Continue' : 'Continue'}
+      showContinue
+      continueLabel="Continue"
     >
       {step === 'hardware' && (
         <ExamStepCard title="Hardware Check">

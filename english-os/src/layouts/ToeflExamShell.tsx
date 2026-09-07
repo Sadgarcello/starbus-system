@@ -1,8 +1,7 @@
-import { Button } from '@/components/ui/Button';
+import { cn } from '@/utils/cn';
 import { ExamMobileTip } from '@/components/readingExam/ExamMobileTip';
 import { paths } from '@/routes/paths';
 import { useNavigate } from 'react-router-dom';
-
 interface ToeflExamShellProps {
   children: React.ReactNode;
   onContinue?: () => void;
@@ -36,29 +35,30 @@ export function ToeflExamShell({
             TOEFL Reading · Setup
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
+        <div className="flex shrink-0 items-center gap-2">
+          <button
             type="button"
-            variant="secondary"
-            size="sm"
-            className="border-club/30 bg-paper text-ink hover:bg-paper-soft"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-club/40 bg-paper px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-paper-soft sm:text-sm"
             onClick={exitTest}
           >
             Exit Test
-          </Button>
+          </button>
           {showContinue && onContinue && (
-            <Button
+            <button
               type="button"
-              size="sm"
-              className="border border-club bg-club text-ink hover:bg-club-hover disabled:opacity-50"
               disabled={continueDisabled}
+              className={cn(
+                'inline-flex min-h-10 items-center justify-center rounded-md border px-3 py-1.5 text-xs font-semibold transition sm:text-sm',
+                continueDisabled
+                  ? 'cursor-not-allowed border-club/50 bg-club/20 text-club/70'
+                  : 'border-club bg-club text-ink hover:bg-club-hover',
+              )}
               onClick={onContinue}
             >
               {continueLabel} →
-            </Button>
+            </button>
           )}
-        </div>
-      </header>
+        </div>      </header>
       <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6 sm:py-12">{children}</main>
       <ExamMobileTip />
     </div>

@@ -13,6 +13,7 @@ import type {
 } from '@/lib/readingPractice/types';
 import { readingPracticeService } from '@/services/readingPracticeService';
 import { paths } from '@/routes/paths';
+import { isExamPrepComplete } from '@/lib/readingExam/examPrepStorage';
 
 const TYPE_LABEL: Record<ReadingQuestionType, string> = {
   COMPLETE_WORDS: 'Complete the Word',
@@ -47,6 +48,14 @@ export default function ReadingPracticeSessionPage() {
 
   const targetLength = useMemo(() => Math.min(20, Math.max(1, length || 10)), [length]);
   const busy = phase !== 'idle' && phase !== 'booting';
+
+  useEffect(() => {
+    if (student?.exam_track !== 'toefl') return;
+    const query = `mode=${encodeURIComponent(mode)}&length=${encodeURIComponent(String(targetLength))}`;
+    if (!isExamPrepComplete()) {
+      navigate(`${paths.readingPracticeCheck}?${query}`, { replace: true });
+    }
+  }, [student?.exam_track, mode, targetLength, navigate]);
 
   useEffect(() => {
     sessionIdRef.current = sessionId;

@@ -84,7 +84,7 @@ export default function ReadingPage() {
                 practice profile, not AI.
               </p>
             </div>
-            <Link to={`${paths.readingPractice}/session?mode=ADAPTIVE&length=10`} className="shrink-0">
+            <Link to={`${paths.readingPracticeCheck}?mode=ADAPTIVE&length=10`} className="shrink-0">
               <Button className="w-full sm:w-auto">Take actual test</Button>
             </Link>
           </div>

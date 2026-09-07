@@ -71,7 +71,7 @@ export default function ReadingPracticeHubPage() {
             <CardHeader title={m.title} subtitle={m.description} />
             <div className="flex flex-wrap gap-2 px-4 pb-4">
               {SESSION_LENGTHS.map((len) => (
-                <Link key={len} to={`${paths.readingPractice}/session?mode=${m.mode}&length=${len}`}>
+                <Link key={len} to={`${paths.readingPracticeCheck}?mode=${m.mode}&length=${len}`}>
                   <Button size="sm" variant={i === 0 ? 'primary' : 'secondary'}>
                     {len} questions
                   </Button>
@@ -88,7 +88,7 @@ export default function ReadingPracticeHubPage() {
           subtitle="Full adaptive session — mixed Complete the Words, Daily Life, and Academic passages."
         />
         <div className="px-4 pb-4">
-          <Link to={`${paths.readingPractice}/session?mode=ADAPTIVE&length=10`}>
+          <Link to={`${paths.readingPracticeCheck}?mode=ADAPTIVE&length=10`}>
             <Button className="w-full sm:w-auto">Start 10-question adaptive test</Button>
           </Link>
         </div>

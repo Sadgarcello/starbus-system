@@ -8,6 +8,8 @@ export const paths = {
   speaking: '/speaking',
   reading: '/reading',
   readingPractice: '/reading/practice',
+  readingPracticeCheck: '/reading/practice/check',
+  readingPracticeIntro: '/reading/practice/intro',
   readingPracticeAdmin: '/reading/practice/admin',
   listening: '/listening',
   writing: '/writing',

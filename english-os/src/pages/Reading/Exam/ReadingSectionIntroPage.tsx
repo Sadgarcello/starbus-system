@@ -64,8 +64,8 @@ export default function ReadingSectionIntroPage() {
     >
       <div className="w-full max-w-3xl space-y-6">
         <div className="flex items-start gap-3">
-          <div className="mt-1 h-10 w-1 shrink-0 rounded-full bg-[#9eb0d8]" />
-          <h1 className="text-3xl font-bold text-[#2a4a7a]">Reading Section</h1>
+          <div className="mt-1 h-10 w-1 shrink-0 rounded-full bg-club" />
+          <h1 className="font-display text-3xl text-ink">Reading Section</h1>
         </div>
 
         <p className="text-base leading-relaxed text-ink-muted">
@@ -76,7 +76,7 @@ export default function ReadingSectionIntroPage() {
         <div className="overflow-hidden rounded-md border border-paper-line">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="bg-[#b8c5e8] text-ink">
+              <tr className="border-b border-club/30 bg-club-soft text-ink">
                 <th className="px-4 py-3 font-semibold">Type of Task</th>
                 <th className="px-4 py-3 font-semibold">Description</th>
               </tr>

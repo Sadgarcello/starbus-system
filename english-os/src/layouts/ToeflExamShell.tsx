@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button';
+import { ExamMobileTip } from '@/components/readingExam/ExamMobileTip';
 import { paths } from '@/routes/paths';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ interface ToeflExamShellProps {
   showContinue?: boolean;
 }
 
-/** Full-screen TOEFL-style shell — no app nav. */
+/** Full-screen TOEFL-style shell — Khawaja Club colors, no app nav. */
 export function ToeflExamShell({
   children,
   onContinue,
@@ -27,15 +28,20 @@ export function ToeflExamShell({
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper">
-      <header className="flex items-center justify-between bg-[#9eb0d8] px-4 py-3 text-white sm:px-6">
-        <p className="text-sm font-semibold tracking-wide sm:text-base">Khawaja Club · NT-016</p>
+    <div className="flex min-h-dvh flex-col bg-paper-soft">
+      <header className="flex items-center justify-between border-b border-ink/10 bg-ink px-4 py-3 text-club sm:px-6">
+        <div>
+          <p className="text-sm font-bold tracking-wide sm:text-base">Khawaja Club</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-club/80 sm:text-xs">
+            TOEFL Reading · Setup
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="secondary"
             size="sm"
-            className="border-white/40 bg-white text-ink hover:bg-paper-soft"
+            className="border-club/30 bg-paper text-ink hover:bg-paper-soft"
             onClick={exitTest}
           >
             Exit Test
@@ -44,7 +50,7 @@ export function ToeflExamShell({
             <Button
               type="button"
               size="sm"
-              className="bg-[#5a7ab8] text-white hover:bg-[#4a6aa8] disabled:opacity-50"
+              className="border border-club bg-club text-ink hover:bg-club-hover disabled:opacity-50"
               disabled={continueDisabled}
               onClick={onContinue}
             >
@@ -54,6 +60,7 @@ export function ToeflExamShell({
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+      <ExamMobileTip />
     </div>
   );
 }

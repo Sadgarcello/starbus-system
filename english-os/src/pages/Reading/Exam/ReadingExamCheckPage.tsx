@@ -131,8 +131,8 @@ export default function ReadingExamCheckPage() {
             audio clearly.
           </p>
           <p>You will be able to change the volume during the test if you need to.</p>
-          <div className="flex items-center gap-3 rounded-md bg-paper-soft px-4 py-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#b8c5e8] text-[#2a4a7a]">
+          <div className="flex items-center gap-3 rounded-md border border-club/30 bg-club-soft/60 px-4 py-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-club/40 bg-club-soft text-ink">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.05a4.48 4.48 0 0 0 2.5-4.02z" />
               </svg>
@@ -149,7 +149,8 @@ export default function ReadingExamCheckPage() {
             <Button
               type="button"
               size="lg"
-              className="min-w-[220px] bg-[#9eb0d8] text-[#2a4a7a] hover:bg-[#8aa0ce]"
+              variant="primary"
+              className="min-w-[220px]"
               disabled={playing}
               onClick={() => void play()}
             >
@@ -184,7 +185,7 @@ export default function ReadingExamCheckPage() {
           <div className="flex flex-col items-center justify-center gap-3">
             <button
               type="button"
-              className="flex h-40 w-40 flex-col items-center justify-center rounded-full bg-[#9eb0d8] text-[#2a4a7a] shadow-md transition hover:bg-[#8aa0ce] disabled:opacity-60"
+              className="flex h-40 w-40 flex-col items-center justify-center rounded-full border-2 border-club bg-club text-ink shadow-md transition hover:bg-club-hover disabled:opacity-60"
               disabled={mic.active || countdown != null}
               onClick={() => setCountdown(3)}
             >
@@ -194,7 +195,7 @@ export default function ReadingExamCheckPage() {
               <span className="mt-2 text-lg font-bold tracking-wide">RECORD</span>
             </button>
             {countdown != null && (
-              <p className="text-lg font-semibold text-[#2a4a7a]">Starting in {countdown}…</p>
+              <p className="text-lg font-semibold text-ink">Starting in {countdown}…</p>
             )}
           </div>
 

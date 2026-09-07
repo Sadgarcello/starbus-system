@@ -9,7 +9,7 @@ export function ExamStepCard({
 }) {
   return (
     <div className="w-full max-w-2xl space-y-6">
-      <h1 className="text-center text-2xl font-bold text-[#2a4a7a] sm:text-3xl">{title}</h1>
+      <h1 className="font-display text-center text-2xl text-ink sm:text-3xl">{title}</h1>
       <hr className="border-paper-line" />
       <div className="space-y-5 text-sm leading-relaxed text-ink-muted sm:text-base">{children}</div>
     </div>
@@ -25,7 +25,7 @@ export function ExamIconRow() {
         { label: 'Volume', icon: SpeakerIcon },
       ].map(({ label, icon: Icon }) => (
         <div key={label} className="flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#b8c5e8] text-[#2a4a7a]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-club/40 bg-club-soft text-ink">
             <Icon />
           </div>
           <span className="text-xs text-ink-subtle">{label}</span>

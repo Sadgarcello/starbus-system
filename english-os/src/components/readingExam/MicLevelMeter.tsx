@@ -22,8 +22,8 @@ export function MicLevelMeter({
     variant === 'example-good' ? 8 : variant === 'example-loud' ? 18 : bars;
   const fillClass =
     variant === 'example-loud' || label === 'too_loud'
-      ? 'bg-red-500'
-      : 'bg-teal-600';
+      ? 'bg-danger'
+      : 'bg-ink';
 
   return (
     <div className="space-y-2">

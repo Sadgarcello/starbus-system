@@ -20,7 +20,14 @@ const ReadingPracticeHubPage = lazy(() => import('@/pages/Reading/Practice/Readi
 const ReadingExamCheckPage = lazy(() => import('@/pages/Reading/Exam/ReadingExamCheckPage'));
 const ReadingSectionIntroPage = lazy(() => import('@/pages/Reading/Exam/ReadingSectionIntroPage'));
 const ReadingPracticeSessionPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeSessionPage'));
+const ReadingPracticeReportPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeReportPage'));
 const ReadingPracticeAdminPage = lazy(() => import('@/pages/Reading/Practice/ReadingPracticeAdminPage'));
+const ReadingPracticeResultsAdminPage = lazy(
+  () => import('@/pages/Reading/Practice/ReadingPracticeResultsAdminPage'),
+);
+const ReadingPracticeAdminReportPage = lazy(
+  () => import('@/pages/Reading/Practice/ReadingPracticeAdminReportPage'),
+);
 const WritingPage = lazy(() => import('@/pages/Writing/WritingPage'));
 const ListeningPage = lazy(() => import('@/pages/Listening/ListeningPage'));
 const AnalyticsPage = lazy(() => import('@/pages/Analytics/AnalyticsPage'));
@@ -70,7 +77,10 @@ const router = createBrowserRouter([
           { path: paths.speaking, element: <S><SpeakingPage /></S> },
           { path: paths.reading, element: <S><ReadingPage /></S> },
           { path: paths.readingPractice, element: <S><ReadingPracticeHubPage /></S> },
+          { path: `${paths.readingPractice}/report/:sessionId`, element: <S><ReadingPracticeReportPage /></S> },
           { path: paths.readingPracticeAdmin, element: <S><ReadingPracticeAdminPage /></S> },
+          { path: paths.readingPracticeAdminResults, element: <S><ReadingPracticeResultsAdminPage /></S> },
+          { path: `${paths.readingPractice}/admin/report/:sessionId`, element: <S><ReadingPracticeAdminReportPage /></S> },
           { path: paths.writing, element: <S><WritingPage /></S> },
           { path: paths.listening, element: <S><ListeningPage /></S> },
           { path: paths.analytics, element: <S><AnalyticsPage /></S> },

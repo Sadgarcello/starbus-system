@@ -17,6 +17,8 @@ export interface SelectionContext {
   candidates: QuestionCandidate[];
   /** If academic session has active passage, prefer its remaining questions */
   activePassageId?: string | null;
+  /** If Daily Life session has active context, serve its remaining questions in order */
+  activeContextId?: string | null;
   /** Full-test mode: lock selection to this section type */
   forcedQuestionType?: ReadingQuestionType;
 }
@@ -102,9 +104,20 @@ export function selectQuestion(ctx: SelectionContext): QuestionCandidate | null 
   const exclude = new Set([...ctx.recentQuestionIds, ...ctx.sessionQuestionIds]);
   let pool = ctx.candidates.filter((c) => !exclude.has(c.questionId));
 
+  if (ctx.activeContextId) {
+    const contextQs = pool.filter((c) => c.contextId === ctx.activeContextId);
+    if (contextQs.length > 0) {
+      contextQs.sort((a, b) => (a.questionOrder ?? 0) - (b.questionOrder ?? 0));
+      return contextQs[0]!;
+    }
+  }
+
   if (ctx.activePassageId) {
     const passageQs = pool.filter((c) => c.passageId === ctx.activePassageId);
-    if (passageQs.length > 0) pool = passageQs;
+    if (passageQs.length > 0) {
+      passageQs.sort((a, b) => (a.questionOrder ?? 0) - (b.questionOrder ?? 0));
+      return passageQs[0]!;
+    }
   }
 
   if (pool.length === 0) {
@@ -114,9 +127,22 @@ export function selectQuestion(ctx: SelectionContext): QuestionCandidate | null 
   if (pool.length === 0) return null;
 
   const targetType = ctx.forcedQuestionType ?? pickTaskType(ctx.mode, ctx.profile);
+  const strictType = ctx.mode !== 'ADAPTIVE' || ctx.forcedQuestionType != null;
 
-  const typed = pool.filter((c) => c.questionType === targetType);
-  const searchPool = typed.length > 0 ? typed : pool;
+  let searchPool = pool.filter((c) => c.questionType === targetType);
+
+  if (searchPool.length === 0) {
+    searchPool = ctx.candidates.filter(
+      (c) =>
+        c.questionType === targetType &&
+        !ctx.sessionQuestionIds.includes(c.questionId),
+    );
+  }
+
+  if (searchPool.length === 0) {
+    if (strictType) return null;
+    searchPool = pool;
+  }
 
   const scored: ScoredCandidate[] = searchPool.map((c) => ({
     ...c,

@@ -75,4 +75,38 @@
   .page-title {
     @apply font-display text-3xl text-ink sm:text-4xl;
   }
+
+  /* Exam answers: block browser first-letter auto-capitalization styling */
+  .exam-answer-input::first-letter {
+    text-transform: none;
+  }
+
+  /* Reading letter blanks: always render lowercase (overrides OS auto-caps) */
+  .exam-letter-input {
+    text-transform: lowercase !important;
+    -webkit-text-transform: lowercase !important;
+    font-variant-numeric: normal;
+    font-variant-caps: normal;
+    -webkit-text-security: none;
+  }
+
+  @keyframes cw-help-idle {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+
+  .cw-help-idle {
+    animation: cw-help-idle 4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cw-help-idle {
+      animation: none;
+    }
+  }
 }

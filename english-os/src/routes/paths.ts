@@ -11,6 +11,10 @@ export const paths = {
   readingPracticeCheck: '/reading/practice/check',
   readingPracticeIntro: '/reading/practice/intro',
   readingPracticeAdmin: '/reading/practice/admin',
+  readingPracticeAdminResults: '/reading/practice/admin/results',
+  readingPracticeAdminReport: (sessionId: string, studentId: string) =>
+    `/reading/practice/admin/report/${sessionId}?studentId=${encodeURIComponent(studentId)}`,
+  readingPracticeReport: (sessionId: string) => `/reading/practice/report/${sessionId}`,
   listening: '/listening',
   writing: '/writing',
   analytics: '/analytics',

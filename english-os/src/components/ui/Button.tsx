@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'gold' | 'practiceContinue';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,6 +15,10 @@ const variants: Record<Variant, string> = {
   secondary: 'bg-paper text-ink border border-paper-line hover:border-ink',
   ghost: 'bg-transparent text-ink hover:bg-paper-line',
   danger: 'bg-danger text-white hover:opacity-90',
+  /** Read in Daily Life — yellow CTA */
+  gold: 'border-[#FBBF24] bg-[#FBBF24] text-ink hover:bg-[#E5AB1F] hover:text-ink disabled:border-paper-line disabled:bg-paper-line disabled:text-ink-subtle',
+  /** Complete the Words — dark button, yellow label */
+  practiceContinue: 'border-ink bg-ink text-[#FBBF24] hover:bg-ink-muted hover:text-[#FBBF24]',
 };
 
 const sizes: Record<Size, string> = {

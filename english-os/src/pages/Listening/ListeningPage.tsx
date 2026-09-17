@@ -11,6 +11,7 @@ import {
   useListeningPicks,
   useSubmitListeningPick,
 } from '@/hooks/useListening';
+import { examAnswerInputClassName, examInputAssistProps, examTextareaProps } from '@/lib/examInputAssist';
 import { getListeningRules, getSkillTrackStyle } from '@/lib/examTrackContent';
 import type { ExamTrack, ListeningPickWithStudent } from '@/types';
 
@@ -168,7 +169,8 @@ function SubmitPickForm({
               value={clipName}
               onChange={(e) => setClipName(e.target.value)}
               required
-              className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+              {...examInputAssistProps}
+              className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
               placeholder="Name of the audio / video clip"
             />
           </Field>
@@ -177,7 +179,8 @@ function SubmitPickForm({
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               required
-              className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+              {...examInputAssistProps}
+              className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
               placeholder="What is it about?"
             />
           </Field>
@@ -187,7 +190,8 @@ function SubmitPickForm({
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+            {...examInputAssistProps}
+            className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
             placeholder="https://…"
           />
         </Field>
@@ -197,7 +201,8 @@ function SubmitPickForm({
             onChange={(e) => setWhyChose(e.target.value)}
             required
             rows={3}
-            className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+            {...examTextareaProps}
+            className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
           />
         </Field>
         <Field label="What you understood">
@@ -207,7 +212,8 @@ function SubmitPickForm({
             required
             rows={4}
             placeholder={formHints.whatUnderstood ?? undefined}
-            className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+            {...examTextareaProps}
+            className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
           />
         </Field>
         <Field label="Personal opinion">
@@ -217,7 +223,8 @@ function SubmitPickForm({
             required
             rows={3}
             placeholder={formHints.opinion ?? undefined}
-            className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink"
+            {...examTextareaProps}
+            className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink`}
           />
         </Field>
         <Button type="submit" loading={submit.isPending}>

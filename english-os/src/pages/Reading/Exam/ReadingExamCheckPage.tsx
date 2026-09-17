@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { MIC_SAMPLE_PARAGRAPH, useMicLevelMeter } from '@/hooks/useMicLevelMeter';
 import { useTestAudio } from '@/hooks/useTestAudio';
 import { patchExamPrep } from '@/lib/readingExam/examPrepStorage';
+import { normalizePracticeMode } from '@/lib/readingPractice/mode';
 import { paths } from '@/routes/paths';
 
 type Step = 'hardware' | 'volume' | 'volume_play' | 'mic_explain' | 'mic_record';
@@ -18,8 +19,18 @@ export default function ReadingExamCheckPage() {
   const { student } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const mode = params.get('mode') ?? 'ADAPTIVE';
-  const length = params.get('length') ?? '10';
+  const rawMode = params.get('mode');
+  const mode = normalizePracticeMode(rawMode);
+  const length = params.get('length') ?? (mode === 'COMPLETE_WORDS' ? '10' : '10');
+
+  useEffect(() => {
+    if (rawMode === 'ADAPTIVE') {
+      navigate(
+        `${paths.readingPracticeCheck}?mode=COMPLETE_WORDS&length=${encodeURIComponent(length)}`,
+        { replace: true },
+      );
+    }
+  }, [rawMode, length, navigate]);
 
   const [step, setStep] = useState<Step>('hardware');
   const [countdown, setCountdown] = useState<number | null>(null);

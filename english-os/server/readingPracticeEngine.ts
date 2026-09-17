@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildCompleteWordsTask,
+  DEFAULT_MASK_BLANK_COUNT,
   gradeCompleteWordsAnswer,
   parseCompleteWordsSubmission,
   toStudentBlanks,
@@ -12,9 +13,17 @@ import {
   updateMastery,
   updateSkillScore,
 } from './readingPractice/difficulty.js';
-import { selectQuestion, summarizeSkills } from './readingPractice/selection.js';
-import { buildSectionMeta } from './readingPractice/sectionPlan.js';
+import {
+  PLACEMENT_START_DIFFICULTY,
+  poolForDifficulty,
+  selectCompleteWordsByPool,
+  adjustSessionDifficultyFromPassageScore,
+} from './readingPractice/difficultyPools.js';
+import type { GradedWord } from './readingPractice/wordGrading.js';
+import { selectQuestion } from './readingPractice/selection.js';
+import { buildSectionMeta, effectiveSessionLength } from './readingPractice/sectionPlan.js';
 import type {
+  MissedWordReport,
   QuestionCandidate,
   ReadingPracticeMode,
   ReadingPracticeProfile,
@@ -23,6 +32,7 @@ import type {
   SessionResultsSummary,
   StudentQuestionPayload,
 } from './readingPractice/types.js';
+import { buildSessionResultsReport } from './readingPractice/sessionReport.js';
 import { DEFAULT_SESSION_LENGTH, HISTORY_EXCLUDE_COUNT, RECENT_WINDOW } from './readingPractice/types.js';
 
 export async function ensureReadingProfile(
@@ -51,23 +61,109 @@ export async function ensureReadingProfile(
   return data as ReadingPracticeProfile;
 }
 
-export async function assertToeflStudent(
+type StudentAuthRow = {
+  id: string;
+  level: string;
+  exam_track: string | null;
+  user_id: string;
+};
+
+async function loadStudentAuthRow(
   admin: SupabaseClient,
   userId: string,
-): Promise<{ studentId: string; level: string; examTrack: string | null }> {
-  const { data: student } = await admin
+): Promise<StudentAuthRow | null> {
+  const { data, error } = await admin
     .from('students')
     .select('id, level, exam_track, user_id')
     .eq('user_id', userId)
     .maybeSingle();
+  if (error) throw error;
+  return (data as StudentAuthRow | null) ?? null;
+}
+
+/** Ensures an active student profile has a students row (backfill for legacy/manual accounts). */
+async function ensureStudentRow(admin: SupabaseClient, userId: string): Promise<StudentAuthRow | null> {
+  const existing = await loadStudentAuthRow(admin, userId);
+  if (existing) return existing;
+
+  const { data: profile, error: profileError } = await admin
+    .from('profiles')
+    .select('role, status')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+
+  if (!profile || profile.role !== 'student') {
+    throw new Error('students_only');
+  }
+  if (profile.status !== 'active') {
+    throw new Error('account_not_active');
+  }
+
+  const { error: insertError } = await admin.from('students').insert({ user_id: userId, level: 'A1' });
+  if (insertError && !insertError.message.toLowerCase().includes('duplicate')) {
+    throw insertError;
+  }
+
+  return loadStudentAuthRow(admin, userId);
+}
+
+export async function assertToeflStudent(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<{ studentId: string; level: string; examTrack: string | null }> {
+  const student = await ensureStudentRow(admin, userId);
 
   if (!student) throw new Error('not_a_student');
   if (student.exam_track !== 'toefl') throw new Error('toefl_only');
   return {
     studentId: student.id as string,
-    level: (student.level as string) || 'A1',
-    examTrack: student.exam_track as string | null,
+    level: student.level || 'A1',
+    examTrack: student.exam_track,
   };
+}
+
+async function loadStaffProfile(admin: SupabaseClient, userId: string) {
+  const { data: profile, error } = await admin
+    .from('profiles')
+    .select('role, status, is_locked')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return profile;
+}
+
+function isStaffRole(role: string | null | undefined): boolean {
+  return role === 'teacher' || role === 'admin';
+}
+
+/** Students may only read their own results; teachers/admins may read any student. */
+export async function resolveReadingResultsAccess(
+  admin: SupabaseClient,
+  userId: string,
+  requestedStudentId?: string,
+): Promise<{ studentId: string; isStaff: boolean }> {
+  const profile = await loadStaffProfile(admin, userId);
+
+  if (profile && profile.status === 'active' && !profile.is_locked && isStaffRole(profile.role)) {
+    if (!requestedStudentId) throw new Error('student_id_required');
+    const { data: student, error } = await admin
+      .from('students')
+      .select('id')
+      .eq('id', requestedStudentId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!student) throw new Error('student_not_found');
+    return { studentId: student.id as string, isStaff: true };
+  }
+
+  const student = await ensureStudentRow(admin, userId);
+  if (!student) throw new Error('not_a_student');
+  if (student.exam_track !== 'toefl') throw new Error('toefl_only');
+  if (requestedStudentId && requestedStudentId !== student.id) {
+    throw new Error('forbidden');
+  }
+  return { studentId: student.id as string, isStaff: false };
 }
 
 async function loadRecentQuestionIds(
@@ -83,63 +179,116 @@ async function loadRecentQuestionIds(
   return (data ?? []).map((r) => r.question_id as string);
 }
 
-async function loadCandidates(admin: SupabaseClient): Promise<QuestionCandidate[]> {
-  const out: QuestionCandidate[] = [];
-
+async function loadCompleteWordsCandidates(admin: SupabaseClient): Promise<QuestionCandidate[]> {
   const { data: cw, error: cwErr } = await admin
     .from('complete_words_questions')
     .select('id, cefr_level, difficulty, category')
     .eq('active', true);
   if (cwErr) throw new Error(cwErr.message);
-  for (const q of cw ?? []) {
-    out.push({
-      questionId: q.id as string,
-      questionType: 'COMPLETE_WORDS',
-      skill: 'VOCABULARY',
-      difficulty: Number(q.difficulty),
-      cefrLevel: q.cefr_level as string,
-    });
-  }
+  return (cw ?? []).map((q) => ({
+    questionId: q.id as string,
+    questionType: 'COMPLETE_WORDS' as const,
+    skill: 'VOCABULARY' as const,
+    difficulty: Number(q.difficulty),
+    cefrLevel: q.cefr_level as string,
+  }));
+}
 
-  const { data: dl, error: dlErr } = await admin
-    .from('daily_life_questions')
-    .select('id, cefr_level, difficulty, skill')
-    .eq('active', true);
+async function loadDailyLifeCandidates(admin: SupabaseClient): Promise<QuestionCandidate[]> {
+  const [{ data: dl, error: dlErr }, { data: contexts, error: ctxErr }] = await Promise.all([
+    admin
+      .from('daily_life_questions')
+      .select('id, context_id, cefr_level, difficulty, skill, created_at')
+      .eq('active', true)
+      .order('created_at', { ascending: true }),
+    admin.from('daily_life_contexts').select('id, cefr_level'),
+  ]);
   if (dlErr) throw new Error(dlErr.message);
-  for (const q of dl ?? []) {
-    out.push({
+  if (ctxErr) throw new Error(ctxErr.message);
+
+  const cefrByContext = new Map((contexts ?? []).map((c) => [c.id as string, c.cefr_level as string]));
+  const orderInContext = new Map<string, number>();
+
+  return (dl ?? []).map((q) => {
+    const contextId = q.context_id as string | null;
+    let questionOrder = 0;
+    if (contextId) {
+      questionOrder = orderInContext.get(contextId) ?? 0;
+      orderInContext.set(contextId, questionOrder + 1);
+    }
+    return {
       questionId: q.id as string,
-      questionType: 'DAILY_LIFE',
+      questionType: 'DAILY_LIFE' as const,
       skill: q.skill as ReadingSkill,
       difficulty: Number(q.difficulty),
-      cefrLevel: q.cefr_level as string,
-    });
-  }
+      cefrLevel: contextId ? (cefrByContext.get(contextId) ?? (q.cefr_level as string)) : (q.cefr_level as string),
+      contextId: contextId ?? undefined,
+      questionOrder,
+    };
+  });
+}
 
-  const { data: aq, error: aqErr } = await admin
-    .from('academic_questions')
-    .select('id, passage_id, difficulty, skill')
-    .eq('active', true);
+async function loadAcademicCandidates(admin: SupabaseClient): Promise<QuestionCandidate[]> {
+  const [{ data: aq, error: aqErr }, { data: passages, error: pErr }] = await Promise.all([
+    admin
+      .from('academic_questions')
+      .select('id, passage_id, difficulty, skill')
+      .eq('active', true)
+      .order('created_at', { ascending: true }),
+    admin.from('academic_passages').select('id, cefr_level'),
+  ]);
   if (aqErr) throw new Error(aqErr.message);
-
-  const { data: passages, error: pErr } = await admin
-    .from('academic_passages')
-    .select('id, cefr_level');
   if (pErr) throw new Error(pErr.message);
   const cefrByPassage = new Map((passages ?? []).map((p) => [p.id as string, p.cefr_level as string]));
+  const orderInPassage = new Map<string, number>();
 
-  for (const q of aq ?? []) {
-    out.push({
+  return (aq ?? []).map((q) => {
+    const passageId = q.passage_id as string;
+    const questionOrder = orderInPassage.get(passageId) ?? 0;
+    orderInPassage.set(passageId, questionOrder + 1);
+    return {
       questionId: q.id as string,
-      questionType: 'ACADEMIC',
+      questionType: 'ACADEMIC' as const,
       skill: q.skill as ReadingSkill,
       difficulty: Number(q.difficulty),
-      cefrLevel: cefrByPassage.get(q.passage_id as string) ?? 'B1',
-      passageId: q.passage_id as string,
-    });
-  }
+      cefrLevel: cefrByPassage.get(passageId) ?? 'B1',
+      passageId,
+      questionOrder,
+    };
+  });
+}
 
-  return out;
+async function loadCandidates(admin: SupabaseClient): Promise<QuestionCandidate[]> {
+  const [cw, dl, ac] = await Promise.all([
+    loadCompleteWordsCandidates(admin),
+    loadDailyLifeCandidates(admin),
+    loadAcademicCandidates(admin),
+  ]);
+  return [...cw, ...dl, ...ac];
+}
+
+function expectedQuestionTypeForMode(mode: ReadingPracticeMode): ReadingQuestionType | null {
+  if (mode === 'COMPLETE_WORDS') return 'COMPLETE_WORDS';
+  if (mode === 'DAILY_LIFE') return 'DAILY_LIFE';
+  if (mode === 'ACADEMIC') return 'ACADEMIC';
+  return null;
+}
+
+function assertQuestionMatchesSessionMode(mode: ReadingPracticeMode, selected: QuestionCandidate): void {
+  const expected = expectedQuestionTypeForMode(mode);
+  if (expected && selected.questionType !== expected) {
+    throw new Error(`wrong_question_type_for_mode:${expected}:${selected.questionType}`);
+  }
+}
+
+async function loadCandidatesForMode(
+  admin: SupabaseClient,
+  mode: ReadingPracticeMode,
+): Promise<QuestionCandidate[]> {
+  if (mode === 'COMPLETE_WORDS') return loadCompleteWordsCandidates(admin);
+  if (mode === 'DAILY_LIFE') return loadDailyLifeCandidates(admin);
+  if (mode === 'ACADEMIC') return loadAcademicCandidates(admin);
+  return loadCandidates(admin);
 }
 
 async function loadSessionQuestionIds(
@@ -174,6 +323,27 @@ async function resolveActivePassageId(
   return null;
 }
 
+async function resolveActiveDailyLifeContextId(
+  admin: SupabaseClient,
+  sessionId: string,
+  currentContextId: string | null,
+  candidates: QuestionCandidate[],
+  sessionQuestionIds: string[],
+): Promise<string | null> {
+  if (!currentContextId) return null;
+
+  const remaining = candidates.filter(
+    (c) => c.contextId === currentContextId && !sessionQuestionIds.includes(c.questionId),
+  );
+  if (remaining.length > 0) return currentContextId;
+
+  await admin
+    .from('reading_practice_sessions')
+    .update({ current_daily_life_context_id: null })
+    .eq('id', sessionId);
+  return null;
+}
+
 export async function buildStudentPayload(
   admin: SupabaseClient,
   selected: QuestionCandidate,
@@ -187,6 +357,9 @@ export async function buildStudentPayload(
       .single();
     if (!q) throw new Error('question_not_found');
     const task = buildCompleteWordsTask(q.sentence as string);
+    if (task.blanks.length !== DEFAULT_MASK_BLANK_COUNT) {
+      throw new Error('invalid_passage_blank_count');
+    }
     return {
       questionType: 'COMPLETE_WORDS',
       questionId: q.id as string,
@@ -201,20 +374,65 @@ export async function buildStudentPayload(
   if (selected.questionType === 'DAILY_LIFE') {
     const { data: q } = await admin
       .from('daily_life_questions')
-      .select('id, title, content, content_type, difficulty, skill, question, option_a, option_b, option_c, option_d')
+      .select(
+        'id, context_id, title, content, content_type, difficulty, skill, question, option_a, option_b, option_c, option_d',
+      )
       .eq('id', selected.questionId)
       .single();
     if (!q) throw new Error('question_not_found');
+
+    const contextId = (q.context_id as string | null) ?? selected.contextId ?? null;
+    let title = q.title as string;
+    let content = q.content as string;
+    let contentType = q.content_type as string;
+
+    if (contextId) {
+      const { data: ctx } = await admin
+        .from('daily_life_contexts')
+        .select('id, title, content, content_type')
+        .eq('id', contextId)
+        .single();
+      if (ctx) {
+        title = ctx.title as string;
+        content = ctx.content as string;
+        contentType = ctx.content_type as string;
+      }
+    }
+
+    let questionIndex = (selected.questionOrder ?? 0) + 1;
+    let questionsInContext = 1;
+    if (contextId) {
+      const { count } = await admin
+        .from('daily_life_questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('context_id', contextId)
+        .eq('active', true);
+
+      const { data: ordered } = await admin
+        .from('daily_life_questions')
+        .select('id')
+        .eq('context_id', contextId)
+        .eq('active', true)
+        .order('created_at', { ascending: true });
+
+      const idx = (ordered ?? []).findIndex((row) => row.id === q.id);
+      questionIndex = idx >= 0 ? idx + 1 : questionIndex;
+      questionsInContext = count ?? 1;
+    }
+
     return {
       questionType: 'DAILY_LIFE',
       questionId: q.id as string,
       skill: q.skill as ReadingSkill,
       difficulty: Number(q.difficulty),
-      title: q.title as string,
-      content: q.content as string,
-      contentType: q.content_type as string,
+      title,
+      content,
+      contentType,
+      contextId: contextId ?? undefined,
       questionText: q.question as string,
       options: mcqOptions(q),
+      questionIndex,
+      questionsInContext,
     };
   }
 
@@ -271,6 +489,11 @@ function mcqOptions(q: Record<string, unknown>) {
   }));
 }
 
+function normalizeStartMode(mode: ReadingPracticeMode): ReadingPracticeMode {
+  // ADAPTIVE (legacy chained test) is deprecated — each task type is its own session.
+  return mode === 'ADAPTIVE' ? 'COMPLETE_WORDS' : mode;
+}
+
 export async function startSession(
   admin: SupabaseClient,
   studentId: string,
@@ -278,14 +501,21 @@ export async function startSession(
   mode: ReadingPracticeMode,
   length: number = DEFAULT_SESSION_LENGTH,
 ) {
+  const sessionMode = normalizeStartMode(mode);
   const profile = await ensureReadingProfile(admin, studentId, officialCefr);
+  const targetLength = effectiveSessionLength(length, sessionMode);
+  const isPlacement = sessionMode === 'COMPLETE_WORDS';
+  const startDiff = isPlacement ? PLACEMENT_START_DIFFICULTY : profile.overall_reading_difficulty;
+
   const { data: session, error } = await admin
     .from('reading_practice_sessions')
     .insert({
       student_id: studentId,
-      mode,
-      target_length: length,
-      starting_difficulty: profile.overall_reading_difficulty,
+      mode: sessionMode,
+      target_length: targetLength,
+      starting_difficulty: startDiff,
+      session_difficulty: startDiff,
+      highest_difficulty_reached: startDiff,
       status: 'active',
     })
     .select('*')
@@ -307,15 +537,24 @@ export async function getNextQuestion(
     .maybeSingle();
   if (!session || session.status !== 'active') throw new Error('invalid_session');
 
-  const { data: student } = await admin.from('students').select('level').eq('id', studentId).single();
-  const profile = await ensureReadingProfile(admin, studentId, (student?.level as string) ?? 'A1');
-
-  const recentQuestionIds = await loadRecentQuestionIds(admin, studentId);
-  const sessionQuestionIds = await loadSessionQuestionIds(admin, sessionId);
-  const candidates = await loadCandidates(admin);
-  if (candidates.length === 0) throw new Error('no_questions');
-
   const mode = session.mode as ReadingPracticeMode;
+
+  const [{ data: student }, recentQuestionIds, sessionQuestionIds, candidates] = await Promise.all([
+    admin.from('students').select('level').eq('id', studentId).single(),
+    loadRecentQuestionIds(admin, studentId),
+    loadSessionQuestionIds(admin, sessionId),
+    loadCandidatesForMode(admin, mode),
+  ]);
+  const profile = await ensureReadingProfile(admin, studentId, (student?.level as string) ?? 'A1');
+  if (candidates.length === 0) {
+    throw new Error(
+      mode === 'DAILY_LIFE'
+        ? 'no_daily_life_questions'
+        : mode === 'ACADEMIC'
+          ? 'no_academic_questions'
+          : 'no_questions',
+    );
+  }
   const targetLength = Number(session.target_length ?? DEFAULT_SESSION_LENGTH);
   const questionIndex = Number(session.questions_answered ?? 0);
   const sectionMeta = buildSectionMeta(mode, targetLength, questionIndex);
@@ -327,6 +566,14 @@ export async function getNextQuestion(
       .update({ current_passage_id: null })
       .eq('id', sessionId);
     session.current_passage_id = null;
+  }
+
+  if (mode !== 'DAILY_LIFE' && session.current_daily_life_context_id) {
+    await admin
+      .from('reading_practice_sessions')
+      .update({ current_daily_life_context_id: null })
+      .eq('id', sessionId);
+    session.current_daily_life_context_id = null;
   }
 
   let activePassageId: string | null = null;
@@ -343,16 +590,54 @@ export async function getNextQuestion(
     }
   }
 
-  const selected = selectQuestion({
-    mode,
-    profile,
-    recentQuestionIds,
-    sessionQuestionIds,
-    candidates,
-    activePassageId,
-    forcedQuestionType,
-  });
-  if (!selected) throw new Error('no_eligible_question');
+  let activeContextId: string | null = null;
+  if (mode === 'DAILY_LIFE') {
+    activeContextId = await resolveActiveDailyLifeContextId(
+      admin,
+      sessionId,
+      session.current_daily_life_context_id as string | null,
+      candidates,
+      sessionQuestionIds,
+    );
+    if (activeContextId !== session.current_daily_life_context_id) {
+      session.current_daily_life_context_id = activeContextId;
+    }
+  }
+
+  const sessionDifficulty = Number(
+    session.session_difficulty ?? session.starting_difficulty ?? PLACEMENT_START_DIFFICULTY,
+  );
+
+  let selected: QuestionCandidate | null = null;
+  if (mode === 'COMPLETE_WORDS') {
+    selected = selectCompleteWordsByPool(
+      candidates,
+      sessionDifficulty,
+      sessionQuestionIds,
+      recentQuestionIds,
+    );
+  } else {
+    selected = selectQuestion({
+      mode,
+      profile,
+      recentQuestionIds,
+      sessionQuestionIds,
+      candidates,
+      activePassageId,
+      activeContextId,
+      forcedQuestionType,
+    });
+  }
+  if (!selected) {
+    throw new Error(
+      mode === 'DAILY_LIFE'
+        ? 'no_eligible_daily_life_question'
+        : mode === 'ACADEMIC'
+          ? 'no_eligible_academic_question'
+          : 'no_eligible_question',
+    );
+  }
+  assertQuestionMatchesSessionMode(mode, selected);
 
   if (selected.questionType === 'ACADEMIC' && selected.passageId && !session.current_passage_id) {
     await admin
@@ -360,6 +645,18 @@ export async function getNextQuestion(
       .update({ current_passage_id: selected.passageId })
       .eq('id', sessionId);
     session.current_passage_id = selected.passageId;
+  }
+
+  if (
+    selected.questionType === 'DAILY_LIFE' &&
+    selected.contextId &&
+    !session.current_daily_life_context_id
+  ) {
+    await admin
+      .from('reading_practice_sessions')
+      .update({ current_daily_life_context_id: selected.contextId })
+      .eq('id', sessionId);
+    session.current_daily_life_context_id = selected.contextId;
   }
 
   await admin.from('reading_question_history').insert({
@@ -377,7 +674,29 @@ export async function getNextQuestion(
     payload.sectionMeta = sectionMeta;
   }
 
+  if (mode === 'COMPLETE_WORDS') {
+    const questionNumber = questionIndex + 1;
+    payload.placementMeta = {
+      questionNumber,
+      totalQuestions: targetLength,
+      sessionDifficulty,
+      poolLabel: poolForDifficulty(sessionDifficulty).label,
+    };
+  }
+
   return { payload, session };
+}
+
+function missedWordsFromGradedWords(words: GradedWord[]): MissedWordReport[] {
+  return words
+    .filter((w) => w.errorType !== 'EXACT' && w.errorType !== 'ACCEPTED_VARIANT')
+    .map((w) => ({
+      word: w.correctAnswer,
+      submitted: w.studentAnswer === '—' ? null : w.studentAnswer,
+      result: w.result,
+      wordScore: w.wordScore,
+      errorType: w.errorType,
+    }));
 }
 
 export async function submitAnswer(
@@ -388,7 +707,7 @@ export async function submitAnswer(
   questionType: ReadingQuestionType,
   answer: string,
   responseTimeMs?: number,
-): Promise<{ correct: boolean; explanation: string | null; reveal?: string }> {
+): Promise<{ correct: boolean; explanation: string | null }> {
   const { data: priorAttempt } = await admin
     .from('reading_attempts')
     .select('correct')
@@ -402,6 +721,11 @@ export async function submitAnswer(
   let difficulty = 4;
   let cefrLevel = 'B1';
   let blankResults: { id: number; correct: boolean; expectedWord: string }[] | undefined;
+  let missedWords: MissedWordReport[] | null = null;
+  let storedAnswer = answer;
+  let passageScore = 0;
+  let hasWrongWord = false;
+  let gradedWords: GradedWord[] | undefined;
 
   if (questionType === 'COMPLETE_WORDS') {
     const { data: q } = await admin
@@ -414,6 +738,10 @@ export async function submitAnswer(
     const submitted = parseCompleteWordsSubmission(answer);
     const graded = gradeCompleteWordsAnswer(task.blanks, submitted);
     blankResults = graded.results;
+    gradedWords = graded.words;
+    passageScore = graded.passageScore;
+    hasWrongWord = graded.hasWrongWord;
+    missedWords = missedWordsFromGradedWords(graded.words);
     correct = priorAttempt ? (priorAttempt.correct as boolean) : graded.correct;
     explanation = q.explanation as string | null;
     skill = 'VOCABULARY';
@@ -451,15 +779,47 @@ export async function submitAnswer(
   }
 
   if (priorAttempt) {
-    return {
-      correct,
-      explanation,
-      reveal:
-        questionType === 'COMPLETE_WORDS' && blankResults
-          ? blankResults.map((r) => r.expectedWord).join(', ')
-          : undefined,
-      blankResults,
-    };
+    return { correct, explanation: questionType === 'COMPLETE_WORDS' ? null : explanation };
+  }
+
+  const { data: sessionRowBefore } = await admin
+    .from('reading_practice_sessions')
+    .select(
+      'mode, session_difficulty, starting_difficulty, highest_difficulty_reached, questions_answered, questions_correct, target_length',
+    )
+    .eq('id', sessionId)
+    .single();
+
+  const sessionModeBefore = (sessionRowBefore?.mode as ReadingPracticeMode) ?? 'ADAPTIVE';
+  const isPlacementBefore =
+    sessionModeBefore === 'COMPLETE_WORDS' && questionType === 'COMPLETE_WORDS';
+  const sessionDifficultyBefore = Number(
+    sessionRowBefore?.session_difficulty ??
+      sessionRowBefore?.starting_difficulty ??
+      PLACEMENT_START_DIFFICULTY,
+  );
+
+  if (questionType === 'COMPLETE_WORDS' && gradedWords) {
+    const submitted = parseCompleteWordsSubmission(answer);
+    const sessionDifficultyAfter = isPlacementBefore
+      ? adjustSessionDifficultyFromPassageScore(sessionDifficultyBefore, passageScore)
+      : sessionDifficultyBefore;
+    storedAnswer = JSON.stringify({
+      blanks: submitted,
+      passageScore,
+      sessionDifficultyBefore,
+      sessionDifficultyAfter,
+      questionDifficulty: difficulty,
+      hasWrongWord,
+      words: gradedWords.map((w) => ({
+        targetWord: w.targetWord,
+        studentAnswer: w.studentAnswer,
+        correctAnswer: w.correctAnswer,
+        wordScore: w.wordScore,
+        errorType: w.errorType,
+        feedback: w.feedback,
+      })),
+    });
   }
 
   await admin.from('reading_attempts').insert({
@@ -470,9 +830,10 @@ export async function submitAnswer(
     skill,
     cefr_level: cefrLevel,
     difficulty,
-    answer,
+    answer: storedAnswer,
     correct,
     response_time_ms: responseTimeMs ?? null,
+    missed_words: missedWords,
   });
 
   await admin
@@ -486,37 +847,70 @@ export async function submitAnswer(
     .eq('question_id', questionId)
     .is('answered_at', null);
 
-  await updateProfileAfterAttempt(admin, studentId, questionType, skill, difficulty, correct);
+  const sessionRow = sessionRowBefore;
+  const sessionMode = sessionModeBefore;
+  const isPlacement = isPlacementBefore;
+  const currentSessionDiff = sessionDifficultyBefore;
+  const newSessionDiff =
+    isPlacement && questionType === 'COMPLETE_WORDS'
+      ? adjustSessionDifficultyFromPassageScore(currentSessionDiff, passageScore)
+      : currentSessionDiff;
+  const prevHighest = Number(sessionRow?.highest_difficulty_reached ?? currentSessionDiff);
+  const newHighest = isPlacement ? Math.max(prevHighest, difficulty) : prevHighest;
 
-  if (questionType === 'COMPLETE_WORDS' && blankResults) {
-    await updateWordPerformance(admin, studentId, questionId, '__passage__', correct);
+  if (isPlacement && questionType === 'COMPLETE_WORDS') {
+    const questionNumber = ((sessionRow?.questions_answered as number) ?? 0) + 1;
+    console.log('[CW adaptive]', {
+      questionNumber,
+      sessionDifficultyBefore: currentSessionDiff,
+      questionDifficulty: difficulty,
+      passageScore,
+      adaptiveStep:
+        passageScore >= 85 ? '+1' : passageScore >= 50 ? 'hold' : '-1',
+      sessionDifficultyAfter: newSessionDiff,
+      selectedNextDifficulty: newSessionDiff,
+    });
   }
 
-  const { data: session } = await admin
-    .from('reading_practice_sessions')
-    .select('questions_answered, questions_correct, target_length')
-    .eq('id', sessionId)
-    .single();
+  await updateProfileAfterAttempt(
+    admin,
+    studentId,
+    questionType,
+    skill,
+    difficulty,
+    correct,
+    isPlacement,
+  );
 
-  const answered = ((session?.questions_answered as number) ?? 0) + 1;
-  const correctCount = ((session?.questions_correct as number) ?? 0) + (correct ? 1 : 0);
+  if (questionType === 'COMPLETE_WORDS' && missedWords) {
+    for (const missed of missedWords) {
+      await updateWordPerformance(admin, studentId, questionId, missed.word, false);
+    }
+    if (correct) {
+      await updateWordPerformance(admin, studentId, questionId, '__passage__', true);
+    }
+  }
+
+  const answered = ((sessionRow?.questions_answered as number) ?? 0) + 1;
+  const correctCount = ((sessionRow?.questions_correct as number) ?? 0) + (correct ? 1 : 0);
 
   await admin
     .from('reading_practice_sessions')
     .update({
       questions_answered: answered,
       questions_correct: correctCount,
+      ...(isPlacement
+        ? {
+            session_difficulty: newSessionDiff,
+            highest_difficulty_reached: newHighest,
+          }
+        : {}),
     })
     .eq('id', sessionId);
 
   return {
     correct,
-    explanation,
-    reveal:
-      questionType === 'COMPLETE_WORDS' && blankResults
-        ? blankResults.map((r) => r.expectedWord).join(', ')
-        : undefined,
-    blankResults,
+    explanation: questionType === 'COMPLETE_WORDS' ? null : explanation,
   };
 }
 
@@ -527,6 +921,7 @@ async function updateProfileAfterAttempt(
   skill: ReadingSkill | null,
   difficulty: number,
   correct: boolean,
+  skipDifficultyAdjust = false,
 ) {
   const { data: profile } = await admin
     .from('reading_practice_profiles')
@@ -551,17 +946,19 @@ async function updateProfileAfterAttempt(
         ? 'daily_life_difficulty'
         : 'academic_difficulty';
 
-  const newTypeDiff = adjustDifficulty(Number(profile[typeField]), recentCorrect);
-  const newOverall = adjustDifficulty(Number(profile.overall_reading_difficulty), recentCorrect);
-
   const updates: Record<string, unknown> = {
-    [typeField]: newTypeDiff,
-    overall_reading_difficulty: newOverall,
     total_attempts: Number(profile.total_attempts) + 1,
     total_correct: Number(profile.total_correct) + (correct ? 1 : 0),
     last_practice_at: new Date().toISOString(),
     highest_difficulty: Math.max(Number(profile.highest_difficulty), difficulty),
   };
+
+  if (!skipDifficultyAdjust) {
+    const newTypeDiff = adjustDifficulty(Number(profile[typeField]), recentCorrect);
+    const newOverall = adjustDifficulty(Number(profile.overall_reading_difficulty), recentCorrect);
+    updates[typeField] = newTypeDiff;
+    updates.overall_reading_difficulty = newOverall;
+  }
 
   updates.overall_accuracy =
     (Number(updates.total_correct) / Number(updates.total_attempts)) * 100;
@@ -642,56 +1039,53 @@ export async function finishSession(
     .single();
   if (!session) throw new Error('invalid_session');
 
-  const { data: profile } = await admin
-    .from('reading_practice_profiles')
-    .select('overall_reading_difficulty')
-    .eq('student_id', studentId)
-    .single();
+  const isPlacement = session.mode === 'COMPLETE_WORDS';
+  const ending = isPlacement
+    ? Number(session.session_difficulty ?? session.starting_difficulty)
+    : (
+        await admin
+          .from('reading_practice_profiles')
+          .select('overall_reading_difficulty')
+          .eq('student_id', studentId)
+          .single()
+      ).data?.overall_reading_difficulty ?? session.starting_difficulty;
+  const completedAt = new Date().toISOString();
 
-  const ending = profile?.overall_reading_difficulty ?? session.starting_difficulty;
+  const { data: student } = await admin
+    .from('students')
+    .select('level')
+    .eq('id', studentId)
+    .single();
+  const studentLevel = (student?.level as string) ?? 'A1';
+
+  const summary = await buildSessionResultsReport(
+    admin,
+    studentId,
+    sessionId,
+    { ...session, completed_at: completedAt, status: 'completed' },
+    studentLevel,
+    Number(ending),
+  );
 
   await admin
     .from('reading_practice_sessions')
     .update({
       status: 'completed',
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt,
       ending_difficulty: ending,
+      results_report: summary,
     })
     .eq('id', sessionId);
 
-  const { data: attempts } = await admin
-    .from('reading_attempts')
-    .select('question_type, skill, correct')
-    .eq('session_id', sessionId);
+  if (isPlacement) {
+    await admin
+      .from('reading_practice_profiles')
+      .update({
+        complete_words_difficulty: ending,
+        last_practice_at: completedAt,
+      })
+      .eq('student_id', studentId);
+  }
 
-  const list = attempts ?? [];
-  const questions = list.length;
-  const correct = list.filter((a) => a.correct).length;
-  const { strongest, weakest } = summarizeSkills(
-    list.map((a) => ({ skill: a.skill as ReadingSkill | null, correct: a.correct as boolean })),
-  );
-
-  const byType = {
-    COMPLETE_WORDS: tally(list, 'COMPLETE_WORDS'),
-    DAILY_LIFE: tally(list, 'DAILY_LIFE'),
-    ACADEMIC: tally(list, 'ACADEMIC'),
-  };
-
-  return {
-    questions,
-    correct,
-    accuracy: questions ? Math.round((correct / questions) * 100) : 0,
-    startingDifficulty: Number(session.starting_difficulty),
-    endingDifficulty: Number(ending),
-    strongestSkill: strongest,
-    weakestSkill: weakest,
-    byType,
-  };
-}
-
-function tally(list: { question_type: string; correct: boolean }[], type: ReadingQuestionType) {
-  const subset = list.filter((a) => a.question_type === type);
-  const total = subset.length;
-  const c = subset.filter((a) => a.correct).length;
-  return { total, correct: c, accuracy: total ? Math.round((c / total) * 100) : 0 };
+  return summary;
 }

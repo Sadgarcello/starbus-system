@@ -16,6 +16,7 @@ import {
   useWritingTasks,
 } from '@/hooks/useWriting';
 import { writingService } from '@/services/writingService';
+import { examAnswerInputClassName, examTextareaProps } from '@/lib/examInputAssist';
 import { getSkillTrackStyle } from '@/lib/examTrackContent';
 import type { ExamTrack, WritingSubmissionWithStudent, WritingTask } from '@/types';
 
@@ -343,7 +344,8 @@ function StudentSubmitPanel({
                 rows={8}
                 disabled={closed || reviewed}
                 placeholder={textPlaceholder}
-                className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-ink disabled:opacity-60"
+                {...examTextareaProps}
+                className={`${examAnswerInputClassName} w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-ink disabled:opacity-60`}
               />
             </label>
 

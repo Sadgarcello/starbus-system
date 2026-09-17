@@ -1,31 +1,39 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExamTrackLogo } from '@/components/exam/ExamTrackLogo';
+import { ReadingPracticeHistoryPanel } from '@/components/readingPractice/ReadingPracticeHistoryPanel';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
+import { PRACTICE_MODE_SHORT } from '@/lib/readingPractice/mode';
+import type { ReadingPracticeMode, SessionHistoryEntry } from '@/lib/readingPractice/types';
+import { readingPracticeService } from '@/services/readingPracticeService';
 import { paths } from '@/routes/paths';
-import type { ReadingPracticeMode } from '@/lib/readingPractice/types';
 
-const MODES: { mode: ReadingPracticeMode; title: string; description: string }[] = [
-  {
-    mode: 'ADAPTIVE',
-    title: 'Full reading practice',
-    description: 'Complete the Words, Daily Life, then Academic — in order, like the real test.',
-  },
+const MODES: {
+  mode: Exclude<ReadingPracticeMode, 'ADAPTIVE'>;
+  title: string;
+  description: string;
+  fixedLength?: number;
+}[] = [
   {
     mode: 'COMPLETE_WORDS',
-    title: 'Complete the Words',
-    description: 'Vocabulary, spelling, and context in academic sentences.',
+    title: PRACTICE_MODE_SHORT.COMPLETE_WORDS,
+    description:
+      'Exactly 10 adaptive passages. Difficulty adjusts after each answer. Your score and estimated level appear as soon as you finish — no other sections mixed in.',
+    fixedLength: 10,
   },
   {
     mode: 'DAILY_LIFE',
-    title: 'Read in Daily Life',
-    description: 'Notices, emails, menus, and practical reading.',
+    title: PRACTICE_MODE_SHORT.DAILY_LIFE,
+    description:
+      'Notices, emails, menus, and practical reading — multiple-choice questions with its own scoring and results.',
   },
   {
     mode: 'ACADEMIC',
-    title: 'Read an Academic Passage',
-    description: 'Longer passages with main idea, detail, and inference questions.',
+    title: PRACTICE_MODE_SHORT.ACADEMIC,
+    description:
+      'Academic passages with main idea, detail, and inference questions — separate session and results from Complete the Words.',
   },
 ];
 
@@ -33,6 +41,35 @@ const SESSION_LENGTHS = [5, 10, 15, 20] as const;
 
 export default function ReadingPracticeHubPage() {
   const { student } = useAuth();
+  const [history, setHistory] = useState<SessionHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [modeFilter, setModeFilter] = useState<ReadingPracticeMode | 'ALL'>('ALL');
+
+  useEffect(() => {
+    if (student?.exam_track !== 'toefl') {
+      setHistoryLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setHistoryLoading(true);
+
+    void readingPracticeService
+      .getHistory({ mode: modeFilter === 'ALL' ? undefined : modeFilter })
+      .then((rows) => {
+        if (!cancelled) setHistory(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [student?.exam_track, modeFilter]);
 
   if (!student || student.exam_track !== 'toefl') {
     return (
@@ -57,8 +94,8 @@ export default function ReadingPracticeHubPage() {
           <ExamTrackLogo track="toefl" variant="badge" className="h-5 max-w-[72px]" />
         </div>
         <p className="mt-1 text-sm text-ink-muted">
-          Adaptive practice engine — no AI during sessions. Your official level comes from Khawaja Club
-          assessment; practice adapts separately.
+          Three separate practice modes — Complete the Words (10 questions + results), Daily Life, and
+          Academic. Each has its own session and report. Only you can see your past results.
         </p>
       </div>
 
@@ -70,29 +107,34 @@ export default function ReadingPracticeHubPage() {
           >
             <CardHeader title={m.title} subtitle={m.description} />
             <div className="flex flex-wrap gap-2 px-4 pb-4">
-              {SESSION_LENGTHS.map((len) => (
-                <Link key={len} to={`${paths.readingPracticeCheck}?mode=${m.mode}&length=${len}`}>
-                  <Button size="sm" variant={i === 0 ? 'primary' : 'secondary'}>
-                    {len} questions
+              {m.fixedLength != null ? (
+                <Link to={`${paths.readingPracticeCheck}?mode=${m.mode}&length=${m.fixedLength}`}>
+                  <Button size="sm" variant="primary">
+                    Start 10-question test
                   </Button>
                 </Link>
-              ))}
+              ) : (
+                SESSION_LENGTHS.map((len) => (
+                  <Link key={len} to={`${paths.readingPracticeCheck}?mode=${m.mode}&length=${len}`}>
+                    <Button size="sm" variant={i === 0 ? 'primary' : 'secondary'}>
+                      {len} questions
+                    </Button>
+                  </Link>
+                ))
+              )}
             </div>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <CardHeader
-          title="Take actual test"
-          subtitle="Full adaptive session — mixed Complete the Words, Daily Life, and Academic passages."
-        />
-        <div className="px-4 pb-4">
-          <Link to={`${paths.readingPracticeCheck}?mode=ADAPTIVE&length=10`}>
-            <Button className="w-full sm:w-auto">Start 10-question adaptive test</Button>
-          </Link>
-        </div>
-      </Card>
+      <ReadingPracticeHistoryPanel
+        history={history}
+        loading={historyLoading}
+        modeFilter={modeFilter}
+        onModeFilterChange={setModeFilter}
+        reportHref={paths.readingPracticeReport}
+        emptyMessage="Complete a session to see your history here."
+      />
     </div>
   );
 }

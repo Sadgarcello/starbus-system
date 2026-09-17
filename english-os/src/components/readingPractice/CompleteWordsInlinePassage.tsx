@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, type Dispatch, type KeyboardEvent, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, type Dispatch, type FormEvent, type KeyboardEvent, type SetStateAction } from 'react';
+import { examLetterInputClassName, examLetterInputProps } from '@/lib/examInputAssist';
 import type { StudentQuestionPayload } from '@/lib/readingPractice/types';
 import { buildPassageSegments, missingLetterCountFromMasked } from '@/lib/readingPractice/completeWords';
 
@@ -13,7 +14,7 @@ function setBlankLetter(
   char: string,
   maxLength: number,
 ): void {
-  const nextChar = char.replace(/[^a-zA-Z']/g, '').slice(-1);
+  const nextChar = char.replace(/[^a-zA-Z']/g, '').slice(-1).toLowerCase();
   setBlankAnswers((prev) => {
     const current = (prev[blankId] ?? '').split('');
     while (current.length < maxLength) current.push('');
@@ -27,11 +28,13 @@ export function CompleteWordsInlinePassage({
   blankAnswers,
   setBlankAnswers,
   disabled,
+  onBlankFocus,
 }: {
   question: StudentQuestionPayload;
   blankAnswers: Record<number, string>;
   setBlankAnswers: Dispatch<SetStateAction<Record<number, string>>>;
   disabled: boolean;
+  onBlankFocus?: (blankId: number) => void;
 }) {
   const passage = question.displayPassage ?? question.displaySentence ?? '';
   const blanks = question.blanks ?? [];
@@ -66,6 +69,24 @@ export function CompleteWordsInlinePassage({
     inputRefs.current[slotIndex]?.select();
   }
 
+  function handleLetterBeforeInput(
+    e: FormEvent<HTMLInputElement>,
+    blankId: number,
+    charIndex: number,
+    slotIndex: number,
+    maxLength: number,
+  ) {
+    const data = (e.nativeEvent as InputEvent).data;
+    if (!data) return;
+    const letter = data.replace(/[^a-zA-Z']/g, '').slice(-1);
+    if (!letter) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    handleLetterChange(blankId, charIndex, slotIndex, letter.toLowerCase(), maxLength);
+  }
+
   function handleLetterChange(
     blankId: number,
     charIndex: number,
@@ -73,7 +94,7 @@ export function CompleteWordsInlinePassage({
     raw: string,
     maxLength: number,
   ) {
-    const nextChar = raw.replace(/[^a-zA-Z']/g, '').slice(-1);
+    const nextChar = raw.replace(/[^a-zA-Z']/g, '').slice(-1).toLowerCase();
     setBlankLetter(setBlankAnswers, blankId, charIndex, raw, maxLength);
     if (!disabled && nextChar) {
       focusSlot(slotIndex + 1);
@@ -90,34 +111,40 @@ export function CompleteWordsInlinePassage({
     const letters = getBlankLetters(blankAnswers, blankId);
     const current = letters[charIndex] ?? '';
 
-    if (e.key === 'ArrowRight') {
+    if (e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey)) {
       e.preventDefault();
       focusSlot(slotIndex + 1);
       return;
     }
-    if (e.key === 'ArrowLeft') {
+    if (e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey)) {
       e.preventDefault();
       focusSlot(slotIndex - 1);
       return;
     }
-    if (e.key === 'Backspace' && !current) {
+    if (e.key.length === 1 && /[a-zA-Z']/.test(e.key)) {
       e.preventDefault();
+      handleLetterChange(blankId, charIndex, slotIndex, e.key, maxLength);
+      return;
+    }
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (current) {
+        setBlankLetter(setBlankAnswers, blankId, charIndex, '', maxLength);
+        return;
+      }
       if (charIndex > 0) {
         setBlankLetter(setBlankAnswers, blankId, charIndex - 1, '', maxLength);
         focusSlot(slotIndex - 1);
       } else {
         focusSlot(slotIndex - 1);
       }
+      return;
     }
   }
 
   return (
     <div className="space-y-3">
-      <p className="text-center text-sm font-medium text-ink">
-        Fill in the missing letters in the paragraph.
-      </p>
-
-      <div className="rounded-md border border-paper-line bg-paper px-4 py-5 sm:px-6">
+      <div className="rounded-md border border-paper-line bg-paper px-4 py-5 sm:px-5" lang="en">
         <p className="text-base leading-[2.2] text-ink">
           {segments.map((segment, index) => {
             if (segment.type === 'text') {
@@ -128,11 +155,11 @@ export function CompleteWordsInlinePassage({
             const letters = getBlankLetters(blankAnswers, segment.id);
 
             return (
-              <span key={`b-${segment.id}`} className="inline align-baseline whitespace-nowrap">
-                <span className="font-medium">{segment.visiblePrefix}</span>
+              <span key={`b-${segment.id}`} className="inline align-baseline whitespace-nowrap normal-case">
+                <span className="font-medium lowercase">{segment.visiblePrefix}</span>
                 {Array.from({ length: segment.missingLength }, (_, charIndex) => {
                   const slotIndex = startSlot + charIndex;
-                  const value = letters[charIndex] ?? '';
+                  const value = (letters[charIndex] ?? '').toLowerCase();
 
                   return (
                     <input
@@ -141,16 +168,23 @@ export function CompleteWordsInlinePassage({
                         inputRefs.current[slotIndex] = el;
                       }}
                       type="text"
-                      inputMode="text"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck={false}
+                      {...examLetterInputProps}
+                      inputMode={'verbatim' as 'text'}
+                      name={`blank-${segment.id}-${charIndex}`}
                       aria-label={`Letter ${charIndex + 1} of ${segment.missingLength} in blank ${segment.blankIndex + 1}`}
                       disabled={disabled}
                       value={value}
                       maxLength={1}
                       placeholder="-"
+                      onBeforeInput={(e) =>
+                        handleLetterBeforeInput(
+                          e,
+                          segment.id,
+                          charIndex,
+                          slotIndex,
+                          segment.missingLength,
+                        )
+                      }
                       onChange={(e) =>
                         handleLetterChange(
                           segment.id,
@@ -160,6 +194,7 @@ export function CompleteWordsInlinePassage({
                           segment.missingLength,
                         )
                       }
+                      onFocus={() => onBlankFocus?.(segment.id)}
                       onKeyDown={(e) =>
                         handleLetterKeyDown(
                           e,
@@ -169,12 +204,12 @@ export function CompleteWordsInlinePassage({
                           segment.missingLength,
                         )
                       }
-                      className={`mx-0 inline-block border-0 border-b-2 bg-transparent px-0 py-0 text-center text-base font-medium leading-none outline-none transition-colors placeholder:text-ink/40 disabled:opacity-80 ${
+                      className={`${examLetterInputClassName} mx-0 inline-block border-0 border-b-2 bg-transparent px-0 py-0 text-center text-base font-medium leading-none outline-none transition-colors placeholder:text-ink/40 disabled:opacity-80 ${
                         disabled
                           ? 'border-paper-line text-ink'
                           : 'border-dashed border-ink/45 text-ink focus:border-club focus:bg-club-soft/50'
                       }`}
-                      style={{ width: '1.05ch', minWidth: '1.05ch', height: '1.35em' }}
+                      style={{ width: '1.05ch', minWidth: '1.05ch', height: '1.35em', textTransform: 'lowercase' }}
                     />
                   );
                 })}
@@ -183,13 +218,33 @@ export function CompleteWordsInlinePassage({
           })}
         </p>
 
-        {!disabled && (
-          <p className="mt-4 border-t border-paper-line pt-3 text-xs italic text-ink-subtle">
-            Each dash is one missing letter. Type in the dashes — focus moves automatically. Use
-            arrow keys to move between letters.
-          </p>
-        )}
       </div>
+
+      {!disabled && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-paper-line bg-paper-soft/50 px-3 py-2.5 text-xs text-ink-subtle">
+          <p className="flex items-center gap-2">
+            <span aria-hidden className="text-base leading-none">
+              ⌨
+            </span>
+            <span>
+              Each dash is one missing letter. Type in the blanks — your cursor moves automatically.
+            </span>
+          </p>
+          <p className="shrink-0 font-medium text-ink-muted">
+            <kbd className="rounded border border-paper-line bg-paper px-1.5 py-0.5 text-[10px]">
+              Tab
+            </kbd>
+            {' · '}
+            <kbd className="rounded border border-paper-line bg-paper px-1.5 py-0.5 text-[10px]">
+              ←
+            </kbd>
+            {' '}
+            <kbd className="rounded border border-paper-line bg-paper px-1.5 py-0.5 text-[10px]">
+              →
+            </kbd>
+          </p>
+        </div>
+      )}
     </div>
   );
 }

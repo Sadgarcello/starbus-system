@@ -6,7 +6,5 @@ venv/
 *.sqbpro
 fighters.db
 
-# Starbus (Node)
-starbus/server/node_modules/
-starbus/server/.env
-starbus/server/.env.railway
+.vercel
+.env*

@@ -1,3 +1,5 @@
+import { gradeCompleteWordsPassage, type GradedWord } from './wordGrading';
+
 const TRIVIAL_WORDS = new Set([
   'the', 'a', 'an', 'is', 'are', 'was', 'were', 'of', 'to', 'in', 'on', 'at', 'for',
   'and', 'or', 'but', 'with', 'from', 'as', 'by', 'be', 'it', 'its', 'this', 'that',
@@ -125,7 +127,8 @@ export function maskWordSecondHalf(word: string): {
 } {
   const letters = word.match(/[a-zA-Z]/g) ?? [];
   if (letters.length <= 1) {
-    return { maskedWord: word, visiblePrefix: word, hiddenSuffix: '' };
+    const normalized = word.replace(/[A-Z]/g, (c) => c.toLowerCase());
+    return { maskedWord: normalized, visiblePrefix: normalized, hiddenSuffix: '' };
   }
 
   const keepCount = Math.floor(letters.length / 2);
@@ -139,13 +142,14 @@ export function maskWordSecondHalf(word: string): {
       maskedChars.push(ch);
       continue;
     }
+    const letter = ch.toLowerCase();
     letterIndex++;
     if (letterIndex <= keepCount) {
-      maskedChars.push(ch);
-      visiblePrefix += ch;
+      maskedChars.push(letter);
+      visiblePrefix += letter;
     } else {
       maskedChars.push(MASK_PLACEHOLDER);
-      hiddenSuffix += ch;
+      hiddenSuffix += letter;
     }
   }
 
@@ -153,6 +157,32 @@ export function maskWordSecondHalf(word: string): {
     maskedWord: maskedChars.join(''),
     visiblePrefix,
     hiddenSuffix,
+  };
+}
+
+export function countEligibleBlanks(passage: string, maxBlanks: number = DEFAULT_MASK_BLANK_COUNT): number {
+  return buildCompleteWordsTask(passage, maxBlanks).blanks.length;
+}
+
+export function validatePassageBlankCount(
+  passage: string,
+  requiredBlanks: number = DEFAULT_MASK_BLANK_COUNT,
+): { valid: boolean; blankCount: number; message?: string } {
+  const blankCount = countEligibleBlanks(passage, requiredBlanks);
+  if (blankCount === requiredBlanks) {
+    return { valid: true, blankCount };
+  }
+  if (blankCount < requiredBlanks) {
+    return {
+      valid: false,
+      blankCount,
+      message: `This passage produces ${blankCount} blanks but ${requiredBlanks} are required. Add more eligible content words after the first sentence.`,
+    };
+  }
+  return {
+    valid: false,
+    blankCount,
+    message: `Unexpected blank count (${blankCount}). Contact support if this persists.`,
   };
 }
 
@@ -205,17 +235,51 @@ export function toStudentBlanks(blanks: CompleteWordsBlank[]): CompleteWordsBlan
   }));
 }
 
+export interface CompleteWordsSubmissionMeta {
+  passageScore: number;
+  sessionDifficultyBefore?: number;
+  sessionDifficultyAfter?: number;
+  questionDifficulty?: number;
+  hasWrongWord?: boolean;
+}
+
 export function parseCompleteWordsSubmission(answer: string): Record<string, string> {
   const trimmed = answer.trim();
   if (!trimmed) return {};
   if (trimmed.startsWith('{')) {
     try {
-      return JSON.parse(trimmed) as Record<string, string>;
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+      if (parsed.blanks && typeof parsed.blanks === 'object') {
+        return parsed.blanks as Record<string, string>;
+      }
+      const { blanks: _b, passageScore: _p, sessionDifficultyBefore: _s, sessionDifficultyAfter: _a, questionDifficulty: _q, hasWrongWord: _w, words: _words, ...rest } = parsed;
+      return rest as Record<string, string>;
     } catch {
       return {};
     }
   }
   return { '0': trimmed };
+}
+
+export function parseCompleteWordsSubmissionMeta(answer: string): CompleteWordsSubmissionMeta | null {
+  const trimmed = answer.trim();
+  if (!trimmed.startsWith('{')) return null;
+  try {
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+    if (typeof parsed.passageScore !== 'number') return null;
+    return {
+      passageScore: parsed.passageScore,
+      sessionDifficultyBefore:
+        typeof parsed.sessionDifficultyBefore === 'number' ? parsed.sessionDifficultyBefore : undefined,
+      sessionDifficultyAfter:
+        typeof parsed.sessionDifficultyAfter === 'number' ? parsed.sessionDifficultyAfter : undefined,
+      questionDifficulty:
+        typeof parsed.questionDifficulty === 'number' ? parsed.questionDifficulty : undefined,
+      hasWrongWord: parsed.hasWrongWord === true,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function blankAnswerMatches(
@@ -233,14 +297,33 @@ export function blankAnswerMatches(
 export function gradeCompleteWordsAnswer(
   blanks: CompleteWordsBlank[],
   submitted: Record<string, string>,
-): { correct: boolean; results: { id: number; correct: boolean; expectedWord: string }[] } {
-  const results = blanks.map((blank) => {
-    const raw = submitted[String(blank.id)] ?? '';
-    const ok = blankAnswerMatches(raw, blank.expectedWord, blank.visiblePrefix);
-    return { id: blank.id, correct: ok, expectedWord: blank.expectedWord };
+): {
+  correct: boolean;
+  passageScore: number;
+  hasWrongWord: boolean;
+  exactWordCount: number;
+  partialCreditWordCount: number;
+  incorrectWordCount: number;
+  words: GradedWord[];
+  results: { id: number; correct: boolean; expectedWord: string }[];
+} {
+  const graded = gradeCompleteWordsPassage(blanks, submitted);
+  const results = blanks.map((blank, index) => {
+    const word = graded.words[index]!;
+    return {
+      id: blank.id,
+      correct: word.wordScore === 100,
+      expectedWord: blank.expectedWord,
+    };
   });
   return {
-    correct: results.length > 0 && results.every((r) => r.correct),
+    correct: graded.passageScore >= 85,
+    passageScore: graded.passageScore,
+    hasWrongWord: graded.hasWrongWord,
+    exactWordCount: graded.exactWordCount,
+    partialCreditWordCount: graded.partialCreditWordCount,
+    incorrectWordCount: graded.incorrectWordCount,
+    words: graded.words,
     results,
   };
 }

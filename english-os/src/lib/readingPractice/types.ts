@@ -106,6 +106,8 @@ export interface QuestionCandidate {
   difficulty: number;
   cefrLevel: string;
   passageId?: string;
+  contextId?: string;
+  questionOrder?: number;
 }
 
 import type { SectionMeta } from './sectionPlan';
@@ -130,18 +132,115 @@ export interface StudentQuestionPayload {
   options?: { key: 'A' | 'B' | 'C' | 'D'; label: string }[];
   questionIndex?: number;
   questionsInPassage?: number;
+  /** Daily Life — shared notice/email context */
+  contextId?: string;
+  questionsInContext?: number;
   sectionMeta?: SectionMeta;
+  /** Complete the Words placement — adaptive 10-question test */
+  placementMeta?: {
+    questionNumber: number;
+    totalQuestions: number;
+    sessionDifficulty: number;
+    poolLabel: string;
+  };
+}
+
+export type WordGradeResult = 'correct' | 'misspelling' | 'incorrect' | 'blank';
+
+export type WordErrorType =
+  | 'EXACT'
+  | 'ACCEPTED_VARIANT'
+  | 'MINOR_SPELLING'
+  | 'MODERATE_SPELLING'
+  | 'MAJOR_RECOGNIZABLE_SPELLING'
+  | 'WORD_FORM_OR_WORD_FAMILY'
+  | 'WRONG_WORD'
+  | 'NONSENSE'
+  | 'MISSING';
+
+export type ChecklistResult = WordGradeResult | 'correct' | 'incorrect';
+
+export interface WordResultDetail {
+  targetWord: string;
+  studentAnswer: string;
+  correctAnswer: string;
+  wordScore: number;
+  errorType: WordErrorType;
+  feedback?: string;
+}
+
+export interface MissedWordReport {
+  word: string;
+  submitted: string | null;
+  result?: WordGradeResult;
+  itemNumber?: number;
+  wordScore?: number;
+  errorType?: WordErrorType;
+}
+
+export interface ResultChecklistItem {
+  number: number;
+  questionType: ReadingQuestionType;
+  sectionLabel: string;
+  yourAnswer: string;
+  correctAnswer: string;
+  result: ChecklistResult;
+  points: number;
+  maxPoints: number;
+  difficulty?: number;
+  passageIndex?: number;
+  passageScore?: number;
+  words?: WordResultDetail[];
+  sessionDifficultyBefore?: number;
+  sessionDifficultyAfter?: number;
+  classification?: string;
+}
+
+export interface SessionHistoryEntry {
+  sessionId: string;
+  completedAt: string;
+  mode: ReadingPracticeMode;
+  studentLevel: string;
+  practiceDifficulty: number;
+  totalPoints: number;
+  maxPoints: number;
+  accuracyPercent: number;
+  fullMarks: number;
+  itemCount: number;
 }
 
 export interface SessionResultsSummary {
+  sessionId: string;
+  completedAt: string;
+  mode: ReadingPracticeMode;
+  studentLevel: string;
+  practiceDifficulty: number;
   questions: number;
   correct: number;
   accuracy: number;
   startingDifficulty: number;
   endingDifficulty: number;
+  totalPoints: number;
+  maxPoints: number;
+  accuracyPercent: number;
+  fullMarks: number;
+  itemCount: number;
+  checklist: ResultChecklistItem[];
   strongestSkill: string | null;
   weakestSkill: string | null;
   byType: Record<ReadingQuestionType, { total: number; correct: number; accuracy: number }>;
+  /** Complete the Words — words missed across the session (final report only) */
+  missedWords: MissedWordReport[];
+  history: SessionHistoryEntry[];
+  /** Complete the Words placement test results */
+  placement?: {
+    estimatedLevel: CefrLevel;
+    difficultyReached: number;
+    weightedPerformance: number;
+    passageScore: string;
+    overallScoreOutOf10: number;
+    overallScoreOutOf100: number;
+  };
 }
 
 export const DEFAULT_SESSION_LENGTH = 10;

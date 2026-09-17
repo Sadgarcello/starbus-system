@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type SelectHTMLAttributes } from 'react';
+import { examAnswerInputClassName, examTextInputProps, examTextareaProps } from '@/lib/examInputAssist';
 import { cn } from '@/utils/cn';
 
 export function Field({
@@ -24,15 +25,31 @@ export function Field({
 const controlClass =
   'w-full rounded-md border border-paper-line bg-paper px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-ink-subtle focus:border-ink focus:ring-2 focus:ring-club/40 sm:py-2 sm:text-sm';
 
-export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  function Input({ className, ...props }, ref) {
-    return <input ref={ref} className={cn(controlClass, className)} {...props} />;
+type ExamSafeProps = { examSafe?: boolean };
+
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & ExamSafeProps>(
+  function Input({ className, examSafe, ...props }, ref) {
+    return (
+      <input
+        ref={ref}
+        className={cn(controlClass, examSafe && examAnswerInputClassName, className)}
+        {...(examSafe ? examTextInputProps : {})}
+        {...props}
+      />
+    );
   },
 );
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className, ...props }, ref) {
-    return <textarea ref={ref} className={cn(controlClass, className)} {...props} />;
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & ExamSafeProps>(
+  function Textarea({ className, examSafe, ...props }, ref) {
+    return (
+      <textarea
+        ref={ref}
+        className={cn(controlClass, examSafe && examAnswerInputClassName, className)}
+        {...(examSafe ? examTextareaProps : {})}
+        {...props}
+      />
+    );
   },
 );
 

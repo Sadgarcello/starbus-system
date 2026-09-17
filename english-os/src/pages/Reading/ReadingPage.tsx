@@ -18,6 +18,7 @@ import {
   useVoteReadingBook,
 } from '@/hooks/useReading';
 import { readingProgressPercent } from '@/services/readingService';
+import { PRACTICE_MODE_SHORT } from '@/lib/readingPractice/mode';
 import { paths } from '@/routes/paths';
 import type { ExamTrack, ReadingBook, ReadingBookVoter } from '@/types';
 
@@ -69,32 +70,42 @@ export default function ReadingPage() {
       />
 
       {isStudent && student?.exam_track === 'toefl' && (
-        <Card className="overflow-hidden border-club/40 bg-gradient-to-r from-club-soft/80 to-paper">
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <ExamTrackLogo track="toefl" variant="badge" className="h-5 max-w-[72px]" />
-                <p className="text-xs font-bold uppercase tracking-wide text-ink-subtle">
-                  TOEFL Reading Practice
-                </p>
-              </div>
-              <p className="font-display text-xl text-ink">Take actual test</p>
-              <p className="mt-1 text-sm text-ink-muted">
-                Adaptive Complete the Words, Daily Life, and Academic passages — powered by your
-                practice profile, not AI.
-              </p>
-            </div>
-            <Link to={`${paths.readingPracticeCheck}?mode=ADAPTIVE&length=10`} className="shrink-0">
-              <Button className="w-full sm:w-auto">Take actual test</Button>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Link to={paths.readingPractice} className="text-xs font-bold uppercase text-ink-subtle hover:text-ink">
+              View my past results →
             </Link>
           </div>
-        </Card>
+          <ToeflPracticeCard
+            title={PRACTICE_MODE_SHORT.COMPLETE_WORDS}
+            description="10 adaptive passages — results and estimated level as soon as you finish."
+            actionLabel="Start 10-question test"
+            to={`${paths.readingPracticeCheck}?mode=COMPLETE_WORDS&length=10`}
+          />
+          <ToeflPracticeCard
+            title={PRACTICE_MODE_SHORT.DAILY_LIFE}
+            description="Notices, emails, menus, and practical reading — multiple-choice questions with its own scoring and results."
+            actionLabel="Start practice"
+            to={`${paths.readingPracticeCheck}?mode=DAILY_LIFE&length=10`}
+          />
+          <ToeflPracticeCard
+            title={PRACTICE_MODE_SHORT.ACADEMIC}
+            description="Academic passages with main idea, detail, and inference — multiple-choice questions with its own scoring and results."
+            actionLabel="Start practice"
+            to={`${paths.readingPracticeCheck}?mode=ACADEMIC&length=10`}
+          />
+        </div>
       )}
 
       {isTeacher && (
-        <Link to={paths.readingPracticeAdmin} className="inline-block text-xs font-bold uppercase text-ink-subtle hover:text-ink">
-          Manage reading practice content →
-        </Link>
+        <div className="flex flex-wrap gap-4 text-xs font-bold uppercase text-ink-subtle">
+          <Link to={paths.readingPracticeAdminResults} className="hover:text-ink">
+            Student reading results →
+          </Link>
+          <Link to={paths.readingPracticeAdmin} className="hover:text-ink">
+            Manage reading content →
+          </Link>
+        </div>
       )}
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
@@ -167,6 +178,38 @@ export default function ReadingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ToeflPracticeCard({
+  title,
+  description,
+  actionLabel,
+  to,
+}: {
+  title: string;
+  description: string;
+  actionLabel: string;
+  to: string;
+}) {
+  return (
+    <Card className="overflow-hidden border-club/40 bg-gradient-to-r from-club-soft/80 to-paper">
+      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <ExamTrackLogo track="toefl" variant="badge" className="h-5 max-w-[72px]" />
+            <p className="text-xs font-bold uppercase tracking-wide text-ink-subtle">
+              TOEFL Reading Practice
+            </p>
+          </div>
+          <p className="font-display text-xl text-ink">{title}</p>
+          <p className="mt-1 text-sm text-ink-muted">{description}</p>
+        </div>
+        <Link to={to} className="shrink-0">
+          <Button className="w-full sm:w-auto">{actionLabel}</Button>
+        </Link>
+      </div>
+    </Card>
   );
 }
 

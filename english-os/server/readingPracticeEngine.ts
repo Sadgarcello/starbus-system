@@ -707,7 +707,15 @@ export async function submitAnswer(
   questionType: ReadingQuestionType,
   answer: string,
   responseTimeMs?: number,
-): Promise<{ correct: boolean; explanation: string | null }> {
+): Promise<{
+  correct: boolean;
+  explanation: string | null;
+  placementFeedback?: {
+    passageScore: number;
+    sessionDifficultyBefore: number;
+    sessionDifficultyAfter: number;
+  };
+}> {
   const { data: priorAttempt } = await admin
     .from('reading_attempts')
     .select('correct')
@@ -779,7 +787,10 @@ export async function submitAnswer(
   }
 
   if (priorAttempt) {
-    return { correct, explanation: questionType === 'COMPLETE_WORDS' ? null : explanation };
+    return {
+      correct,
+      explanation: questionType === 'COMPLETE_WORDS' ? null : explanation,
+    };
   }
 
   const { data: sessionRowBefore } = await admin
@@ -911,6 +922,15 @@ export async function submitAnswer(
   return {
     correct,
     explanation: questionType === 'COMPLETE_WORDS' ? null : explanation,
+    ...(isPlacement && questionType === 'COMPLETE_WORDS'
+      ? {
+          placementFeedback: {
+            passageScore,
+            sessionDifficultyBefore: currentSessionDiff,
+            sessionDifficultyAfter: newSessionDiff,
+          },
+        }
+      : {}),
   };
 }
 

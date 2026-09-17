@@ -9,6 +9,12 @@ import { paths } from '@/routes/paths';
 import { CompleteWordsHelpAssistant } from './CompleteWordsHelpAssistant';
 import { CompleteWordsInlinePassage } from './CompleteWordsInlinePassage';
 
+export interface PlacementPassageFeedback {
+  passageScore: number;
+  sessionDifficultyBefore: number;
+  sessionDifficultyAfter: number;
+}
+
 interface CompleteWordsPracticeShellProps {
   question: StudentQuestionPayload;
   blankAnswers: Record<number, string>;
@@ -21,6 +27,7 @@ interface CompleteWordsPracticeShellProps {
   onContinue: () => void;
   continueLabel: string;
   canContinue: boolean;
+  lastPassageFeedback?: PlacementPassageFeedback | null;
 }
 
 export function CompleteWordsPracticeShell({
@@ -35,13 +42,17 @@ export function CompleteWordsPracticeShell({
   onContinue,
   continueLabel,
   canContinue,
+  lastPassageFeedback,
 }: CompleteWordsPracticeShellProps) {
   const questionNumber = question.placementMeta?.questionNumber ?? answeredCount + 1;
   const totalQuestions = question.placementMeta?.totalQuestions ?? targetLength;
   const progressPercent = Math.min(100, Math.round((questionNumber / totalQuestions) * 100));
-  const pool = poolForDifficulty(
+  const sessionDifficulty = Math.round(
     question.placementMeta?.sessionDifficulty ?? question.difficulty,
   );
+  const poolLabel =
+    question.placementMeta?.poolLabel ??
+    poolForDifficulty(sessionDifficulty).label;
 
   function handleClearAll() {
     if (busy) return;
@@ -95,12 +106,28 @@ export function CompleteWordsPracticeShell({
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full border border-club/35 bg-club-soft/60 px-2.5 py-0.5 text-xs font-bold text-ink">
-                  Level {pool.pool}
+                <span className="inline-flex flex-col items-end gap-0.5">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-club/35 bg-club-soft/60 px-2.5 py-0.5 text-xs font-bold text-ink">
+                    Difficulty {sessionDifficulty}/10
+                  </span>
+                  <span className="text-[10px] font-medium text-ink-subtle">Content band {poolLabel}</span>
                 </span>
               </div>
             </div>
           </div>
+
+          {lastPassageFeedback && (
+            <div className="border-b border-paper-line bg-paper-soft/50 px-5 py-2.5 text-xs text-ink-muted sm:px-6">
+              Last passage: {Math.round(lastPassageFeedback.passageScore)}%
+              {lastPassageFeedback.sessionDifficultyAfter >
+              lastPassageFeedback.sessionDifficultyBefore
+                ? ` — difficulty increased to ${lastPassageFeedback.sessionDifficultyAfter}/10`
+                : lastPassageFeedback.sessionDifficultyAfter <
+                    lastPassageFeedback.sessionDifficultyBefore
+                  ? ` — difficulty adjusted to ${lastPassageFeedback.sessionDifficultyAfter}/10`
+                  : ` — staying at ${lastPassageFeedback.sessionDifficultyAfter}/10 (need ≥85% to level up)`}
+            </div>
+          )}
 
           <div className="relative p-5 sm:p-6">
             {busy && (

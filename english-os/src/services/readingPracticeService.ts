@@ -139,7 +139,15 @@ export const readingPracticeService = {
     questionType: ReadingQuestionType,
     answer: string,
     responseTimeMs?: number,
-  ): Promise<{ correct: boolean; explanation: string | null }> {
+  ): Promise<{
+    correct: boolean;
+    explanation: string | null;
+    placementFeedback?: {
+      passageScore: number;
+      sessionDifficultyBefore: number;
+      sessionDifficultyAfter: number;
+    };
+  }> {
     const res = await postReadingPractice({
       action: 'submit',
       sessionId,
@@ -148,7 +156,17 @@ export const readingPracticeService = {
       answer,
       responseTimeMs,
     });
-    const json = await parseApiResponse<{ correct: boolean; explanation: string | null; error?: string; message?: string }>(res);
+    const json = await parseApiResponse<{
+      correct: boolean;
+      explanation: string | null;
+      placementFeedback?: {
+        passageScore: number;
+        sessionDifficultyBefore: number;
+        sessionDifficultyAfter: number;
+      };
+      error?: string;
+      message?: string;
+    }>(res);
     if (!res.ok) throwReadingPracticeError(json, 'submit_failed');
     return json;
   },

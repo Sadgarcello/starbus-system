@@ -12,7 +12,10 @@ import type {
 import type { SectionMeta } from '@/lib/readingPractice/sectionPlan';
 import { expectedQuestionTypeForMode, normalizePracticeMode } from '@/lib/readingPractice/mode';
 import { effectiveSessionLength, SECTION_LABELS } from '@/lib/readingPractice/sectionPlan';
-import { CompleteWordsPracticeShell } from '@/components/readingPractice/CompleteWordsPracticeShell';
+import {
+  CompleteWordsPracticeShell,
+  type PlacementPassageFeedback,
+} from '@/components/readingPractice/CompleteWordsPracticeShell';
 import { AcademicPracticeShell } from '@/components/readingPractice/AcademicPracticeShell';
 import { DailyLifePracticeShell } from '@/components/readingPractice/DailyLifePracticeShell';
 import { missingLetterCountFromMasked } from '@/lib/readingPractice/completeWords';
@@ -48,6 +51,9 @@ export default function ReadingPracticeSessionPage() {
   const [sectionIntro, setSectionIntro] = useState<SectionMeta | null>(null);
   const [summary, setSummary] = useState<SessionResultsSummary | null>(null);
   const [focusedBlankId, setFocusedBlankId] = useState<number | null>(null);
+  const [lastPassageFeedback, setLastPassageFeedback] = useState<PlacementPassageFeedback | null>(
+    null,
+  );
   const startedAt = useRef<number>(Date.now());
   const sessionIdRef = useRef<string | null>(null);
 
@@ -106,6 +112,7 @@ export default function ReadingPracticeSessionPage() {
       setError(null);
       setSummary(null);
       setAnsweredCount(0);
+      setLastPassageFeedback(null);
 
       try {
         const res = await readingPracticeService.start(mode, targetLength);
@@ -145,7 +152,7 @@ export default function ReadingPracticeSessionPage() {
     const activeQuestionId = question.questionId;
     setPhase('submitting');
     try {
-      await readingPracticeService.submit(
+      const submitResult = await readingPracticeService.submit(
         activeSessionId,
         activeQuestionId,
         question.questionType,
@@ -155,6 +162,9 @@ export default function ReadingPracticeSessionPage() {
       if (sessionIdRef.current !== activeSessionId) return;
 
       setError(null);
+      if (submitResult.placementFeedback) {
+        setLastPassageFeedback(submitResult.placementFeedback);
+      }
       const newAnsweredCount = answeredCount + 1;
       setAnsweredCount(newAnsweredCount);
 
@@ -281,6 +291,7 @@ export default function ReadingPracticeSessionPage() {
           onContinue={() => void submitCurrent()}
           continueLabel={cwContinueLabel}
           canContinue={cwCanContinue}
+          lastPassageFeedback={lastPassageFeedback}
         />
       </>
     );

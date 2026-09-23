@@ -29,7 +29,21 @@ const ReadingPracticeAdminReportPage = lazy(
   () => import('@/pages/Reading/Practice/ReadingPracticeAdminReportPage'),
 );
 const WritingPage = lazy(() => import('@/pages/Writing/WritingPage'));
+const WritingPracticeHubPage = lazy(() => import('@/pages/Writing/Practice/WritingPracticeHubPage'));
+const WritingPracticeSessionPage = lazy(
+  () => import('@/pages/Writing/Practice/WritingPracticeSessionPage'),
+);
+const WritingPracticeAdminPage = lazy(
+  () => import('@/pages/Writing/Practice/WritingPracticeAdminPage'),
+);
 const ListeningPage = lazy(() => import('@/pages/Listening/ListeningPage'));
+const ListeningPracticeHubPage = lazy(() => import('@/pages/Listening/Practice/ListeningPracticeHubPage'));
+const ListeningPracticeSessionPage = lazy(
+  () => import('@/pages/Listening/Practice/ListeningPracticeSessionPage'),
+);
+const ListeningPracticeAdminPage = lazy(
+  () => import('@/pages/Listening/Practice/ListeningPracticeAdminPage'),
+);
 const AnalyticsPage = lazy(() => import('@/pages/Analytics/AnalyticsPage'));
 const ProgressPage = lazy(() => import('@/pages/Progress/ProgressPage'));
 const SocialPage = lazy(() => import('@/pages/Social/SocialPage'));
@@ -61,6 +75,8 @@ const router = createBrowserRouter([
       { path: paths.readingPracticeCheck, element: <S><ReadingExamCheckPage /></S> },
       { path: paths.readingPracticeIntro, element: <S><ReadingSectionIntroPage /></S> },
       { path: `${paths.readingPractice}/session`, element: <S><ReadingPracticeSessionPage /></S> },
+      { path: `${paths.listeningPractice}/session`, element: <S><ListeningPracticeSessionPage /></S> },
+      { path: `${paths.writingPractice}/session`, element: <S><WritingPracticeSessionPage /></S> },
       {
         element: <AppLayout />,
         children: [
@@ -82,7 +98,11 @@ const router = createBrowserRouter([
           { path: paths.readingPracticeAdminResults, element: <S><ReadingPracticeResultsAdminPage /></S> },
           { path: `${paths.readingPractice}/admin/report/:sessionId`, element: <S><ReadingPracticeAdminReportPage /></S> },
           { path: paths.writing, element: <S><WritingPage /></S> },
+          { path: paths.writingPractice, element: <S><WritingPracticeHubPage /></S> },
+          { path: paths.writingPracticeAdmin, element: <S><WritingPracticeAdminPage /></S> },
           { path: paths.listening, element: <S><ListeningPage /></S> },
+          { path: paths.listeningPractice, element: <S><ListeningPracticeHubPage /></S> },
+          { path: paths.listeningPracticeAdmin, element: <S><ListeningPracticeAdminPage /></S> },
           { path: paths.analytics, element: <S><AnalyticsPage /></S> },
           { path: paths.social, element: <S><SocialPage /></S> },
           { path: paths.settings, element: <S><SettingsPage /></S> },

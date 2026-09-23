@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
 import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
@@ -18,6 +19,7 @@ import {
 import { writingService } from '@/services/writingService';
 import { examAnswerInputClassName, examTextareaProps } from '@/lib/examInputAssist';
 import { getSkillTrackStyle } from '@/lib/examTrackContent';
+import { paths } from '@/routes/paths';
 import type { ExamTrack, WritingSubmissionWithStudent, WritingTask } from '@/types';
 
 export default function WritingPage() {
@@ -54,6 +56,25 @@ export default function WritingPage() {
         examTrack={student?.exam_track as ExamTrack | null | undefined}
         isTeacher={isTeacher}
       />
+
+      {isStudent && student?.exam_track === 'toefl' && (
+        <Card className="border-club/30 bg-club-soft/30 p-5">
+          <h2 className="font-display text-xl text-ink">TOEFL Writing diagnostic</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            12-question placement: Build a Sentence, Email, and Academic Discussion with cached Gemini
+            feedback (max 2 tests per 48 hours).
+          </p>
+          <Link to={paths.writingPractice} className="mt-3 inline-block text-sm font-bold underline">
+            Open Writing diagnostic →
+          </Link>
+        </Card>
+      )}
+
+      {isTeacher && (
+        <Link to={paths.writingPracticeAdmin} className="text-xs font-bold uppercase text-ink-subtle hover:text-ink">
+          Manage TOEFL writing diagnostic →
+        </Link>
+      )}
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
       {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}

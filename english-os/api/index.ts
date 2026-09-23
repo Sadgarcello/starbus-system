@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleEvaluateText } from '../server/evaluateTextRoute.js';
 import { handlePushThisDevice } from '../server/pushThisDeviceRoute.js';
+import { handleListeningPractice } from '../server/listeningPracticeRoute.js';
+import { handleWritingPractice } from '../server/writingPracticeRoute.js';
 import { handleReadingPractice } from '../server/readingPracticeRoute.js';
 import { handleSendPush } from '../server/sendPushRoute.js';
 
@@ -22,6 +24,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   switch (slug) {
     case 'reading-practice':
       return handleReadingPractice(req, res);
+    case 'listening-practice':
+      return handleListeningPractice(req, res);
+    case 'writing-practice':
+      return handleWritingPractice(req, res);
     case 'evaluate-text':
       return handleEvaluateText(req, res);
     case 'send-push':

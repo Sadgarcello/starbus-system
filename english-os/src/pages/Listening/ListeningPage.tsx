@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Avatar } from '@/components/common/Avatar';
 import { AiFeedbackPanel } from '@/components/ai/AiFeedbackPanel';
 import { SkillModuleHeader } from '@/components/skill/SkillModuleHeader';
@@ -13,6 +14,7 @@ import {
 } from '@/hooks/useListening';
 import { examAnswerInputClassName, examInputAssistProps, examTextareaProps } from '@/lib/examInputAssist';
 import { getListeningRules, getSkillTrackStyle } from '@/lib/examTrackContent';
+import { paths } from '@/routes/paths';
 import type { ExamTrack, ListeningPickWithStudent } from '@/types';
 
 export default function ListeningPage() {
@@ -44,6 +46,27 @@ export default function ListeningPage() {
         examTrack={student?.exam_track as ExamTrack | null | undefined}
         isTeacher={isTeacher}
       />
+
+      {isStudent && student?.exam_track === 'toefl' && (
+        <Card className="border-club/30 bg-club-soft/30 p-5">
+          <h2 className="font-display text-xl text-ink">TOEFL Listening diagnostic</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Lower and upper modules, four task types, one-play audio with grouped questions.
+          </p>
+          <Link
+            to={paths.listeningPractice}
+            className="mt-3 inline-block text-sm font-bold uppercase text-ink underline"
+          >
+            Open Listening Practice →
+          </Link>
+        </Card>
+      )}
+
+      {isTeacher && (
+        <Link to={paths.listeningPracticeAdmin} className="text-xs font-bold uppercase text-ink-subtle hover:text-ink">
+          Manage TOEFL listening content →
+        </Link>
+      )}
 
       {notice && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{notice}</p>}
       {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}

@@ -259,6 +259,77 @@ describe('Complete the Words placement pools', () => {
     expect(picks.size).toBeGreaterThan(1);
   });
 
+  it('never repeats within a 10-question session when enough questions exist per difficulty', () => {
+    const candidates: QuestionCandidate[] = Array.from({ length: 60 }, (_, i) => ({
+      questionId: `q${i}`,
+      questionType: 'COMPLETE_WORDS' as const,
+      skill: 'VOCABULARY' as const,
+      difficulty: (i % 10) + 1,
+      cefrLevel: 'A2',
+    }));
+
+    function simulateSession(recentQuestionIds: string[] = []) {
+      const sessionQuestionIds: string[] = [];
+      let sessionDifficulty = PLACEMENT_START_DIFFICULTY;
+      for (let i = 0; i < PLACEMENT_SESSION_LENGTH; i++) {
+        const pick = selectCompleteWordsByPool(
+          candidates,
+          sessionDifficulty,
+          sessionQuestionIds,
+          recentQuestionIds,
+        );
+        expect(pick).not.toBeNull();
+        expect(sessionQuestionIds).not.toContain(pick!.questionId);
+        sessionQuestionIds.push(pick!.questionId);
+        recentQuestionIds = [pick!.questionId, ...recentQuestionIds].slice(0, 10);
+        sessionDifficulty = adjustSessionDifficultyFromPassageScore(sessionDifficulty, 70);
+      }
+      expect(new Set(sessionQuestionIds).size).toBe(PLACEMENT_SESSION_LENGTH);
+      return { sessionQuestionIds, recentQuestionIds };
+    }
+
+    for (let run = 0; run < 100; run++) {
+      simulateSession();
+    }
+  });
+
+  it('can repeat across sessions once history window (10) rolls off', () => {
+    const candidates: QuestionCandidate[] = Array.from({ length: 20 }, (_, i) => ({
+      questionId: `q${i}`,
+      questionType: 'COMPLETE_WORDS' as const,
+      skill: 'VOCABULARY' as const,
+      difficulty: 2,
+      cefrLevel: 'A2',
+    }));
+
+    let recent: string[] = [];
+    const firstSessionIds: string[] = [];
+    for (let test = 0; test < 3; test++) {
+      const sessionQuestionIds: string[] = [];
+      for (let i = 0; i < PLACEMENT_SESSION_LENGTH; i++) {
+        const pick = selectCompleteWordsByPool(candidates, 2, sessionQuestionIds, recent);
+        expect(pick).not.toBeNull();
+        sessionQuestionIds.push(pick!.questionId);
+        recent = [pick!.questionId, ...recent].slice(0, 10);
+        if (test === 0) firstSessionIds.push(pick!.questionId);
+      }
+    }
+
+    const thirdSessionStart = recent.slice(0, 3);
+    const repeatsFromFirst = thirdSessionStart.filter((id) => firstSessionIds.includes(id));
+    expect(repeatsFromFirst.length).toBeGreaterThan(0);
+  });
+
+  it('excludes both session and recent history when picking', () => {
+    const candidates: QuestionCandidate[] = [
+      { questionId: 'recent', questionType: 'COMPLETE_WORDS', skill: 'VOCABULARY', difficulty: 2, cefrLevel: 'A2' },
+      { questionId: 'session', questionType: 'COMPLETE_WORDS', skill: 'VOCABULARY', difficulty: 2, cefrLevel: 'A2' },
+      { questionId: 'fresh', questionType: 'COMPLETE_WORDS', skill: 'VOCABULARY', difficulty: 2, cefrLevel: 'A2' },
+    ];
+    const pick = selectCompleteWordsByPool(candidates, 2, ['session'], ['recent']);
+    expect(pick?.questionId).toBe('fresh');
+  });
+
   it('estimates lower level when student fails hard questions', () => {
     const easy = estimateProficiency(
       Array.from({ length: 6 }, () => ({ passageScore: 70, difficulty: 2 })).concat([
